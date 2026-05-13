@@ -4,7 +4,7 @@ import { listPainelDiscountTypes } from "@/lib/painel-descontos";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Categorias | Clube Rincao",
+  title: "Painel - Categorias | Estancia",
   robots: { index: false, follow: false },
 };
 

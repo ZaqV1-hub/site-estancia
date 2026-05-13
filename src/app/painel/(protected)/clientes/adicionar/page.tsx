@@ -4,7 +4,7 @@ import { listClientTypes } from "@/lib/ops-client-education";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Adicionar Cliente | Clube Rincao",
+  title: "Painel - Adicionar Cliente | Estancia",
   robots: {
     index: false,
     follow: false,

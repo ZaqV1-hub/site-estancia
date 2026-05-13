@@ -5,7 +5,7 @@ import { getOpsSchoolTripsScreenData } from "@/lib/ops-school-trips";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Passeios Escolares | Clube Rincao",
+  title: "Painel - Passeios Escolares | Estancia",
   robots: {
     index: false,
     follow: false,

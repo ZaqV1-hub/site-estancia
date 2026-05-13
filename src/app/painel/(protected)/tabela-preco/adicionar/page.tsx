@@ -3,7 +3,7 @@ import { PainelTabelaPrecoFormPage } from "@/components/painel-tabela-preco-form
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Adicionar Tabela de Preco | Clube Rincao",
+  title: "Painel - Adicionar Tabela de Preco | Estancia",
   robots: {
     index: false,
     follow: false,

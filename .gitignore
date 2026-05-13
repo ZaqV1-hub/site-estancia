@@ -19,6 +19,7 @@
 /.next/
 /out/
 /.data/
+/.local/
 
 # production
 /build

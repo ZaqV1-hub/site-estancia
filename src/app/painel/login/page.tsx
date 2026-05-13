@@ -15,8 +15,8 @@ import {
 import { getRecaptchaSiteKey } from "@/lib/recaptcha";
 
 export const metadata: Metadata = {
-  title: "Painel - Entrar | Clube Rincao",
-  description: "Entrada do novo painel interno operacional do Clube Rincao.",
+  title: "Painel - Entrar | Estancia",
+  description: "Entrada do novo painel interno operacional do Estancia.",
   robots: {
     index: false,
     follow: false,

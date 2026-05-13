@@ -3,7 +3,7 @@ import { PainelResetPasswordPage } from "@/components/painel-password-reset-page
 import { getPainelPasswordResetTicket } from "@/lib/painel-password-reset";
 
 export const metadata: Metadata = {
-  title: "Painel - Trocar Senha | Clube Rincao",
+  title: "Painel - Trocar Senha | Estancia",
   robots: {
     index: false,
     follow: false,

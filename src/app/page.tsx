@@ -27,11 +27,11 @@ const structureSupport = [
 ];
 
 const structureGallery = [
-  { src: "/photos/estrutura-galeria.jpg", alt: "Galeria da estrutura do Clube Rincao", className: "md:col-span-2 md:row-span-2" },
-  { src: "/photos/estrutura-piscina.jpg", alt: "Piscina da estrutura do Clube Rincao", className: "" },
-  { src: "/photos/day-use.jpg", alt: "Area verde do Clube Rincao", className: "" },
-  { src: "/photos/escola.jpg", alt: "Area infantil do Clube Rincao", className: "" },
-  { src: "/photos/confraternizacao.jpg", alt: "Grupo em evento no Clube Rincao", className: "" },
+  { src: "/photos/estrutura-galeria.jpg", alt: "Galeria da estrutura do Estancia", className: "md:col-span-2 md:row-span-2" },
+  { src: "/photos/estrutura-piscina.jpg", alt: "Piscina da estrutura do Estancia", className: "" },
+  { src: "/photos/day-use.jpg", alt: "Area verde do Estancia", className: "" },
+  { src: "/photos/escola.jpg", alt: "Area infantil do Estancia", className: "" },
+  { src: "/photos/confraternizacao.jpg", alt: "Grupo em evento no Estancia", className: "" },
 ];
 
 export default function Home() {
@@ -71,7 +71,7 @@ export default function Home() {
         <div className="relative h-[320px] w-full md:absolute md:left-0 md:top-0 md:h-full md:w-1/2">
           <Image
             src="/photos/day-use.jpg"
-            alt="Day-Use Familia no Clube Rincao"
+            alt="Day-Use Familia no Estancia"
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 50vw"

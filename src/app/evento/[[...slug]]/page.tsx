@@ -22,9 +22,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: "Eventos Legados - Clube e Park Rincao - Pousada e Lazer",
+    title: "Eventos Legados - Estancia",
     description:
-      "Arquivo das URLs legadas de eventos preservadas no novo institucional do Clube Rincao.",
+      "Arquivo das URLs legadas de eventos preservadas no novo institucional do Estancia.",
     alternates: {
       canonical: requestedSlug ? `/evento/${requestedSlug}` : "/evento",
     },

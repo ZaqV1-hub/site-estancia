@@ -4,7 +4,7 @@ import { getOpsClientTripCreateScreenData } from "@/lib/ops-client-trips";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Vincular Passeio | Clube Rincao",
+  title: "Painel - Vincular Passeio | Estancia",
   robots: {
     index: false,
     follow: false,

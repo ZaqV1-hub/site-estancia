@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getInfoPage } from "@/lib/site-content";
 
-const productionSiteUrl = "https://www.cluberincao.com.br";
-const brandName = "Clube e Park Rincao - Pousada e Lazer";
+const productionSiteUrl = "https://www.estancia.local";
+const brandName = "Estancia";
 
 export function getSiteUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL ?? productionSiteUrl;

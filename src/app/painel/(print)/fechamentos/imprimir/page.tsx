@@ -6,7 +6,7 @@ import { requirePainelAccess } from "@/lib/painel-session";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Painel - Impressao de Fechamento | Clube Rincao",
+  title: "Painel - Impressao de Fechamento | Estancia",
   robots: {
     index: false,
     follow: false,

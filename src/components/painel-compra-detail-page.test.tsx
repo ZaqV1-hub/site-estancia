@@ -40,7 +40,7 @@ describe("PainelCompraDetailPage", () => {
               visitDate: "08/05/2026",
               voucherType: "escol",
               voucherTypeLabel: "Escolar",
-              schoolName: "Colegio Rincao",
+              schoolName: "Colegio Estancia",
               className: "7A",
               periodName: "Manha",
               unitValue: "40,00",
@@ -61,7 +61,7 @@ describe("PainelCompraDetailPage", () => {
     expect(html).toContain("Vouchers");
     expect(html).toContain("Consultar pagamento (Cielo)");
     expect(html).toContain("PainelCompraDetailActions");
-    expect(html).toContain("Colegio Rincao");
+    expect(html).toContain("Colegio Estancia");
     expect(html).toContain("/painel/clientes/passeios/2306/alunos");
   });
 });

@@ -62,12 +62,12 @@ describe("purchase-confirmation-email", () => {
     expect(dbQuery).toHaveBeenCalledWith(
       expect.stringContaining("INSERT INTO email"),
       expect.arrayContaining([
-        "ingressos@cluberincao.com.br",
-        "Ingressos Clube Rincao",
+        "ingressos@estancia.local",
+        "Ingressos Estancia",
         "cliente@example.com",
         "Cliente Teste",
-        "ingressos@cluberincao.com.br",
-        "Clube Rincao - Compra",
+        "ingressos@estancia.local",
+        "Estancia - Compra",
       ]),
     );
     expect(dbQuery).toHaveBeenCalledWith(

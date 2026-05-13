@@ -7,7 +7,7 @@ import {
 } from "@/lib/painel-bilheteria-page";
 
 export const metadata: Metadata = {
-  title: "Painel - Detalhe de Venda | Clube Rincao",
+  title: "Painel - Detalhe de Venda | Estancia",
   robots: {
     index: false,
     follow: false,

@@ -3,7 +3,7 @@ import { PainelCategoriaFormPage } from "@/components/painel-categoria-form-page
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Nova Categoria | Clube Rincao",
+  title: "Painel - Nova Categoria | Estancia",
   robots: { index: false, follow: false },
 };
 

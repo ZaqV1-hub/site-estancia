@@ -3,7 +3,7 @@ import { PainelInformacaoFormPage } from "@/components/painel-informacao-form-pa
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Adicionar Informacao | Clube Rincao",
+  title: "Painel - Adicionar Informacao | Estancia",
   robots: {
     index: false,
     follow: false,

@@ -127,7 +127,7 @@ export function PainelBilheteriaPageHeader({
       <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)_560px] xl:items-start">
         <div className="flex items-center">
           <Image
-            alt="Clube Rincao"
+            alt="Estancia"
             className="h-auto max-w-[280px] drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
             height={155}
             src="/brand/rincao-logo.png"

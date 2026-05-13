@@ -66,7 +66,7 @@ export function IngressoShell({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/brand/rincao-logo.png"
-                alt="Clube e Park Rincao - Pousada e Lazer"
+                alt="Estancia"
                 width={340}
                 height={159}
                 className="h-auto w-[280px] md:w-[340px]"

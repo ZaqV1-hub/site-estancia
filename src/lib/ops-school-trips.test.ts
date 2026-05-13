@@ -40,7 +40,7 @@ describe("ops-school-trips", () => {
           rows: [
             {
               idescola: 12,
-              nmescola: "Escola Rincao",
+              nmescola: "Escola Estancia",
               stescola: "ati",
               idinformacao: 8,
             },
@@ -82,7 +82,7 @@ describe("ops-school-trips", () => {
       },
       selectedSchool: {
         schoolId: 12,
-        name: "Escola Rincao",
+        name: "Escola Estancia",
         status: "ati",
         trips: [
           {
@@ -114,7 +114,7 @@ describe("ops-school-trips", () => {
           rows: [
             {
               idescola: 12,
-              nmescola: "Escola Rincao",
+              nmescola: "Escola Estancia",
               stescola: "ati",
               idinformacao: 8,
             },

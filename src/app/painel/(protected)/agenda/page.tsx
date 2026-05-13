@@ -4,7 +4,7 @@ import { getPainelAgendaScreenData } from "@/lib/painel-agenda";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Agenda | Clube Rincao",
+  title: "Painel - Agenda | Estancia",
   robots: {
     index: false,
     follow: false,

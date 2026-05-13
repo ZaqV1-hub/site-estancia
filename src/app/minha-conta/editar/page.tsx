@@ -3,7 +3,7 @@ import { CustomerAccountManagePage } from "@/components/customer-account-manage-
 import { requireAuthenticatedCustomer } from "@/lib/customer-area";
 
 export const metadata: Metadata = {
-  title: "Alterar meus dados | Clube Rincao",
+  title: "Alterar meus dados | Estancia",
   alternates: {
     canonical: "/minha-conta/editar",
   },

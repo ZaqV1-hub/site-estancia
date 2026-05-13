@@ -7,7 +7,7 @@ import { loadPainelBilheteriaPurchaseDetailFromParams } from "@/lib/painel-bilhe
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Pagamento de Reserva | Clube Rincao",
+  title: "Painel - Pagamento de Reserva | Estancia",
   robots: {
     index: false,
     follow: false,

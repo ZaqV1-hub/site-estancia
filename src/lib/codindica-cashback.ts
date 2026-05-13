@@ -195,7 +195,7 @@ function buildRepresentativeEmailHtml(input: {
     <html lang="pt-BR">
       <head>
         <meta charSet="UTF-8" />
-        <title>Clube Rincao - Compra Finalizada</title>
+        <title>Estancia - Compra Finalizada</title>
       </head>
       <body style="margin:0;padding:24px;background:#f0ede5;color:#4a5560;font-family:Arial,Helvetica,sans-serif;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -405,12 +405,12 @@ async function enqueueRepresentativeEmail(
       )
     `,
     [
-      "ingressos@cluberincao.com.br",
-      "Ingressos Clube Rincao",
+      "ingressos@estancia.local",
+      "Ingressos Estancia",
       representativeEmail,
       code.nmrepresentante ?? representativeEmail,
-      "ingressos@cluberincao.com.br",
-      "Clube Rincao - Compra Finalizada",
+      "ingressos@estancia.local",
+      "Estancia - Compra Finalizada",
       buildRepresentativeEmailHtml({
         purchase,
         code,

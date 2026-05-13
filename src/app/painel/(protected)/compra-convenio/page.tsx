@@ -4,7 +4,7 @@ import { listPainelCompraConvenio } from "@/lib/painel-compra-convenio";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Compra Convenio | Clube Rincao",
+  title: "Painel - Compra Convenio | Estancia",
   robots: {
     index: false,
     follow: false,

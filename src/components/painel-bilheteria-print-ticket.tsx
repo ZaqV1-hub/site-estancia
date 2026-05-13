@@ -37,7 +37,7 @@ function PainelBilheteriaPrintTicketItem({
     <article className="border border-[#cfdbe4] bg-white px-4 py-3 text-center shadow-[0_8px_24px_rgba(31,67,98,0.12)] print:border-0 print:shadow-none">
       <img
         src="/brand/rincao-logo.png"
-        alt="Clube Rincao"
+        alt="Estancia"
         className="mx-auto h-10 w-auto object-contain"
       />
       <h1 className="mt-3 text-xl font-bold text-[#1b3447]">

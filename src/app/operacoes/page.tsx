@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Painel Interno | Clube Rincao",
+  title: "Painel Interno | Estancia",
   description:
-    "Entrada legada redirecionada para o novo /painel interno do Clube Rincao.",
+    "Entrada legada redirecionada para o novo /painel interno do Estancia.",
   robots: {
     index: false,
     follow: false,

@@ -29,7 +29,7 @@ describe("ops-school-trip-report", () => {
               tpagenda: "escol",
               stagenda: "abe",
               idescola: 44,
-              nmescola: "Colegio Rincao",
+              nmescola: "Colegio Estancia",
               stescola: "ati",
               status: "ati",
               codescoladata: "ABC123",
@@ -108,7 +108,7 @@ describe("ops-school-trip-report", () => {
       trip: {
         agendaId: 77,
         schoolId: 44,
-        schoolName: "Colegio Rincao",
+        schoolName: "Colegio Estancia",
         code: "ABC123",
       },
       filters: {

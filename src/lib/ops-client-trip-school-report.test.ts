@@ -30,7 +30,7 @@ describe("ops-client-trip-school-report", () => {
               stagenda: "abe",
               slug: "abc123slug",
               idcliente: 44,
-              cliente_nome: "Colegio Rincao",
+              cliente_nome: "Colegio Estancia",
               idtipo: 4,
               tipo_nome: "Escola",
             },
@@ -107,7 +107,7 @@ describe("ops-client-trip-school-report", () => {
       trip: {
         agendaId: 77,
         clientId: 44,
-        clientName: "Colegio Rincao",
+        clientName: "Colegio Estancia",
         code: "ABC123",
       },
       filters: {

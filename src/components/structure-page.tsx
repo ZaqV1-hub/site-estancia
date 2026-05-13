@@ -35,7 +35,7 @@ const supportItems = [
 const gallery = [
   {
     src: "/structure/gallery-1.jpeg",
-    alt: "Piscina do Clube Rincão",
+    alt: "Piscina do Estancia",
     className: "col-span-4 aspect-[16/8]",
   },
   {
@@ -65,7 +65,7 @@ const gallery = [
   },
   {
     src: "/structure/gallery-7.jpg",
-    alt: "Área verde do Clube Rincão",
+    alt: "Área verde do Estancia",
     className: "col-span-1 aspect-[4/5]",
   },
   {
@@ -100,7 +100,7 @@ const gallery = [
   },
   {
     src: "/structure/gallery-14.jpg",
-    alt: "Jardins do Clube Rincão",
+    alt: "Jardins do Estancia",
     className: "col-span-2 aspect-[16/9]",
   },
 ];

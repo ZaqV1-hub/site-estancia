@@ -59,7 +59,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/brand/rincao-logo.png"
-            alt="Clube e Park Rincao - Pousada e Lazer"
+            alt="Estancia"
             width={340}
             height={159}
             className="h-auto w-[300px] md:w-[340px]"
@@ -257,7 +257,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
                 className="site-facebook-fallback absolute inset-0 z-0 flex flex-col justify-between p-5 text-[#1b5d96]"
               >
                 <div>
-                  <p className="legacy-rounded text-[18px]">Clube Rincão</p>
+                  <p className="legacy-rounded text-[18px]">Estancia</p>
                   <p className="mt-3 text-sm leading-6">
                     Acompanhe novidades, agenda e conteúdos institucionais na nossa página oficial.
                   </p>
@@ -266,7 +266,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
               </a>
               <div
                 className="fb-page relative z-10"
-                data-href="https://www.facebook.com/ClubeRincao/"
+                data-href="#"
                 data-tabs="timeline"
                 data-width="400"
                 data-height="200"
@@ -276,10 +276,10 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
                 data-show-facepile="true"
               >
                 <blockquote
-                  cite="https://www.facebook.com/ClubeRincao/"
+                  cite="#"
                   className="fb-xfbml-parse-ignore"
                 >
-                  <a href="https://www.facebook.com/ClubeRincao/">Clube Rincão</a>
+                  <a href="#">Estancia</a>
                 </blockquote>
               </div>
             </div>

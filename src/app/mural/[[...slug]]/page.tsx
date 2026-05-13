@@ -12,10 +12,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const requestedSlug = slug?.[0];
 
   return {
-    title: "Mural Legado - Clube e Park Rincao - Pousada e Lazer",
+    title: "Mural Legado - Estancia",
     description: requestedSlug
-      ? `Arquivo do mural legado para o slug ${requestedSlug}, preservado no novo institucional do Clube Rincao.`
-      : "Arquivo centralizado do mural legado preservado no novo institucional do Clube Rincao.",
+      ? `Arquivo do mural legado para o slug ${requestedSlug}, preservado no novo institucional do Estancia.`
+      : "Arquivo centralizado do mural legado preservado no novo institucional do Estancia.",
     alternates: {
       canonical: requestedSlug ? `/mural/${requestedSlug}` : "/mural",
     },

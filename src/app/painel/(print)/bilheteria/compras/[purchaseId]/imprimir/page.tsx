@@ -10,7 +10,7 @@ import { requirePainelAccess } from "@/lib/painel-session";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Painel - Impressao QR da compra | Clube Rincao",
+  title: "Painel - Impressao QR da compra | Estancia",
   robots: {
     index: false,
     follow: false,

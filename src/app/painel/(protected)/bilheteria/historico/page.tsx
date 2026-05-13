@@ -17,7 +17,7 @@ import { readPainelBilheteriaFlashState } from "@/lib/painel-bilheteria-page";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Historico de Vendas | Clube Rincao",
+  title: "Painel - Historico de Vendas | Estancia",
   robots: {
     index: false,
     follow: false,

@@ -8,9 +8,9 @@ import {
 } from "@/lib/customer-area";
 
 export const metadata: Metadata = {
-  title: "Area do Cliente - Entrar | Clube Rincao",
+  title: "Area do Cliente - Entrar | Estancia",
   description:
-    "Entre na nova area do cliente do Clube Rincao para consultar sessao, compras e vouchers pelo BFF da migracao.",
+    "Entre na nova area do cliente do Estancia para consultar sessao, compras e vouchers pelo BFF da migracao.",
   alternates: {
     canonical: "/login",
   },

@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
 const data = {
   filters: {
     code: "ABC123",
-    query: "Rincao",
+    query: "Estancia",
     typeId: 4,
     status: "abe",
     fromDate: "2026-05-01",

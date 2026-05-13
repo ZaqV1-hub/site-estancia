@@ -72,7 +72,7 @@ function getPasswordResetConfig(): PasswordResetConfig {
 }
 
 function buildResetSubject() {
-  return "Clube Rincao - Recuperacao de Senha";
+  return "Estancia - Recuperacao de Senha";
 }
 
 function generateResetTicket() {

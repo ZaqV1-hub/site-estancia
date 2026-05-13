@@ -4,7 +4,7 @@ import { PainelBilheteriaSalesBuilder } from "@/components/painel-bilheteria-sal
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Vendas da Bilheteria | Clube Rincao",
+  title: "Painel - Vendas da Bilheteria | Estancia",
   robots: {
     index: false,
     follow: false,

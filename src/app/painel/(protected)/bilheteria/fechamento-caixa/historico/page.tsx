@@ -5,7 +5,7 @@ import { listBilheteriaCashClosureHistory } from "@/lib/bilheteria-cash-data";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Historico de Fechamentos | Clube Rincao",
+  title: "Painel - Historico de Fechamentos | Estancia",
   robots: {
     index: false,
     follow: false,

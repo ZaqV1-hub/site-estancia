@@ -4,7 +4,7 @@ import { listPainelInformacoes } from "@/lib/painel-informacoes";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Informacoes | Clube Rincao",
+  title: "Painel - Informacoes | Estancia",
   robots: {
     index: false,
     follow: false,

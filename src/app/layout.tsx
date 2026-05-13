@@ -17,22 +17,22 @@ const varelaRound = Varela_Round({
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: "Clube e Park Rincao - Pousada e Lazer em Sao Paulo",
+  title: "Estancia em Sao Paulo",
   description:
-    "Novo institucional do Clube Rincao em Next.js, com paginas publicas, segmentos de atendimento e convivencia inicial com o dominio transacional `/ingresso`.",
+    "Novo institucional do Estancia em Next.js, com paginas publicas, segmentos de atendimento e convivencia inicial com o dominio transacional `/ingresso`.",
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "Clube e Park Rincao - Pousada e Lazer em Sao Paulo",
+    title: "Estancia em Sao Paulo",
     description:
-      "Conheca o novo institucional do Clube Rincao, com estrutura, segmentos e canais de atendimento.",
-    siteName: "Clube e Park Rincao - Pousada e Lazer",
+      "Conheca o novo institucional do Estancia, com estrutura, segmentos e canais de atendimento.",
+    siteName: "Estancia",
     type: "website",
     images: [
       {
         url: "/photos/day-use.jpg",
-        alt: "Area verde do Clube Rincao",
+        alt: "Area verde do Estancia",
       },
     ],
   },

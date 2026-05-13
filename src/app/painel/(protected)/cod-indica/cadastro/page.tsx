@@ -3,7 +3,7 @@ import { PainelCodIndicaFormPage } from "@/components/painel-cod-indica-form-pag
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Cadastro Cod Indica | Clube Rincao",
+  title: "Painel - Cadastro Cod Indica | Estancia",
   robots: { index: false, follow: false },
 };
 

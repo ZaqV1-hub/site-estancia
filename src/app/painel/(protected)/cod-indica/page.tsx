@@ -4,7 +4,7 @@ import { listPainelCodIndica } from "@/lib/painel-cod-indica";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Cod Indica | Clube Rincao",
+  title: "Painel - Cod Indica | Estancia",
   robots: { index: false, follow: false },
 };
 

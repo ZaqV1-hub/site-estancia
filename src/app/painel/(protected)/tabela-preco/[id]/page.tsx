@@ -4,7 +4,7 @@ import { getPainelTabelaPreco } from "@/lib/painel-tabela-preco";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Detalhe Tabela de Preco | Clube Rincao",
+  title: "Painel - Detalhe Tabela de Preco | Estancia",
   robots: {
     index: false,
     follow: false,

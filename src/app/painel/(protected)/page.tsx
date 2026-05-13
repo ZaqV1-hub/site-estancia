@@ -4,7 +4,7 @@ import { loadPainelHomePageData } from "@/lib/painel-home";
 import { requirePainelSession } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Home | Clube Rincao",
+  title: "Painel - Home | Estancia",
   robots: {
     index: false,
     follow: false,

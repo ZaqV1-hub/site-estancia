@@ -3,7 +3,7 @@ import { PainelUsuarioFormPage } from "@/components/painel-usuario-form-page";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Adicionar Usuario | Clube Rincao",
+  title: "Painel - Adicionar Usuario | Estancia",
   robots: {
     index: false,
     follow: false,

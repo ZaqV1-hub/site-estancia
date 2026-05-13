@@ -214,7 +214,7 @@ export function PainelShell({
 
         <footer className="mt-8 shrink-0 bg-[linear-gradient(180deg,#3b97db_0%,#205a7f_100%)] px-4 py-4 text-white">
           <div className="mx-auto max-w-[1540px] text-sm font-semibold uppercase tracking-[0.08em]">
-            Clube e Park Rincão
+            Estancia
           </div>
         </footer>
       </div>

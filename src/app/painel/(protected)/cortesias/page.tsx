@@ -4,7 +4,7 @@ import { listPainelCortesias } from "@/lib/painel-cortesias";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Cortesias | Clube Rincao",
+  title: "Painel - Cortesias | Estancia",
   robots: { index: false, follow: false },
 };
 

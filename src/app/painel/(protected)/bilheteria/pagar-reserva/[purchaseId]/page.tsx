@@ -6,7 +6,7 @@ import { getPainelBilheteriaPurchaseDetail } from "@/lib/painel-bilheteria";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Pagar Reserva | Clube Rincao",
+  title: "Painel - Pagar Reserva | Estancia",
   robots: {
     index: false,
     follow: false,

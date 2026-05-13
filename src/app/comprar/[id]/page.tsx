@@ -12,9 +12,9 @@ import { requireAuthenticatedCustomer } from "@/lib/customer-area";
 import { getPurchaseAgendaContext } from "@/lib/purchase-repository";
 
 export const metadata: Metadata = {
-  title: "Comprar Ingressos | Clube Rincao",
+  title: "Comprar Ingressos | Estancia",
   description:
-    "Compra online de ingressos do Clube Rincao com checkout seguro.",
+    "Compra online de ingressos do Estancia com checkout seguro.",
 };
 
 export const dynamic = "force-dynamic";

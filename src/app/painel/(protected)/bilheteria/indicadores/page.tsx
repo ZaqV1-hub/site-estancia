@@ -4,7 +4,7 @@ import { getPainelBilheteriaIndicators } from "@/lib/painel-bilheteria";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Indicadores da Bilheteria | Clube Rincao",
+  title: "Painel - Indicadores da Bilheteria | Estancia",
   robots: {
     index: false,
     follow: false,

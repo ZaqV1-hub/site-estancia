@@ -4,7 +4,7 @@ import { getBilheteriaCashFundSummary } from "@/lib/bilheteria-cash-data";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Fundo de Caixa | Clube Rincao",
+  title: "Painel - Fundo de Caixa | Estancia",
   robots: {
     index: false,
     follow: false,

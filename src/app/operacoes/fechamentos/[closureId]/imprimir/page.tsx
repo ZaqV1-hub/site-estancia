@@ -11,7 +11,7 @@ type PageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Impressao de Fechamento | Clube Rincao",
+  title: "Impressao de Fechamento | Estancia",
   robots: {
     index: false,
     follow: false,

@@ -1,0 +1,778 @@
+import { getIngressoDbPool } from "@/lib/ingresso-db";
+import {
+  buildTicketsApiHeaders,
+  getTicketsApiBaseUrl,
+} from "@/lib/ticket-api";
+
+type TicketServiceConfig = {
+  baseUrl: string;
+  username: string;
+  password: string;
+  testing: boolean;
+  timeoutMs: number;
+};
+
+type ConfirmedPurchaseRow = {
+  idcompra: number;
+  cpf: string | null;
+  tpcompra: string | null;
+  dtcompra: string | null;
+  email: string | null;
+  nmusuario: string | null;
+  celular: string | null;
+};
+
+type VoucherTicketRow = {
+  idvoucher: number;
+  numvoucher: string | null;
+  tpvoucher: string | null;
+  vlunicompra: string | null;
+  stusado: string | null;
+  voucherenviado: string | null;
+  identificacao: string | null;
+  idagenda: number | null;
+  dtagenda: string | null;
+};
+
+type VoucherCpfSource = {
+  identificacao: string | null;
+};
+
+type VoucherCodeSource = {
+  numvoucher: string | null;
+  tpvoucher: string | null;
+};
+
+type TicketSendResult = {
+  status: "sent" | "skipped";
+  purchaseId: number;
+  sentVoucherIds: number[];
+  skippedReason?: string;
+};
+
+type TicketWhatsappSendResult = {
+  status: "sent" | "skipped";
+  purchaseId: number;
+  sentVoucherIds: number[];
+  skippedReason?: string;
+};
+
+export type TicketValidationAction = "validate" | "unvalidate" | "invalidate";
+
+type TicketValidationPair = {
+  purchaseId: number;
+  voucherId: number;
+};
+
+type TicketValidationVoucherRow = {
+  idcompra: number;
+  idvoucher: number;
+  numvoucher: string | null;
+  tpvoucher: string | null;
+  vlunicompra: string | null;
+  identificacao: string | null;
+  dtagenda: string | null;
+  cpf: string | null;
+  tpcompra: string | null;
+  dtcompra: string | null;
+  celular: string | null;
+};
+
+type TicketValidationSyncResult = {
+  status: "sent" | "skipped";
+  action: TicketValidationAction;
+  pairs: string[];
+  skippedReason?: string;
+};
+
+const voucherTypeLabels: Record<string, string> = {
+  norma: "a partir de 10 anos",
+  infan: "de 4 a 9 anos",
+  isent: "de 0 a 3 anos",
+  escol: "Escola",
+  corte: "Cortesia",
+  espec: "Especial",
+};
+
+function getConfig(): TicketServiceConfig | null {
+  const baseUrl = process.env.INGRESSO_TICKET_API_BASE_URL?.trim() ?? "";
+  const username = process.env.INGRESSO_TICKET_API_USERNAME?.trim() ?? "";
+  const password = process.env.INGRESSO_TICKET_API_PASSWORD?.trim() ?? "";
+  const timeoutMs = Number(process.env.INGRESSO_TICKET_API_TIMEOUT_MS ?? 25000);
+  const testing = process.env.INGRESSO_TICKET_API_TESTING === "true";
+
+  if (baseUrl && username && password) {
+    return {
+      baseUrl: baseUrl.replace(/\/+$/, ""),
+      username,
+      password,
+      testing,
+      timeoutMs,
+    };
+  }
+
+  if (
+    process.env.NODE_ENV === "development" &&
+    !baseUrl &&
+    !username &&
+    !password
+  ) {
+    return {
+      baseUrl: "http://127.0.0.1:4120",
+      username: "local-ticket-user",
+      password: "local-ticket-pass",
+      testing: true,
+      timeoutMs,
+    };
+  }
+
+  return null;
+}
+
+export function isTicketServiceConfigured() {
+  return getConfig() !== null;
+}
+
+function resolveLocalTestingBaseUrl(baseUrl: string) {
+  try {
+    const url = new URL(baseUrl);
+
+    if (url.hostname !== "ticket-stub" && url.hostname !== "localhost") {
+      return null;
+    }
+
+    url.hostname = "127.0.0.1";
+    return url.toString().replace(/\/+$/, "");
+  } catch {
+    return null;
+  }
+}
+
+function resolveTicketServiceBaseUrls(config: TicketServiceConfig) {
+  const baseUrls = [config.baseUrl];
+
+  if (!config.testing) {
+    return baseUrls;
+  }
+
+  const localTestingBaseUrl = resolveLocalTestingBaseUrl(config.baseUrl);
+
+  if (localTestingBaseUrl && localTestingBaseUrl !== config.baseUrl) {
+    baseUrls.push(localTestingBaseUrl);
+  }
+
+  if (!baseUrls.includes("http://127.0.0.1:4120")) {
+    baseUrls.push("http://127.0.0.1:4120");
+  }
+
+  return baseUrls;
+}
+
+function isRetryableTicketServiceError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const causeCode =
+    error.cause && typeof error.cause === "object" && "code" in error.cause
+      ? String((error.cause as { code?: unknown }).code ?? "")
+      : "";
+  const errorText = `${error.message} ${causeCode}`;
+
+  return /(fetch failed|ENOTFOUND|ECONNREFUSED|EAI_AGAIN|ECONNRESET)/i.test(
+    errorText,
+  );
+}
+
+function digitsOnly(value: string | null | undefined) {
+  return String(value ?? "").replace(/\D+/g, "");
+}
+
+function normalizeWhatsappNumbers(value: string | undefined) {
+  return String(value ?? "")
+    .split(",")
+    .map((entry) => digitsOnly(entry))
+    .filter(Boolean);
+}
+
+function validateWhatsappPhoneForEnvironment(phoneNumber: string) {
+  if (process.env.INGRESSO_TICKET_API_WHATSAPP_TESTING !== "true") {
+    return true;
+  }
+
+  const allowedNumbers = normalizeWhatsappNumbers(
+    process.env.INGRESSO_TICKET_API_WHATSAPP_ALLOWED_NUMBERS,
+  );
+
+  if (allowedNumbers.length === 0 || allowedNumbers.includes(phoneNumber)) {
+    return true;
+  }
+
+  return false;
+}
+
+function resolveVoucherCpf(compraCpf: string | null, voucher: VoucherCpfSource) {
+  const purchaseCpf = digitsOnly(compraCpf);
+
+  if (purchaseCpf.length === 11) {
+    return purchaseCpf;
+  }
+
+  const voucherCpf = digitsOnly(voucher.identificacao);
+
+  return voucherCpf.length === 11 ? voucherCpf : "";
+}
+
+function voucherPrefixForType(type: string | null) {
+  switch (type) {
+    case "norma":
+    case "corte":
+      return "A";
+    case "infan":
+      return "C";
+    case "isent":
+      return "I";
+    case "escol":
+      return "ESC-";
+    case "espec":
+      return "E";
+    default:
+      return "";
+  }
+}
+
+function normalizeVoucherCode(voucher: VoucherCodeSource) {
+  const code = String(voucher.numvoucher ?? "").trim();
+
+  if (!code || !/^\d+$/.test(code)) {
+    return code;
+  }
+
+  const prefix = voucherPrefixForType(voucher.tpvoucher);
+
+  return prefix && !code.startsWith(prefix) ? `${prefix}${code}` : code;
+}
+
+async function ticketRequest(
+  config: TicketServiceConfig,
+  path: string,
+  body: unknown,
+  token?: string,
+) {
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (config.testing) {
+    headers["X-Testing"] = "true";
+  }
+
+  const baseUrls = resolveTicketServiceBaseUrls(config);
+  let lastError: unknown = null;
+
+  for (const [index, baseUrl] of baseUrls.entries()) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
+
+    try {
+      const response = await fetch(`${baseUrl}${path}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`ticket_api_error_${response.status}`);
+      }
+
+      return response.json().catch(() => ({}));
+    } catch (error) {
+      lastError = error;
+
+      if (
+        index < baseUrls.length - 1 &&
+        isRetryableTicketServiceError(error)
+      ) {
+        continue;
+      }
+
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("ticket_api_unreachable");
+}
+
+async function websiteTicketRequest(path: string, body: unknown) {
+  const baseUrl = getTicketsApiBaseUrl();
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: "POST",
+    headers: buildTicketsApiHeaders(),
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`ticket_api_error_${response.status}`);
+  }
+
+  return response.json().catch(() => ({}));
+}
+
+async function authenticate(config: TicketServiceConfig) {
+  const response = await ticketRequest(config, "/login", {
+    user: config.username,
+    password: config.password,
+  });
+  const token =
+    response && typeof response === "object"
+      ? (response as Record<string, unknown>).token
+      : null;
+
+  return typeof token === "string" && token ? token : null;
+}
+
+async function loadTicketValidationVoucher(
+  purchaseId: number,
+  voucherId: number,
+) {
+  const pool = getIngressoDbPool();
+  const result = await pool.query<TicketValidationVoucherRow>(
+    `
+      SELECT
+        voucher.idcompra,
+        voucher.idvoucher,
+        voucher.numvoucher,
+        voucher.tpvoucher,
+        voucher.vlunicompra::text AS vlunicompra,
+        voucher.identificacao,
+        agenda.dtagenda::text AS dtagenda,
+        compra.cpf,
+        compra.tpcompra,
+        compra.dtcompra::text AS dtcompra,
+        usuario.celular
+      FROM voucher
+      JOIN compra ON compra.idcompra = voucher.idcompra
+      LEFT JOIN agenda ON agenda.idagenda = voucher.idagenda
+      LEFT JOIN usuario ON usuario.cpf = compra.cpf
+      WHERE voucher.idcompra = $1
+        AND voucher.idvoucher = $2
+      LIMIT 1
+    `,
+    [purchaseId, voucherId],
+  );
+
+  return result.rows[0] ?? null;
+}
+
+function buildValidationTicketPayload(voucher: TicketValidationVoucherRow) {
+  return {
+    purchaseId: String(voucher.idcompra),
+    voucherId: String(voucher.idvoucher),
+    voucherCode: normalizeVoucherCode(voucher),
+    numvoucher: String(voucher.numvoucher ?? ""),
+    cpf: resolveVoucherCpf(voucher.cpf, voucher),
+    cellphone: String(voucher.celular ?? ""),
+    type: String(voucher.tpvoucher ?? ""),
+    typeLabel:
+      voucherTypeLabels[String(voucher.tpvoucher ?? "")] ??
+      String(voucher.tpvoucher ?? ""),
+    purchaseLocation: voucher.tpcompra === "ponli" ? "Online" : "Bilheteria",
+    purchaseDate: String(voucher.dtcompra ?? ""),
+    price: String(voucher.vlunicompra ?? ""),
+    tpcompra: String(voucher.tpcompra ?? ""),
+    dtAgenda: String(voucher.dtagenda ?? ""),
+  };
+}
+
+async function loadConfirmedPurchase(purchaseId: number) {
+  const pool = getIngressoDbPool();
+  const purchase = await pool.query<ConfirmedPurchaseRow>(
+    `
+      SELECT
+        compra.idcompra,
+        compra.cpf,
+        compra.tpcompra,
+        compra.dtcompra::text AS dtcompra,
+        usuario.email,
+        usuario.nmusuario,
+        usuario.celular
+      FROM compra
+      LEFT JOIN usuario ON usuario.cpf = compra.cpf
+      WHERE compra.idcompra = $1
+        AND compra.stcompra = 'conc'
+      LIMIT 1
+    `,
+    [purchaseId],
+  );
+
+  return purchase.rows[0] ?? null;
+}
+
+async function loadPendingTicketVouchers(purchaseId: number) {
+  const pool = getIngressoDbPool();
+  const vouchers = await pool.query<VoucherTicketRow>(
+    `
+      SELECT
+        voucher.idvoucher,
+        voucher.numvoucher,
+        voucher.tpvoucher,
+        voucher.vlunicompra::text AS vlunicompra,
+        voucher.stusado,
+        voucher.voucherenviado,
+        voucher.identificacao,
+        voucher.idagenda,
+        agenda.dtagenda::text AS dtagenda
+      FROM voucher
+      LEFT JOIN agenda ON agenda.idagenda = voucher.idagenda
+      WHERE voucher.idcompra = $1
+        AND voucher.stusado NOT IN ('s', 'inv')
+        AND voucher.voucherenviado <> 's'
+      ORDER BY voucher.idvoucher ASC
+    `,
+    [purchaseId],
+  );
+
+  return vouchers.rows;
+}
+
+async function loadSelectedTicketVouchers(
+  purchaseId: number,
+  voucherIds: number[],
+) {
+  if (voucherIds.length === 0) {
+    return [];
+  }
+
+  const pool = getIngressoDbPool();
+  const vouchers = await pool.query<VoucherTicketRow>(
+    `
+      SELECT
+        voucher.idvoucher,
+        voucher.numvoucher,
+        voucher.tpvoucher,
+        voucher.vlunicompra::text AS vlunicompra,
+        voucher.stusado,
+        voucher.voucherenviado,
+        voucher.identificacao,
+        voucher.idagenda,
+        agenda.dtagenda::text AS dtagenda
+      FROM voucher
+      LEFT JOIN agenda ON agenda.idagenda = voucher.idagenda
+      WHERE voucher.idcompra = $1
+        AND voucher.idvoucher = ANY($2::int[])
+        AND voucher.stusado NOT IN ('s', 'inv')
+      ORDER BY voucher.idvoucher ASC
+    `,
+    [purchaseId, voucherIds],
+  );
+
+  return vouchers.rows;
+}
+
+async function markVouchersSent(voucherIds: number[]) {
+  if (voucherIds.length === 0) {
+    return;
+  }
+
+  const pool = getIngressoDbPool();
+
+  await pool.query(
+    `
+      UPDATE voucher
+      SET voucherenviado = 's'
+      WHERE idvoucher = ANY($1::int[])
+    `,
+    [voucherIds],
+  );
+}
+
+function buildTicketPayload(
+  purchase: ConfirmedPurchaseRow,
+  vouchers: VoucherTicketRow[],
+) {
+  const purchaseLocation =
+    purchase.tpcompra === "ponli" ? "Online" : "Bilheteria";
+
+  return vouchers.map((voucher) => ({
+    purchaseId: String(purchase.idcompra),
+    voucherId: String(voucher.idvoucher),
+    voucherCode: normalizeVoucherCode(voucher),
+    numvoucher: String(voucher.numvoucher ?? ""),
+    cpf: resolveVoucherCpf(purchase.cpf, voucher),
+    cellphone: String(purchase.celular ?? ""),
+    type: String(voucher.tpvoucher ?? ""),
+    typeLabel:
+      voucherTypeLabels[String(voucher.tpvoucher ?? "")] ??
+      String(voucher.tpvoucher ?? ""),
+    purchaseLocation,
+    purchaseDate: String(purchase.dtcompra ?? ""),
+    price: String(voucher.vlunicompra ?? ""),
+    tpcompra: String(purchase.tpcompra ?? ""),
+    dtAgenda: String(voucher.dtagenda ?? ""),
+  }));
+}
+
+export async function processConfirmedPurchaseTickets(
+  purchaseId: number,
+): Promise<TicketSendResult> {
+  const config = getConfig();
+
+  if (!config) {
+    return {
+      status: "skipped",
+      purchaseId,
+      sentVoucherIds: [],
+      skippedReason: "ticket_service_not_configured",
+    };
+  }
+
+  const purchase = await loadConfirmedPurchase(purchaseId);
+
+  if (!purchase) {
+    return {
+      status: "skipped",
+      purchaseId,
+      sentVoucherIds: [],
+      skippedReason: "purchase_not_confirmed",
+    };
+  }
+
+  const vouchers = await loadPendingTicketVouchers(purchaseId);
+
+  if (vouchers.length === 0) {
+    return {
+      status: "skipped",
+      purchaseId,
+      sentVoucherIds: [],
+      skippedReason: "no_pending_vouchers",
+    };
+  }
+
+  const token = await authenticate(config);
+
+  if (!token) {
+    return {
+      status: "skipped",
+      purchaseId,
+      sentVoucherIds: [],
+      skippedReason: "ticket_auth_failed",
+    };
+  }
+
+  const regularVouchers = vouchers.filter((voucher) => voucher.tpvoucher !== "escol");
+  const schoolVouchers = vouchers.filter((voucher) => voucher.tpvoucher === "escol");
+  const sentVoucherIds: number[] = [];
+
+  if (regularVouchers.length > 0) {
+    await ticketRequest(
+      config,
+      "/generate-and-send-tickets",
+      {
+        vouchers: buildTicketPayload(purchase, regularVouchers),
+        email: purchase.email,
+        nmusuario: purchase.nmusuario,
+      },
+      token,
+    );
+    sentVoucherIds.push(...regularVouchers.map((voucher) => voucher.idvoucher));
+  }
+
+  for (const voucher of schoolVouchers) {
+    await ticketRequest(
+      config,
+      "/send-school-ticket-message",
+      {
+        email: purchase.email,
+        cellphone: purchase.celular,
+      },
+      token,
+    );
+    sentVoucherIds.push(voucher.idvoucher);
+  }
+
+  await markVouchersSent(sentVoucherIds);
+
+  return {
+    status: "sent",
+    purchaseId,
+    sentVoucherIds,
+  };
+}
+
+export async function sendPurchaseTicketsWhatsApp(
+  purchaseId: number,
+  voucherIds: number[],
+  phoneNumber: string,
+): Promise<TicketWhatsappSendResult> {
+  const normalizedPhone = digitsOnly(phoneNumber);
+
+  if (normalizedPhone.length < 11) {
+    return {
+      status: "skipped",
+      purchaseId,
+      sentVoucherIds: [],
+      skippedReason: "invalid_phone_number",
+    };
+  }
+
+  if (!validateWhatsappPhoneForEnvironment(normalizedPhone)) {
+    return {
+      status: "skipped",
+      purchaseId,
+      sentVoucherIds: [],
+      skippedReason: "phone_not_allowed_for_testing",
+    };
+  }
+
+  const purchase = await loadConfirmedPurchase(purchaseId);
+
+  if (!purchase) {
+    return {
+      status: "skipped",
+      purchaseId,
+      sentVoucherIds: [],
+      skippedReason: "purchase_not_confirmed",
+    };
+  }
+
+  const selectedVoucherIds = Array.from(
+    new Set(
+      voucherIds.filter(
+        (voucherId) => Number.isInteger(voucherId) && voucherId > 0,
+      ),
+    ),
+  );
+  const vouchers = await loadSelectedTicketVouchers(purchaseId, selectedVoucherIds);
+
+  if (vouchers.length === 0) {
+    return {
+      status: "skipped",
+      purchaseId,
+      sentVoucherIds: [],
+      skippedReason: "no_selected_vouchers",
+    };
+  }
+
+  await websiteTicketRequest(
+    "/website/tickets/send",
+    {
+      phoneNumber: normalizedPhone,
+      vouchers: buildTicketPayload(purchase, vouchers),
+    },
+  );
+
+  return {
+    status: "sent",
+    purchaseId,
+    sentVoucherIds: vouchers.map((voucher) => voucher.idvoucher),
+  };
+}
+
+export async function syncTicketValidation(
+  pairs: TicketValidationPair[],
+  action: TicketValidationAction,
+): Promise<TicketValidationSyncResult> {
+  const normalizedPairs = Array.from(
+    new Set(
+      pairs
+        .filter(
+          (pair) =>
+            Number.isInteger(pair.purchaseId) &&
+            pair.purchaseId > 0 &&
+            Number.isInteger(pair.voucherId) &&
+            pair.voucherId > 0,
+        )
+        .map((pair) => `${pair.purchaseId}-${pair.voucherId}`),
+    ),
+  ).map((pair) => {
+    const [purchaseId, voucherId] = pair.split("-").map(Number);
+
+    return { purchaseId, voucherId };
+  });
+
+  if (normalizedPairs.length === 0) {
+    return {
+      status: "skipped",
+      action,
+      pairs: [],
+      skippedReason: "no_ticket_pairs",
+    };
+  }
+
+  const config = getConfig();
+
+  if (!config) {
+    return {
+      status: "skipped",
+      action,
+      pairs: normalizedPairs.map(
+        (pair) => `${pair.purchaseId}-${pair.voucherId}`,
+      ),
+      skippedReason: "ticket_service_not_configured",
+    };
+  }
+
+  const token = await authenticate(config);
+
+  if (!token) {
+    return {
+      status: "skipped",
+      action,
+      pairs: normalizedPairs.map(
+        (pair) => `${pair.purchaseId}-${pair.voucherId}`,
+      ),
+      skippedReason: "ticket_auth_failed",
+    };
+  }
+
+  for (const pair of normalizedPairs) {
+    const payload: Record<string, unknown> = {
+      id: `${pair.purchaseId}-${pair.voucherId}`,
+      action,
+    };
+
+    if (config.testing) {
+      payload.isTesting = "true";
+    }
+
+    if (action === "validate") {
+      const voucher = await loadTicketValidationVoucher(
+        pair.purchaseId,
+        pair.voucherId,
+      );
+
+      if (!voucher) {
+        return {
+          status: "skipped",
+          action,
+          pairs: normalizedPairs.map(
+            (currentPair) => `${currentPair.purchaseId}-${currentPair.voucherId}`,
+          ),
+          skippedReason: "ticket_validation_payload_missing",
+        };
+      }
+
+      payload.ticket = buildValidationTicketPayload(voucher);
+    }
+
+    await ticketRequest(config, "/tickets/validate", payload, token);
+  }
+
+  return {
+    status: "sent",
+    action,
+    pairs: normalizedPairs.map(
+      (pair) => `${pair.purchaseId}-${pair.voucherId}`,
+    ),
+  };
+}

@@ -169,46 +169,43 @@ export function BilheteriaCashClosurePage({
         ]}
       />
 
-      <section className="grid gap-6 rounded-[6px] bg-[#f4f8fc] p-6 shadow-[0_12px_34px_rgba(31,67,98,0.08)] print:bg-white print:p-0 print:shadow-none">
+      <section className="panel-section grid gap-5 p-5 print:bg-white print:p-0 print:shadow-none">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="legacy-condensed text-5xl text-[#205a7f]">
-              FECHAMENTO DE CAIXA
+            <p className="panel-eyebrow">Caixa</p>
+            <h1 className="text-[28px] font-black leading-tight text-[#17351f]">
+              Fechamento de caixa
             </h1>
-            {isHistorical ? (
-              <p className="mt-2 text-sm leading-6 text-[#5f7387]">
-                Visualizacao historica do fechamento salvo.
-              </p>
-            ) : null}
+            {isHistorical ? <p className="mt-1 text-sm text-[#5a6b5d]">Historico salvo</p> : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             {isManager ? (
               <>
                 <Link
-                  className="rounded-[4px] border border-[#b8cade] bg-white px-4 py-2.5 text-sm font-bold text-[#205a7f] shadow-[0_3px_0_rgba(0,0,0,0.12)]"
+                  className="panel-button-secondary"
                   href="/painel/bilheteria/fechamento-caixa/historico"
                 >
-                  Ver historico de fechamentos
+                  Historico
                 </Link>
                 <Link
-                  className="rounded-[4px] border border-[#b8cade] bg-white px-4 py-2.5 text-sm font-bold text-[#205a7f] shadow-[0_3px_0_rgba(0,0,0,0.12)]"
+                  className="panel-button-secondary"
                   href={
                     closureId
                       ? `/painel/bilheteria/fechamento-caixa/edicoes?fechamento_id=${closureId}`
                       : "/painel/bilheteria/fechamento-caixa/edicoes"
                   }
                 >
-                  Ver edicoes
+                  Edicoes
                 </Link>
               </>
             ) : null}
-            <div className="inline-flex rounded-[4px] border border-[#c7dced] bg-[#e7f1fa] p-1">
+            <div className="inline-flex rounded-[8px] border border-[#dbe7d7] bg-[#f6faf3] p-1">
               <button
-                className={`rounded-[4px] px-4 py-2 text-sm font-bold ${
+                className={`rounded-[6px] px-4 py-2 text-sm font-bold ${
                   activeTab === "resumo"
-                    ? "bg-white text-[#205a7f] shadow-[0_8px_16px_rgba(30,89,136,0.12)]"
-                    : "text-[#436b8b]"
+                    ? "bg-[#2b8c46] text-white"
+                    : "text-[#426048]"
                 }`}
                 onClick={() => setActiveTab("resumo")}
                 type="button"
@@ -216,10 +213,10 @@ export function BilheteriaCashClosurePage({
                 Resumo
               </button>
               <button
-                className={`rounded-[4px] px-4 py-2 text-sm font-bold ${
+                className={`rounded-[6px] px-4 py-2 text-sm font-bold ${
                   activeTab === "detalhado"
-                    ? "bg-white text-[#205a7f] shadow-[0_8px_16px_rgba(30,89,136,0.12)]"
-                    : "text-[#436b8b]"
+                    ? "bg-[#2b8c46] text-white"
+                    : "text-[#426048]"
                 }`}
                 onClick={() => setActiveTab("detalhado")}
                 type="button"
@@ -242,7 +239,7 @@ export function BilheteriaCashClosurePage({
           </div>
         ) : null}
 
-        <div className="border border-[#b8e2ef] bg-[linear-gradient(90deg,#d8f2fa_0%,#ebf8ff_100%)] px-4 py-4 text-sm text-[#1b5f80]">
+        <div className="rounded-[8px] border border-[#dbe7d7] bg-[#f6faf3] px-4 py-3 text-sm text-[#314c36]">
           <strong className="block text-xs uppercase tracking-[0.06em]">
             Periodo considerado
           </strong>
@@ -251,7 +248,7 @@ export function BilheteriaCashClosurePage({
         </div>
 
         <div className="grid gap-4 xl:grid-cols-4">
-          <article className="overflow-hidden rounded-[6px] border border-[#d8e3ef] bg-white p-5 shadow-[0_8px_22px_rgba(36,76,114,0.08)]">
+          <article className="overflow-hidden rounded-[8px] border border-[#dbe7d7] bg-white p-5 shadow-none">
             <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#5f7387]">
               Publico
             </span>

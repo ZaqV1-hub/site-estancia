@@ -472,7 +472,7 @@
         $container.empty();
 
         var methodsHtml = this._buildMethodsMarkup();
-        var logoHtml = this.config.logoUrl ? '<img class="cielo-header__logo" src="' + this.config.logoUrl + '" alt="Clube Rincão">' : '';
+        var logoHtml = this.config.logoUrl ? '<img class="cielo-header__logo" src="' + this.config.logoUrl + '" alt="Estância e Parque Ecológico das Águas">' : '';
         var brandOptions = this._buildBrandOptions();
 
         var html = '' +
@@ -481,7 +481,7 @@
                     '<div class="cielo-header">' +
                         logoHtml +
                         '<div>' +
-                            '<p class="cielo-checkout__title">Checkout de Pagamento - Clube Rincão</p>' +
+                            '<p class="cielo-checkout__title">Checkout de Pagamento - Estância</p>' +
                             '<p class="cielo-checkout__order">ID da compra: <strong id="cieloOrderId">-</strong></p>' +
                         '</div>' +
                     '</div>' +
@@ -577,9 +577,9 @@
                 '.cielo-section__note{font-size:12px;color:#8f8fa0;margin:8px 0 0;}' +
                 '.cielo-methods{display:flex;flex-wrap:wrap;gap:12px;}' +
                 '.cielo-method{display:flex;align-items:center;gap:14px;border:1px solid #d5d5e5;border-radius:50px;padding:12px 18px;background:#f4f4f9;cursor:pointer;transition:all .15s;text-decoration:none;min-width:180px;flex:1 1 180px;}' +
-                '.cielo-method.is-active{border-color:#6f7dff;background:#edf0ff;box-shadow:0 6px 15px rgba(109,125,255,.25);}' +
+                '.cielo-method.is-active{border-color:#2b8c46;background:#eef8ed;box-shadow:0 6px 15px rgba(43,140,70,.22);}' +
                 '.cielo-method input{position:absolute;opacity:0;pointer-events:none;}' +
-                '.cielo-method__icon{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6f7dff,#8cc4ff);display:inline-block;position:relative;flex-shrink:0;}' +
+                '.cielo-method__icon{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#2b8c46,#7bc043);display:inline-block;position:relative;flex-shrink:0;}' +
                 '.cielo-method__icon:after{content:"";position:absolute;top:12px;left:8px;right:8px;bottom:14px;border-radius:6px;background:#fff;}' +
                 '.cielo-method--pix .cielo-method__icon{background:linear-gradient(135deg,#22c55e,#4ade80);}' +
                 '.cielo-method__texts strong{display:block;font-size:15px;color:#1b1c32;}' +
@@ -606,7 +606,7 @@
                 '.cielo-checkout__summary ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}' +
                 '.cielo-checkout__summary li{display:flex;justify-content:space-between;font-size:14px;color:#5b5c68;border-bottom:1px solid #dedee8;padding-bottom:6px;}' +
                 '.cielo-checkout__summary li strong{color:#12121f;}' +
-                '#cieloPrimaryAction{border:0;border-radius:999px;padding:13px 18px;font-size:15px;font-weight:600;background:#4f63ff;color:#fff;cursor:pointer;transition:.15s;margin-top:auto;}' +
+                '#cieloPrimaryAction{border:0;border-radius:999px;padding:13px 18px;font-size:15px;font-weight:600;background:#2b8c46;color:#fff;cursor:pointer;transition:.15s;margin-top:auto;}' +
                 '#cieloPrimaryAction:disabled{opacity:.6;cursor:not-allowed;}' +
                 '#cieloSecondaryAction{border:0;border-radius:999px;padding:13px 18px;font-size:15px;font-weight:600;background:#d4d4da;color:#4a4a57;cursor:pointer;}' +
                 '.cielo-pix-result__content{border:1px solid #dbeafe;border-radius:16px;padding:16px;background:#fff;}' +

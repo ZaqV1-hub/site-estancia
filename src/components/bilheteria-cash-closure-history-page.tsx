@@ -43,17 +43,15 @@ export function BilheteriaCashClosureHistoryPage({
         ]}
       />
 
-      <section className="grid gap-5 rounded-[6px] bg-[#f4f8fc] p-6 shadow-[0_12px_34px_rgba(31,67,98,0.08)]">
+      <section className="panel-section grid gap-5 p-5">
         <div>
-          <h1 className="legacy-condensed text-5xl text-[#205a7f]">
-            HISTORICO DE FECHAMENTOS
+          <p className="panel-eyebrow">Caixa</p>
+          <h1 className="text-[28px] font-black leading-tight text-[#17351f]">
+            Historico de fechamentos
           </h1>
-          <p className="mt-2 text-sm leading-6 text-[#5f7387]">
-            Lista de fechamentos ja concluidos para consulta, revisao e reimpressao.
-          </p>
         </div>
 
-        <div className="overflow-hidden rounded-[6px] border border-[#d8e3ef] bg-white shadow-[0_10px_22px_rgba(29,70,109,0.06)]">
+        <div className="overflow-hidden rounded-[8px] border border-[#dbe7d7] bg-white shadow-none">
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-sm">
               <thead className="bg-[#5f84a3] text-left text-white">

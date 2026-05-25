@@ -19,6 +19,10 @@ export const runtime = "nodejs";
 type PurchaseBody = {
   agendaId?: unknown;
   codindica?: unknown;
+  lineItems?: Array<{
+    productId?: unknown;
+    quantity?: unknown;
+  }>;
   quantities?: {
     discountedNormal?: unknown;
     discountedChild?: unknown;
@@ -44,18 +48,46 @@ function parseRequestBody(body: PurchaseBody | null): CreatePurchaseRequest | nu
       : body?.codindica === undefined
         ? undefined
         : null;
+  if (!Number.isInteger(agendaId) || agendaId <= 0) {
+    return null;
+  }
+
+  if (codindica === null) {
+    return null;
+  }
+
+  if (Array.isArray(body?.lineItems)) {
+    const lineItems = body.lineItems.map((item) => {
+      const quantity = parseQuantity(item?.quantity);
+
+      if (typeof item?.productId !== "string" || quantity === null || quantity <= 0) {
+        return null;
+      }
+
+      return {
+        productId: item.productId,
+        quantity,
+      };
+    });
+
+    if (lineItems.length === 0 || lineItems.some((item) => item === null)) {
+      return null;
+    }
+
+    return {
+      agendaId,
+      codindica: codindica || undefined,
+      lineItems: lineItems as NonNullable<CreatePurchaseRequest["lineItems"]>,
+    };
+  }
+
   const discountedNormal = parseQuantity(body?.quantities?.discountedNormal);
   const discountedChild = parseQuantity(body?.quantities?.discountedChild);
   const normal = parseQuantity(body?.quantities?.normal);
   const child = parseQuantity(body?.quantities?.child);
   const exempt = parseQuantity(body?.quantities?.exempt);
 
-  if (!Number.isInteger(agendaId) || agendaId <= 0) {
-    return null;
-  }
-
   if (
-    codindica === null ||
     discountedNormal === null ||
     discountedChild === null ||
     normal === null ||
@@ -107,11 +139,22 @@ export async function POST(request: Request) {
 
   try {
     const user = auth.subject;
+    const selection = purchase.lineItems
+      ? { lineItems: purchase.lineItems }
+      : purchase.quantities;
+
+    if (!selection) {
+      return customerApiErrorResponse(
+        "invalid_purchase",
+        "Informe agenda e quantidades validas para continuar.",
+        400,
+      );
+    }
 
     const created = await createOnlinePurchase(
       user.cpf,
       purchase.agendaId,
-      purchase.quantities,
+      selection,
       purchase.codindica,
     );
 

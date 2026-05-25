@@ -1,5 +1,6 @@
 "use client";
 
+import { EstanciaLogo } from "@/components/estancia-logo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -14,22 +15,22 @@ type IngressoShellProps = {
 const navItems = [
   {
     key: "schedule" as const,
-    label: "AGENDAMENTO",
+    label: "Agendamento",
     href: "/agenda",
   },
   {
     key: "buy" as const,
-    label: "COMPRAR",
+    label: "Comprar",
     href: "/agenda",
   },
   {
     key: "tickets" as const,
-    label: "MEUS INGRESSOS",
+    label: "Meus ingressos",
     href: "/meus-ingressos",
   },
   {
     key: "account" as const,
-    label: "MEUS DADOS",
+    label: "Meus dados",
     href: "/minha-conta",
   },
 ];
@@ -58,67 +59,58 @@ export function IngressoShell({
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white text-[var(--brown-1)]">
-      <header className="relative bg-[linear-gradient(180deg,#3d97da_0%,#1a5c8c_100%)]">
-        <div className="mx-auto flex w-full max-w-[1920px] flex-col gap-4 px-4 pb-8 pt-5 md:px-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
-          <div className="flex items-start gap-6">
-            <Link href="/" className="shrink-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/brand/rincao-logo.png"
-                alt="Estancia"
-                width={340}
-                height={159}
-                className="h-auto w-[280px] md:w-[340px]"
-              />
-            </Link>
-
-            <nav className="hidden self-center lg:block">
-              <ul className="flex items-end gap-2 pt-5">
-                {navItems.map((item) => {
-                  const isActive =
-                    item.key === active ||
-                    (active === "auth" &&
-                      (item.key === "schedule" || item.key === "buy"));
-
-                  return (
-                    <li key={item.key}>
-                      <Link
-                        href={item.href}
-                        className={`legacy-condensed inline-flex min-h-[46px] items-center border-b-[3px] px-3 text-[18px] text-white transition ${
-                          isActive
-                            ? "border-white"
-                            : "border-white/45 hover:border-white/80"
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
+    <div className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f8f5ef_0%,#fbfaf7_32%,#ffffff_100%)] text-[#17312d]">
+      <header className="sticky top-0 z-40 border-b border-[rgba(35,73,63,0.08)] bg-white/95 shadow-[0_10px_30px_rgba(21,48,42,0.06)] backdrop-blur-md">
+        <div className="mx-auto grid min-h-[96px] w-[min(1240px,calc(100%-40px))] grid-cols-1 items-center gap-4 py-3 lg:grid-cols-[260px_1fr_260px]">
+          <div className="flex justify-center lg:justify-start">
+            <EstanciaLogo href="/" compact className="h-[62px] max-w-[260px]" />
           </div>
 
-          <div className="flex flex-col items-start gap-3 text-left text-white lg:items-end lg:pt-4 lg:text-right">
+          <nav className="order-3 justify-self-center lg:order-none">
+            <ul className="flex flex-wrap items-center justify-center gap-5 md:gap-8">
+              {navItems.map((item) => {
+                const isActive =
+                  item.key === active ||
+                  (active === "auth" &&
+                    (item.key === "schedule" || item.key === "buy"));
+
+                return (
+                  <li key={item.key}>
+                    <Link
+                      href={item.href}
+                      className={`relative py-1 text-[0.96rem] font-bold transition after:absolute after:bottom-[-4px] after:left-0 after:right-0 after:h-0.5 after:origin-center after:bg-current after:transition ${
+                        isActive
+                          ? "text-[#17342d] after:scale-x-100"
+                          : "text-[#5e746e] after:scale-x-0 hover:text-[#17342d] hover:after:scale-x-100"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          <div className="flex flex-col items-center gap-3 text-center lg:items-end lg:text-right">
             {user ? (
               <div className="flex flex-wrap items-center gap-3 text-[14px]">
-                <span className="legacy-rounded">{user.name}</span>
+                <span className="font-bold text-[#17351f]">{user.name}</span>
                 <button
                   type="button"
                   onClick={handleLogout}
                   disabled={logoutPending}
-                  className="underline underline-offset-2 disabled:opacity-60"
+                  className="text-[#426048] underline underline-offset-2 disabled:opacity-60"
                 >
                   {logoutPending ? "saindo..." : "deslogar"}
                 </button>
               </div>
             ) : (
               <div className="flex flex-wrap gap-3 text-[14px]">
-                <Link href="/login" className="underline underline-offset-2">
+                <Link href="/login" className="text-[#426048] underline underline-offset-2">
                   entrar
                 </Link>
-                <Link href="/cadastro" className="underline underline-offset-2">
+                <Link href="/cadastro" className="text-[#426048] underline underline-offset-2">
                   criar conta
                 </Link>
               </div>
@@ -126,29 +118,15 @@ export function IngressoShell({
 
             <Link
               href="/"
-              className="legacy-rounded inline-flex min-h-[42px] items-center justify-center rounded-full border border-white px-5 text-[14px] text-white hover:bg-white/10"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-full border border-[rgba(35,73,63,0.12)] bg-[rgba(35,73,63,0.04)] px-5 text-[14px] font-bold text-[#17342d] hover:bg-[#17342d] hover:text-white"
             >
               Voltar para o site
             </Link>
           </div>
         </div>
-
-        <div
-          aria-hidden
-          className="h-9 w-full bg-cover bg-left-top bg-no-repeat"
-          style={{ backgroundImage: "url('/theme/color-bar.png')" }}
-        />
       </header>
 
       <main className="pb-12">{children}</main>
-
-      <footer className="mt-8">
-        <div
-          aria-hidden
-          className="h-9 w-full bg-cover bg-left-top bg-no-repeat"
-          style={{ backgroundImage: "url('/theme/color-bar.png')" }}
-        />
-      </footer>
     </div>
   );
 }

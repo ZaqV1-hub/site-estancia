@@ -29,6 +29,7 @@ vi.mock("@/lib/payment-reconciliation", async () => {
 describe("checkout-status", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.NODE_ENV = "test";
   });
 
   it("maps paid gateway statuses to confirmed purchases", () => {
@@ -96,25 +97,27 @@ describe("checkout-status", () => {
     );
   });
 
-  it("returns checkout unavailable without legacy fallback when Cielo ecommerce is not configured", async () => {
+  it("returns local mock checkout status when Cielo ecommerce is not configured outside production", async () => {
     mocks.isCieloEcommerceConfigured.mockReturnValue(false);
     vi.stubGlobal("fetch", vi.fn());
 
     const { syncCheckoutStatus } = await import("@/lib/checkout-status");
     const result = await syncCheckoutStatus(
-      { id: 456 },
+      { id: 456, status: "pend" },
       new URLSearchParams("reference=456"),
     );
 
     expect(result).toMatchObject({
-      status: 503,
+      status: 200,
       contentType: "application/json; charset=UTF-8",
       body: {
-        ok: false,
-        error: {
-          code: "checkout_unavailable",
-          message: "Checkout nativo indisponivel neste ambiente.",
-        },
+        ok: true,
+        mock: true,
+        purchaseId: 456,
+      },
+      mapped: {
+        purchaseStatus: "pend",
+        gatewayStatus: 1,
       },
       reconciliation: null,
     });

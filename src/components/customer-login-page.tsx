@@ -1,5 +1,6 @@
 "use client";
 
+import { EstanciaLogo } from "@/components/estancia-logo";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useTransition } from "react";
@@ -135,12 +136,13 @@ export function CustomerLoginPage({
   return (
     <IngressoShell active="auth">
       <div className="mx-auto w-full max-w-[760px] px-4 pt-8 md:px-6">
-        <div className="rounded-[30px] border border-[#d8e6f0] bg-white p-7 text-left shadow-[0_18px_48px_rgba(17,66,97,0.11)]">
-          <h2 className="legacy-rounded text-[27px] leading-tight text-[#1c5a80]">
-            Login do cliente
+        <div className="estancia-card p-7 text-left md:p-8">
+          <EstanciaLogo compact />
+          <h2 className="mt-6 text-[32px] font-black leading-tight text-[#17351f]">
+            Entrar
           </h2>
-          <p className="mt-3 text-sm leading-7 text-[#4d6477]">
-            Informe o CPF e a senha que voce ja usa no ambiente de ingressos.
+          <p className="mt-3 text-sm leading-7 text-[#516956]">
+            Acesse sua conta para continuar sua compra e consultar seus ingressos.
           </p>
 
           <form
@@ -151,7 +153,7 @@ export function CustomerLoginPage({
             aria-busy={isBusy}
           >
             <label className="block">
-              <span className="legacy-rounded text-[13px] uppercase tracking-[0.16em] text-[#658098]">
+              <span className="text-[13px] font-bold uppercase tracking-[0.16em] text-[#688063]">
                 CPF
               </span>
               <input
@@ -162,12 +164,12 @@ export function CustomerLoginPage({
                 value={cpf}
                 onChange={(event) => setCpf(formatCpf(event.target.value))}
                 disabled={isBusy}
-                className="mt-2 w-full rounded-[22px] border border-[#c9d7e3] bg-[#f7fbfe] px-4 py-3 text-[15px] text-[#214d6b] outline-none transition focus:border-[#3498db] focus:bg-white focus:ring-2 focus:ring-[#d2ecfb]"
+                className="estancia-field mt-2"
               />
             </label>
 
             <label className="block">
-              <span className="legacy-rounded text-[13px] uppercase tracking-[0.16em] text-[#658098]">
+              <span className="text-[13px] font-bold uppercase tracking-[0.16em] text-[#688063]">
                 Senha
               </span>
               <input
@@ -177,7 +179,7 @@ export function CustomerLoginPage({
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 disabled={isBusy}
-                className="mt-2 w-full rounded-[22px] border border-[#c9d7e3] bg-[#f7fbfe] px-4 py-3 text-[15px] text-[#214d6b] outline-none transition focus:border-[#3498db] focus:bg-white focus:ring-2 focus:ring-[#d2ecfb]"
+                className="estancia-field mt-2"
               />
             </label>
 
@@ -187,21 +189,21 @@ export function CustomerLoginPage({
               <div
                 role="status"
                 aria-live="polite"
-                className="flex items-start gap-3 rounded-[22px] border border-[#cde1ef] bg-[#f4fbff] px-4 py-3 text-sm text-[#1c5a80]"
+                className="flex items-start gap-3 rounded-[22px] border border-[#dbe7d7] bg-[#f7fbf5] px-4 py-3 text-sm text-[#17351f]"
               >
                 <span
                   aria-hidden="true"
-                  className="mt-0.5 inline-block h-4 w-4 shrink-0 rounded-full border-2 border-[#3498db] border-t-transparent animate-spin"
+                  className="mt-0.5 inline-block h-4 w-4 shrink-0 rounded-full border-2 border-[#2b8c46] border-t-transparent animate-spin"
                 />
                 <div>
                   <p className="font-semibold">{feedback.statusTitle}</p>
-                  <p className="mt-1 text-[#4d6477]">{feedback.statusDescription}</p>
+                  <p className="mt-1 text-[#516956]">{feedback.statusDescription}</p>
                 </div>
               </div>
             ) : null}
 
             <div className="text-right text-sm">
-              <Link href="/login/esqueci" className="font-semibold text-[#246b99] underline">
+              <Link href="/login/esqueci" className="font-semibold text-[#2b8c46] underline">
                 esqueci minha senha
               </Link>
             </div>
@@ -215,7 +217,7 @@ export function CustomerLoginPage({
             <button
               type="submit"
               disabled={isBusy}
-              className="legacy-rounded inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[999px] bg-[#3498db] px-5 py-3 text-[15px] text-white shadow-[0_12px_25px_rgba(52,152,219,0.24)] hover:bg-[#246b99] disabled:cursor-wait disabled:bg-[#8abfe7]"
+              className="inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[999px] bg-[#2b8c46] px-5 py-3 text-[15px] font-black text-white shadow-[0_12px_25px_rgba(43,140,70,0.24)] hover:bg-[#1f6b36] disabled:cursor-wait disabled:bg-[#8ebf88]"
             >
               {isBusy ? (
                 <span
@@ -227,13 +229,13 @@ export function CustomerLoginPage({
             </button>
           </form>
 
-          <div className="mt-5 rounded-[22px] border border-[#d8e6f0] bg-[#f7fbfe] px-4 py-4 text-sm text-[#4d6477]">
+          <div className="mt-5 rounded-[22px] border border-[#dbe7d7] bg-[#f7fbf5] px-4 py-4 text-sm text-[#516956]">
             <p>
               Ainda nao tem cadastro?
               {" "}
               <Link
                 href={`/cadastro?redirect=${encodeURIComponent(redirectTo)}`}
-                className="font-semibold text-[#246b99] underline"
+                className="font-semibold text-[#2b8c46] underline"
               >
                 Criar conta
               </Link>

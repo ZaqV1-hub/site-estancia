@@ -1,10 +1,5 @@
-/* eslint-disable jsx-a11y/alt-text */
-
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import {
   Document,
-  Image,
   Page,
   StyleSheet,
   Text,
@@ -17,61 +12,67 @@ const styles = StyleSheet.create({
   page: {
     padding: 28,
     backgroundColor: "#ffffff",
-    color: "#333333",
+    color: "#35503b",
     fontSize: 10,
     fontFamily: "Helvetica",
   },
   header: {
     marginBottom: 18,
-    borderBottom: "1 solid #0f4f7c",
+    borderBottom: "1 solid #cfe0ca",
     paddingBottom: 12,
   },
-  logo: {
-    width: 150,
-    height: 54,
-    objectFit: "contain",
+  logoTitle: {
+    color: "#17351f",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  logoSubtitle: {
+    color: "#17351f",
+    fontSize: 18,
+    fontWeight: "bold",
     marginBottom: 10,
   },
   title: {
-    color: "#0f4f7c",
+    color: "#17351f",
     fontSize: 18,
     fontWeight: "bold",
   },
   meta: {
     marginTop: 6,
-    color: "#4f6472",
+    color: "#5b6f5e",
     fontSize: 10,
   },
   totalBox: {
-    border: "1 solid #c9d8e3",
+    border: "1 solid #dbe7d7",
     padding: 10,
     marginBottom: 14,
+    backgroundColor: "#f7fbf5",
   },
   totalLabel: {
-    color: "#6a7d8a",
+    color: "#6a8b68",
     fontSize: 9,
     textTransform: "uppercase",
   },
   totalValue: {
     marginTop: 4,
-    color: "#0f4f7c",
+    color: "#17351f",
     fontSize: 16,
     fontWeight: "bold",
   },
   table: {
-    border: "1 solid #d7d7d7",
+    border: "1 solid #d9e3db",
   },
   row: {
     flexDirection: "row",
   },
   headerRow: {
-    backgroundColor: "#5f84a3",
+    backgroundColor: "#2b8c46",
     color: "#ffffff",
     fontWeight: "bold",
   },
   cell: {
-    borderRight: "1 solid #d7d7d7",
-    borderBottom: "1 solid #d7d7d7",
+    borderRight: "1 solid #d9e3db",
+    borderBottom: "1 solid #d9e3db",
     paddingHorizontal: 6,
     paddingVertical: 6,
   },
@@ -85,36 +86,17 @@ const styles = StyleSheet.create({
   colType: { width: "14%" },
 });
 
-let logoDataUrlPromise: Promise<string | null> | null = null;
-
-async function getLogoDataUrl() {
-  if (!logoDataUrlPromise) {
-    logoDataUrlPromise = readFile(
-      path.join(process.cwd(), "public", "brand", "rincao-logo.png"),
-    )
-      .then((buffer) => `data:image/png;base64,${buffer.toString("base64")}`)
-      .catch(() => null);
-  }
-
-  return logoDataUrlPromise;
-}
-
-function ReportDocument({
-  report,
-  logoDataUrl,
-}: {
-  report: PainelCodIndicaReportData;
-  logoDataUrl: string | null;
-}) {
+function ReportDocument({ report }: { report: PainelCodIndicaReportData }) {
   return (
     <Document title={`cod-indica-${report.codigo}`}>
       <Page size="A4" orientation="landscape" style={styles.page}>
         <View style={styles.header}>
-          {logoDataUrl ? <Image src={logoDataUrl} style={styles.logo} /> : null}
+          <Text style={styles.logoTitle}>Estancia e Parque</Text>
+          <Text style={styles.logoSubtitle}>Ecologica das Aguas</Text>
           <Text style={styles.title}>Relatorio de cashback - Cod Indica</Text>
           <Text style={styles.meta}>
-            Codigo {report.codigo} • {report.representante} • Periodo {report.dateFromLabel} ate{" "}
-            {report.dateToLabel}
+            Codigo {report.codigo} • {report.representante} • Periodo{" "}
+            {report.dateFromLabel} ate {report.dateToLabel}
           </Text>
         </View>
 
@@ -141,8 +123,12 @@ function ReportDocument({
               <Text style={[styles.cell, styles.colCpf]}>{row.cpfLabel}</Text>
               <Text style={[styles.cell, styles.colDate]}>{row.paymentDateLabel}</Text>
               <Text style={[styles.cell, styles.colValue]}>R$ {row.totalValueLabel}</Text>
-              <Text style={[styles.cell, styles.colDiscount]}>R$ {row.discountValueLabel}</Text>
-              <Text style={[styles.cell, styles.colCashback]}>R$ {row.cashbackValueLabel}</Text>
+              <Text style={[styles.cell, styles.colDiscount]}>
+                R$ {row.discountValueLabel}
+              </Text>
+              <Text style={[styles.cell, styles.colCashback]}>
+                R$ {row.cashbackValueLabel}
+              </Text>
               <Text style={[styles.cell, styles.colType]}>{row.cashbackTypeLabel}</Text>
             </View>
           ))}
@@ -155,6 +141,5 @@ function ReportDocument({
 export async function renderPainelCodIndicaReportPdfBuffer(
   report: PainelCodIndicaReportData,
 ) {
-  const logoDataUrl = await getLogoDataUrl();
-  return renderToBuffer(<ReportDocument logoDataUrl={logoDataUrl} report={report} />);
+  return renderToBuffer(<ReportDocument report={report} />);
 }

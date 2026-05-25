@@ -7,7 +7,7 @@ type CheckoutSandboxConfirmationParams = {
   name: string;
   email: string | null;
   phone: string | null;
-  paymentType: "CreditCard" | "Pix";
+  paymentType: "CreditCard" | "DebitCard" | "Pix";
 };
 
 function digitsOnly(value: string | null | undefined) {
@@ -18,10 +18,19 @@ function fallbackNumericString(value: string, fallback: string) {
   return value.trim() === "" ? fallback : value;
 }
 
-function buildMockPaymentCode(paymentType: "CreditCard" | "Pix", purchaseId: number) {
+function buildMockPaymentCode(
+  paymentType: "CreditCard" | "DebitCard" | "Pix",
+  purchaseId: number,
+) {
   const suffix = `${purchaseId}-${Date.now()}`;
 
-  return paymentType === "Pix" ? `mock-pix-${suffix}` : `mock-card-${suffix}`;
+  if (paymentType === "Pix") {
+    return `mock-pix-${suffix}`;
+  }
+
+  return paymentType === "DebitCard"
+    ? `mock-debit-${suffix}`
+    : `mock-card-${suffix}`;
 }
 
 export async function confirmSandboxCheckout({
@@ -52,8 +61,8 @@ export async function confirmSandboxCheckout({
     extraAmount: "0.00",
     installmentCount: 1,
     paymentMethod: {
-      type: paymentType === "Pix" ? 11 : 1,
-      code: paymentType === "Pix" ? 0 : 101,
+      type: paymentType === "Pix" ? 11 : paymentType === "DebitCard" ? 2 : 1,
+      code: paymentType === "Pix" ? 0 : paymentType === "DebitCard" ? 102 : 101,
     },
     sender: {
       email: email ?? "",

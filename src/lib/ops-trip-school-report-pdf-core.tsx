@@ -1,10 +1,5 @@
-/* eslint-disable jsx-a11y/alt-text */
-
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import {
   Document,
-  Image,
   Page,
   StyleSheet,
   Text,
@@ -33,27 +28,32 @@ type PdfTripReport = {
 const styles = StyleSheet.create({
   page: {
     padding: 28,
-    backgroundColor: "#f3f7fb",
-    color: "#355063",
+    backgroundColor: "#f4f6f1",
+    color: "#35503b",
     fontSize: 10,
     fontFamily: "Helvetica",
   },
   card: {
     backgroundColor: "#ffffff",
     borderRadius: 18,
-    border: "1 solid #0d4872",
+    border: "1 solid #cfe0ca",
     overflow: "hidden",
   },
   header: {
-    backgroundColor: "#175387",
+    backgroundColor: "#1f6b36",
     paddingHorizontal: 24,
     paddingVertical: 18,
     alignItems: "center",
   },
-  logo: {
-    width: 152,
-    height: 48,
-    objectFit: "contain",
+  logoTitle: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  logoSubtitle: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "bold",
     marginBottom: 10,
   },
   headerTitle: {
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   },
   headerMeta: {
     marginTop: 8,
-    color: "#d8e9f6",
+    color: "#dbeed5",
     fontSize: 10,
   },
   body: {
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   sectionTitle: {
-    color: "#175387",
+    color: "#1f6b36",
     fontSize: 12,
     fontWeight: "bold",
     marginBottom: 6,
@@ -84,30 +84,30 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     width: "31%",
-    border: "1 solid #d7e5ef",
+    border: "1 solid #dbe7d7",
     borderRadius: 10,
     padding: 10,
-    backgroundColor: "#f8fbfd",
+    backgroundColor: "#f7fbf5",
   },
   metricValue: {
-    color: "#175387",
+    color: "#17351f",
     fontSize: 14,
     fontWeight: "bold",
   },
   metricLabel: {
     marginTop: 4,
-    color: "#5d7282",
+    color: "#5d7a62",
     fontSize: 9,
   },
   table: {
-    border: "1 solid #d9e3eb",
+    border: "1 solid #d9e3db",
     borderRadius: 10,
     overflow: "hidden",
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#edf5fa",
-    color: "#345062",
+    backgroundColor: "#eef6ea",
+    color: "#35503b",
     fontWeight: "bold",
     paddingVertical: 8,
     paddingHorizontal: 10,
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingVertical: 7,
     paddingHorizontal: 10,
-    borderTop: "1 solid #e5edf3",
+    borderTop: "1 solid #e5ede2",
   },
   colVoucher: { width: "14%" },
   colName: { width: "28%" },
@@ -125,23 +125,9 @@ const styles = StyleSheet.create({
   colValue: { width: "10%", textAlign: "right" },
   colStatus: { width: "10%" },
   emptyState: {
-    color: "#5d7282",
+    color: "#5d7a62",
   },
 });
-
-let logoDataUrlPromise: Promise<string | null> | null = null;
-
-async function getLogoDataUrl() {
-  if (!logoDataUrlPromise) {
-    logoDataUrlPromise = readFile(
-      path.join(process.cwd(), "public", "brand", "rincao-logo.png"),
-    )
-      .then((buffer) => `data:image/png;base64,${buffer.toString("base64")}`)
-      .catch(() => null);
-  }
-
-  return logoDataUrlPromise;
-}
 
 function ParticipantTable({
   title,
@@ -192,11 +178,9 @@ function ParticipantTable({
 function ReportDocument({
   report,
   ownerName,
-  logoDataUrl,
 }: {
   report: PdfTripReport;
   ownerName: string;
-  logoDataUrl: string | null;
 }) {
   const statusFilter = report.filters.purchaseStatus
     ? report.statusOptions.find((option) => option.value === report.filters.purchaseStatus)
@@ -208,16 +192,25 @@ function ReportDocument({
       <Page size="A4" orientation="landscape" style={styles.page}>
         <View style={styles.card}>
           <View style={styles.header}>
-            {logoDataUrl ? <Image src={logoDataUrl} style={styles.logo} /> : null}
+            <Text style={styles.logoTitle}>Estancia e Parque</Text>
+            <Text style={styles.logoSubtitle}>Ecologica das Aguas</Text>
             <Text style={styles.headerTitle}>Relatorio do passeio escolar</Text>
             <Text style={styles.headerMeta}>
-              {report.trip.code} • {ownerName} • {report.trip.dateLabel} • Status da
+              {report.trip.code} - {ownerName} - {report.trip.dateLabel} - Status da
               compra: {statusFilter}
             </Text>
           </View>
 
           <View style={styles.body}>
             <View style={styles.metricsRow}>
+              <View style={styles.metricCard}>
+                <Text style={styles.metricValue}>{report.students.length}</Text>
+                <Text style={styles.metricLabel}>Alunos</Text>
+              </View>
+              <View style={styles.metricCard}>
+                <Text style={styles.metricValue}>{report.educators.length}</Text>
+                <Text style={styles.metricLabel}>Educadores</Text>
+              </View>
               <View style={styles.metricCard}>
                 <Text style={styles.metricValue}>{report.indicators.totalCount}</Text>
                 <Text style={styles.metricLabel}>Participantes</Text>
@@ -237,7 +230,11 @@ function ReportDocument({
             </View>
 
             <ParticipantTable title="Alunos" rows={report.students} showClass />
-            <ParticipantTable title="Educadores" rows={report.educators} showClass={false} />
+            <ParticipantTable
+              title="Educadores"
+              rows={report.educators}
+              showClass={false}
+            />
           </View>
         </View>
       </Page>
@@ -249,13 +246,5 @@ export async function renderOpsTripSchoolReportPdfBuffer(
   report: PdfTripReport,
   ownerName: string,
 ) {
-  const logoDataUrl = await getLogoDataUrl();
-
-  return renderToBuffer(
-    <ReportDocument
-      report={report}
-      ownerName={ownerName}
-      logoDataUrl={logoDataUrl}
-    />,
-  );
+  return renderToBuffer(<ReportDocument report={report} ownerName={ownerName} />);
 }

@@ -163,47 +163,47 @@ export default async function CheckoutReturnPage({
   const copy = getStatusCopy(finalStatus);
   const badgeClass =
     copy.tone === "success"
-      ? "bg-[#e6f7ee] text-[#16613a]"
+      ? "bg-[#e8f6e7] text-[#1f6b36]"
       : copy.tone === "danger"
         ? "bg-[#fff0ed] text-[#a34335]"
-        : "bg-[#fff7df] text-[#7b5a14]";
+        : "bg-[#f4f7e8] text-[#6f5e1b]";
 
   return (
     <IngressoShell active="buy" user={customer}>
-      <div className="mx-auto w-full max-w-[1040px] px-4 pb-4 pt-8 md:px-6">
-        <h1 className="legacy-rounded text-center text-[25px] text-[#3393d6] sm:text-[34px]">
+      <div className="mx-auto w-full max-w-[1100px] px-4 pb-4 pt-8 md:px-6">
+        <h1 className="text-center text-[30px] font-black text-[#17351f] sm:text-[38px]">
           Retorno do pagamento
         </h1>
-        <p className="mx-auto mt-2 max-w-[760px] text-center text-[15px] leading-8 text-[#60768a]">
+        <p className="mx-auto mt-2 max-w-[760px] text-center text-[15px] leading-8 text-[#516956]">
           Acompanhe a confirmacao da operadora e a liberacao dos vouchers.
         </p>
       </div>
 
-      <div className="mx-auto grid w-full max-w-[1040px] gap-6 px-4 pb-12 md:px-6 lg:grid-cols-[1fr_0.85fr]">
-        <div className="rounded-[30px] border border-[#d8e6f0] bg-white p-7 text-left shadow-[0_18px_48px_rgba(17,66,97,0.11)]">
+      <div className="mx-auto grid w-full max-w-[1100px] gap-6 px-4 pb-12 md:px-6 lg:grid-cols-[1fr_0.85fr]">
+        <div className="rounded-[30px] border border-[#dce8d8] bg-white p-7 text-left shadow-[0_18px_48px_rgba(34,85,41,0.11)]">
           <span
-            className={`legacy-rounded inline-flex rounded-full px-4 py-2 text-[13px] ${badgeClass}`}
+            className={`inline-flex rounded-full px-4 py-2 text-[13px] font-bold ${badgeClass}`}
           >
             {copy.eyebrow}
           </span>
-          <h1 className="legacy-rounded mt-5 text-[31px] leading-tight text-[#1c5a80]">
+          <h1 className="mt-5 text-[31px] font-black leading-tight text-[#17351f]">
             {copy.title}
           </h1>
-          <p className="mt-4 text-sm leading-7 text-[#4d6477]">
+          <p className="mt-4 text-sm leading-7 text-[#516956]">
             {copy.message}
           </p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/meus-ingressos"
-              className="legacy-rounded inline-flex min-h-[48px] items-center justify-center rounded-[999px] bg-[#3498db] px-5 py-3 text-[15px] text-white shadow-[0_12px_25px_rgba(52,152,219,0.24)] hover:bg-[#246b99]"
+              className="inline-flex min-h-[48px] items-center justify-center rounded-[999px] bg-[#2b8c46] px-5 py-3 text-[15px] font-black text-white shadow-[0_12px_25px_rgba(43,140,70,0.24)] hover:bg-[#1f6b36]"
             >
               Ver meus ingressos
             </Link>
             {finalStatus === "conc" ? null : (
               <Link
                 href={`/checkout/${refreshedPurchase.id}`}
-                className="legacy-rounded inline-flex min-h-[48px] items-center justify-center rounded-[999px] border border-[#bfd4e5] bg-white px-5 py-3 text-[15px] text-[#1c5a80] hover:bg-[#f3f8fc]"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-[999px] border border-[#cfe0ca] bg-white px-5 py-3 text-[15px] font-bold text-[#275033] hover:bg-[#f7fbf5]"
               >
                 Voltar ao checkout
               </Link>
@@ -211,26 +211,26 @@ export default async function CheckoutReturnPage({
           </div>
         </div>
 
-        <aside className="rounded-[30px] bg-[linear-gradient(145deg,#205f86,#174867)] p-7 text-left text-white shadow-[0_24px_55px_rgba(20,62,91,0.18)]">
-          <p className="legacy-rounded text-[12px] uppercase tracking-[0.28em] text-white/72">
+        <aside className="rounded-[30px] bg-[linear-gradient(145deg,#1d4c27,#2b8c46)] p-7 text-left text-white shadow-[0_24px_55px_rgba(29,76,39,0.18)]">
+          <p className="text-[12px] uppercase tracking-[0.28em] text-white/72">
             Pedido #{refreshedPurchase.id}
           </p>
           <dl className="mt-5 space-y-4 text-sm leading-6 text-white/84">
             <div>
               <dt className="text-white/62">Status da compra</dt>
-              <dd className="legacy-rounded text-[18px] text-white">
+              <dd className="text-[18px] font-black text-white">
                 {refreshedPurchase.statusLabel}
               </dd>
             </div>
             <div>
               <dt className="text-white/62">Status da operadora</dt>
-              <dd className="legacy-rounded text-[18px] text-white">
+              <dd className="text-[18px] font-black text-white">
                 {synced.mapped.gatewayStatusLabel}
               </dd>
             </div>
             <div>
               <dt className="text-white/62">Ingressos vinculados</dt>
-              <dd className="legacy-rounded text-[18px] text-white">
+              <dd className="text-[18px] font-black text-white">
                 {refreshedPurchase.voucherCount}
               </dd>
             </div>

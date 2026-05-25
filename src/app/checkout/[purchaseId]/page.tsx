@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CustomerCheckoutPage } from "@/components/customer-checkout-page";
 import { resolveCheckoutMode } from "@/lib/checkout-mode";
 import { buildCheckoutReturnUrl } from "@/lib/checkout-status";
+import { isCielo3dsConfigured } from "@/lib/cielo-3ds";
 import { getActivePublicUserProfileByCpf } from "@/lib/user-repository";
 import { requireAuthenticatedCustomer } from "@/lib/customer-area";
 import { getSiteUrl } from "@/lib/site-metadata";
@@ -52,6 +53,7 @@ export default async function CheckoutRoutePage({
         phone: profile?.mobile ?? profile?.phone ?? null,
       }}
       returnUrl={buildCheckoutReturnUrl(purchase.id, getSiteUrl())}
+      threeDsEnabled={isCielo3dsConfigured()}
     />
   );
 }

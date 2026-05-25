@@ -61,8 +61,8 @@ function messageToneClasses(tone: WorkstationMessage["tone"]) {
 
 function actionButtonClasses(active = false) {
   return active
-    ? "bg-white text-[#205a7f]"
-    : "border border-white/50 bg-white/10 text-white hover:bg-white/20";
+    ? "bg-[#2b8c46] text-white"
+    : "border border-[#dbe7d7] bg-white text-[#17351f] hover:bg-[#f6faf3]";
 }
 
 async function readJson<T>(response: Response) {
@@ -682,18 +682,18 @@ export function PainelBilheteriaWorkstation({
                 className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_300px]"
               >
                 <label className="grid gap-2">
-                  <span className="text-[15px] text-[#205a7f]">{form.title}</span>
+                  <span className="text-[15px] font-semibold text-[#275330]">{form.title}</span>
                   <input
                     value={value}
                     onChange={(event) => setValue(event.target.value)}
                     placeholder={field?.placeholder || field?.label}
-                    className="min-h-[138px] border border-[#b7bcc0] bg-[#efefef] px-7 text-[34px] font-light text-[#787878] shadow-[inset_0_8px_18px_rgba(0,0,0,0.08)] outline-none placeholder:text-[#787878]"
+                    className="min-h-[138px] rounded-[28px] border border-[#d7e3d2] bg-white px-7 text-[34px] font-light text-[#3d5642] shadow-[0_18px_40px_rgba(24,67,34,0.08)] outline-none placeholder:text-[#8aa18f]"
                   />
                 </label>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="min-h-[138px] bg-[linear-gradient(180deg,#41a0e6_0%,#205a7f_100%)] px-7 text-[34px] font-light text-white shadow-[0_8px_22px_rgba(32,90,127,0.2)] transition hover:brightness-105 disabled:opacity-60"
+                  className="min-h-[138px] rounded-[28px] bg-[linear-gradient(135deg,#1f6b36,#7bc043)] px-7 text-[34px] font-light text-white shadow-[0_16px_40px_rgba(24,67,34,0.18)] transition hover:brightness-105 disabled:opacity-60"
                 >
                   {submitting ? "Aguarde" : form.submitLabel}
                 </button>
@@ -702,8 +702,8 @@ export function PainelBilheteriaWorkstation({
           })}
         </div>
 
-        <aside className="rounded-[6px] border border-[#4f88b0] bg-[linear-gradient(180deg,#3e9ce1_0%,#245f88_100%)] p-6 text-white shadow-[0_12px_24px_rgba(32,90,127,0.22)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/80">
+        <aside className="panel-section p-5">
+          <p className="panel-eyebrow">
             Ações
           </p>
           <div className="mt-5 grid gap-3">
@@ -715,7 +715,7 @@ export function PainelBilheteriaWorkstation({
                     key={action.key}
                     type="button"
                     onClick={handleOpenTicketLookup}
-                    className={`inline-flex min-h-[42px] items-center justify-center rounded-full px-5 py-2.5 text-center text-base font-bold uppercase tracking-[0.01em] shadow-[0_3px_0_rgba(0,0,0,0.18)] ${
+                    className={`inline-flex min-h-[42px] items-center justify-center rounded-[8px] px-5 py-2.5 text-center text-sm font-bold ${
                       actionButtonClasses(ticketLookupOpen)
                     }`}
                   >
@@ -725,7 +725,7 @@ export function PainelBilheteriaWorkstation({
                   <Link
                     key={action.key}
                     href={action.href}
-                    className={`inline-flex min-h-[42px] items-center justify-center rounded-full px-5 py-2.5 text-center text-base font-bold uppercase tracking-[0.01em] shadow-[0_3px_0_rgba(0,0,0,0.18)] ${
+                    className={`inline-flex min-h-[42px] items-center justify-center rounded-[8px] px-5 py-2.5 text-center text-sm font-bold ${
                       actionButtonClasses(false)
                     }`}
                   >
@@ -735,9 +735,8 @@ export function PainelBilheteriaWorkstation({
               ))}
           </div>
 
-          <div className="mt-8 border-t border-white/20 pt-6 text-sm leading-6 text-white/80">
-            <div>Logado como:</div>
-            <div className="font-semibold text-white">
+          <div className="mt-6 border-t border-[#dbe7d7] pt-4 text-sm leading-6 text-[#5a6b5d]">
+            <div className="font-semibold text-[#17351f]">
               {actorName || actorCpf || "Sessão operacional"}
             </div>
           </div>
@@ -767,11 +766,11 @@ export function PainelBilheteriaWorkstation({
           ticketLookupOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        <div className="w-full max-w-[420px] rounded-[6px] border border-[#d7e1e8] bg-white shadow-[0_24px_64px_rgba(31,67,98,0.28)]">
-          <div className="flex items-center justify-between gap-3 border-b border-[#d7e1e8] px-5 py-4">
+        <div className="w-full max-w-[460px] rounded-[28px] border border-[#dbe7d7] bg-white shadow-[0_24px_64px_rgba(24,67,34,0.2)]">
+          <div className="flex items-center justify-between gap-3 border-b border-[#dbe7d7] px-5 py-4">
             <h2
               id="painel-bilheteria-ticket-lookup-title"
-              className="text-lg font-semibold text-[#205a7f]"
+              className="text-lg font-black text-[#17351f]"
             >
               {contract.modals?.find((modal) => modal.id === "ticket-lookup")?.title ||
                 "Consultar Ingresso"}
@@ -779,7 +778,7 @@ export function PainelBilheteriaWorkstation({
             <button
               type="button"
               onClick={handleCloseTicketLookup}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#d7e1e8] text-[#5d7282]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#dbe7d7] text-[#5d745f]"
               aria-label="Fechar consulta de ingresso"
             >
               ×
@@ -788,7 +787,7 @@ export function PainelBilheteriaWorkstation({
 
           <div className="grid gap-4 px-5 py-5">
             <form onSubmit={handleTicketLookupSubmit} className="grid gap-3">
-              <label className="grid gap-2 text-sm font-semibold text-[#345062]">
+              <label className="grid gap-2 text-sm font-semibold text-[#35503b]">
                 Inserir ID do Ingresso
                 <input
                   value={ticketLookup}
@@ -799,7 +798,7 @@ export function PainelBilheteriaWorkstation({
                     setTicketWhatsappSuccess(null);
                   }}
                   placeholder="ID do Ingresso"
-                  className="min-h-[42px] border border-[#c9d8e3] bg-white px-4 py-2.5 text-sm text-[#1b3447]"
+                  className="estancia-field min-h-[42px] px-4 py-2.5 text-sm"
                 />
               </label>
 
@@ -810,7 +809,7 @@ export function PainelBilheteriaWorkstation({
               ) : null}
 
               {ticketLookupResult ? (
-                <div className="border border-[#d7e1e8] bg-[#f8fbfd] px-4 py-4 text-sm text-[#345062]">
+                <div className="rounded-[22px] border border-[#dbe7d7] bg-[#f7fbf5] px-4 py-4 text-sm text-[#35503b]">
                   <div className="text-base font-semibold text-[#286445]">
                     Ingresso Encontrado!
                   </div>
@@ -834,13 +833,13 @@ export function PainelBilheteriaWorkstation({
                     </p>
                   ) : ticketLookupResult.purchaseId ? (
                     <div className="mt-4 grid gap-3">
-                      <label className="grid gap-2 text-sm font-semibold text-[#345062]">
+                      <label className="grid gap-2 text-sm font-semibold text-[#35503b]">
                         Telefone com DDD
                         <input
                           value={ticketWhatsappPhone}
                           onChange={(event) => setTicketWhatsappPhone(event.target.value)}
                           placeholder="(DDD) 9xxxx-xxxx"
-                          className="min-h-[42px] border border-[#c9d8e3] bg-white px-4 py-2.5 text-sm text-[#1b3447]"
+                          className="estancia-field min-h-[42px] px-4 py-2.5 text-sm"
                         />
                       </label>
                       {ticketWhatsappError ? (
@@ -858,13 +857,13 @@ export function PainelBilheteriaWorkstation({
                 <button
                   type="button"
                   onClick={handleCloseTicketLookup}
-                  className="rounded-[4px] border border-[#c9d8e3] px-4 py-2.5 text-sm font-bold text-[#5d7282]"
+                  className="rounded-full border border-[#dbe7d7] px-4 py-2.5 text-sm font-bold text-[#5d745f]"
                 >
                   Voltar
                 </button>
                 <button
                   type="submit"
-                  className="rounded-[4px] bg-[linear-gradient(180deg,#3e9ce1_0%,#245f88_100%)] px-4 py-2.5 text-sm font-bold text-white"
+                  className="rounded-full bg-[#2b8c46] px-4 py-2.5 text-sm font-bold text-white"
                 >
                   {contract.modals?.find((modal) => modal.id === "ticket-lookup")
                     ?.primaryActionLabel || "Procurar"}
@@ -873,7 +872,7 @@ export function PainelBilheteriaWorkstation({
                   type="button"
                   onClick={handlePrintTicketLookup}
                   disabled={!ticketLookupResult || ticketLookupResult.used}
-                  className="rounded-[4px] bg-[#2f78be] px-4 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-[#dbe7d7] bg-white px-4 py-2.5 text-sm font-bold text-[#275330] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Imprimir QR-Code
                 </button>
@@ -886,7 +885,7 @@ export function PainelBilheteriaWorkstation({
                     ticketLookupResult.used ||
                     !ticketLookupResult.purchaseId
                   }
-                  className="rounded-[4px] bg-[#2f9e5b] px-4 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full bg-[#2b8c46] px-4 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {sendingTicketWhatsapp ? "Enviando..." : "Enviar no WhatsApp"}
                 </button>
@@ -897,7 +896,7 @@ export function PainelBilheteriaWorkstation({
       </section>
 
       {customerLookup ? (
-        <section className="rounded-[6px] border border-[#d3dde6] bg-white p-5 shadow-[0_8px_22px_rgba(32,90,127,0.08)]">
+        <section className="rounded-[28px] border border-[#dbe7d7] bg-white p-5 shadow-[0_16px_36px_rgba(24,67,34,0.08)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-[#205a7f]">

@@ -198,32 +198,29 @@ export function BilheteriaCashFundPage({
         ]}
       />
 
-      <section className="grid gap-6 rounded-[6px] bg-white p-6 shadow-[0_12px_34px_rgba(31,67,98,0.08)]">
+      <section className="panel-section grid gap-5 p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="legacy-condensed text-5xl text-[#205a7f]">
-              FUNDO DE CAIXA
+            <p className="panel-eyebrow">Caixa</p>
+            <h1 className="text-[28px] font-black leading-tight text-[#17351f]">
+              Fundo de caixa
             </h1>
-            <p className="mt-2 max-w-[72ch] text-sm leading-6 text-[#5f7387]">
-              Lancamentos dedicados de fundo e sangria do periodo aberto, com
-              os mesmos blocos separados do legado.
-            </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <button
-              className="rounded-[4px] bg-[#86efac] px-5 py-3 text-sm font-bold text-[#0f4021] shadow-[0_3px_0_rgba(0,0,0,0.12)]"
+              className="panel-button"
               onClick={() => setModalState({ kind: "create-fundo" })}
               type="button"
             >
-              FAZER FUNDO DE CAIXA
+              Fazer fundo
             </button>
             <button
-              className="rounded-[4px] bg-[#fca5a5] px-5 py-3 text-sm font-bold text-[#5c1616] shadow-[0_3px_0_rgba(0,0,0,0.12)]"
+              className="rounded-[8px] border border-[#e7b9b9] bg-[#fff4f4] px-4 py-2 text-sm font-bold text-[#8a2d2d]"
               onClick={() => setModalState({ kind: "create-sangria" })}
               type="button"
             >
-              FAZER SANGRIA
+              Fazer sangria
             </button>
           </div>
         </div>
@@ -241,20 +238,20 @@ export function BilheteriaCashFundPage({
         ) : null}
 
         <div className="grid gap-4">
-          <div className="border-2 border-[#22c55e] bg-white px-4 py-3 text-xl font-extrabold text-[#065f46]">
+          <div className="rounded-[8px] border border-[#dbe7d7] bg-[#f6faf3] px-4 py-3 text-lg font-extrabold text-[#17351f]">
             Dinheiro do Fundo de Caixa:{" "}
             <span>{formatBilheteriaCashMoney(currentSummary.totals.fund)}</span>
           </div>
-          <div className="border-2 border-[#22c55e] bg-white px-4 py-3 text-xl font-extrabold text-[#065f46]">
+          <div className="rounded-[8px] border border-[#dbe7d7] bg-[#f6faf3] px-4 py-3 text-lg font-extrabold text-[#17351f]">
             Dinheiro total no caixa:{" "}
             <span>{formatBilheteriaCashMoney(currentSummary.totals.cashInDrawer)}</span>
           </div>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <article className="overflow-hidden rounded-[6px] border border-[#d6e1eb] bg-white shadow-[0_6px_18px_rgba(31,67,98,0.08)]">
-            <div className="border-b border-[#d6e1eb] px-4 py-4 text-lg font-bold text-[#1d3348]">
-              Fundo de Caixa:
+          <article className="overflow-hidden rounded-[8px] border border-[#dbe7d7] bg-white shadow-none">
+            <div className="border-b border-[#dbe7d7] px-4 py-4 text-lg font-bold text-[#17351f]">
+              Fundo de caixa
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse text-sm">
@@ -273,9 +270,9 @@ export function BilheteriaCashFundPage({
             </div>
           </article>
 
-          <article className="overflow-hidden rounded-[6px] border border-[#d6e1eb] bg-white shadow-[0_6px_18px_rgba(31,67,98,0.08)]">
-            <div className="border-b border-[#d6e1eb] px-4 py-4 text-lg font-bold text-[#1d3348]">
-              Sangrias:
+          <article className="overflow-hidden rounded-[8px] border border-[#dbe7d7] bg-white shadow-none">
+            <div className="border-b border-[#dbe7d7] px-4 py-4 text-lg font-bold text-[#17351f]">
+              Sangrias
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse text-sm">

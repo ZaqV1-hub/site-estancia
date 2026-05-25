@@ -4,12 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
-import { useState } from "react";
-import { contact, primaryNav } from "@/lib/site-content";
+import { useEffect, useState } from "react";
+import { EstanciaLogo } from "@/components/estancia-logo";
+import { contact } from "@/lib/site-content";
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const isHome = pathname === "/";
 
   const usesStandaloneShell =
     pathname.startsWith("/painel") ||
@@ -25,12 +28,26 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
     pathname === "/minha-conta" ||
     pathname.startsWith("/minha-conta/");
 
+  useEffect(() => {
+    if (usesStandaloneShell || !isHome) {
+      return;
+    }
+
+    const handleScroll = () => setScrolled(window.scrollY > 16);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isHome, usesStandaloneShell]);
+
   if (usesStandaloneShell) {
     return <>{children}</>;
   }
 
+  const headerIsSolid = !isHome || scrolled || menuOpen;
+
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white text-[var(--brown-1)]">
+    <div className="min-h-screen overflow-x-hidden bg-white text-[#17351f]">
       <div id="fb-root" />
       <Script
         id="facebook-jssdk"
@@ -42,7 +59,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         href={contact.whatsapp}
         target="_blank"
         rel="noreferrer"
-        className="fixed bottom-4 left-4 z-50 md:bottom-[2%] md:left-[2%]"
+        className="fixed bottom-4 right-4 z-50 md:bottom-[2%] md:right-[2%]"
       >
         <Image
           src="/theme/whatsapp-icon.png"
@@ -54,236 +71,85 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         />
       </a>
 
-      <header className="site-header">
-        <Link href="/" className="site-logo">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/rincao-logo.png"
-            alt="Estancia"
-            width={340}
-            height={159}
-            className="h-auto w-[300px] md:w-[340px]"
+      <header
+        className={`fixed inset-x-0 top-0 z-40 transition-all duration-200 ${
+          headerIsSolid
+            ? "border-b border-[rgba(35,73,63,0.08)] bg-white/95 shadow-[0_10px_30px_rgba(21,48,42,0.06)] backdrop-blur-md"
+            : "bg-transparent"
+        }`}
+      >
+        <div className="mx-auto grid min-h-[108px] w-[min(1240px,calc(100%-40px))] grid-cols-[auto_1fr] items-center gap-5 py-2 lg:grid-cols-[auto_1fr]">
+          <EstanciaLogo
+            href="/"
+            compact
+            className="h-[62px] max-w-[260px]"
           />
-        </Link>
 
-        <nav className={`site-nav ${menuOpen ? "is-open" : ""}`}>
           <button
             type="button"
             aria-label="Abrir menu"
             onClick={() => setMenuOpen((current) => !current)}
-            className="site-mobile-menu"
-          />
-          <ul>
-            {primaryNav
-              .filter((item) => item.href !== "/")
-              .map((item) => (
-                <li key={item.href}>
+            className={`flex h-[50px] w-[50px] items-center justify-center justify-self-end rounded-[8px] border text-[22px] font-black lg:hidden ${
+              headerIsSolid
+                ? "border-[#d8e0d4] bg-white text-[#17342d] shadow-[0_12px_28px_rgba(22,47,41,0.1)]"
+                : "border-white/20 bg-white/10 text-white"
+            }`}
+          >
+            =
+          </button>
+
+          <nav
+            className={`${
+              menuOpen ? "block" : "hidden"
+            } absolute left-5 right-5 top-[calc(100%+12px)] rounded-[8px] border border-[rgba(35,73,63,0.08)] bg-white p-4 text-left shadow-[0_24px_48px_rgba(19,48,41,0.14)] lg:static lg:col-start-2 lg:row-start-1 lg:block lg:justify-self-center lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none`}
+          >
+            <ul className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-[34px]">
+              {[
+                ["Início", "/"],
+                ["Atrações", "/#atracoes"],
+                ["Eventos", "/#eventos"],
+                ["Comprar ingressos", "/agenda"],
+              ].map(([label, href]) => (
+                <li key={href}>
                   <Link
-                    href={item.href}
-                    className="site-nav-link legacy-condensed"
+                    href={href}
+                    className={`relative py-1 text-[1rem] font-medium transition after:absolute after:bottom-[-4px] after:left-0 after:right-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-current after:transition hover:after:scale-x-100 ${
+                      headerIsSolid ? "text-[#17342d]" : "text-white"
+                    } ${headerIsSolid ? "" : "drop-shadow-[0_2px_8px_rgba(0,0,0,0.75)]"}`}
                     onClick={() => setMenuOpen(false)}
                   >
-                    {item.label}
+                    {label}
                   </Link>
                 </li>
               ))}
-          </ul>
-        </nav>
-
-        <div className="site-header-actions">
-          <Link
-            href="/agenda"
-            className="site-ticket"
-          >
-            Comprar
-            <span className="legacy-condensed">Ingressos</span>
-          </Link>
-
-          <a
-            href={contact.facebook}
-            target="_blank"
-            rel="noreferrer"
-            className="site-social site-social-last"
-          >
-            <Image src="/brand/facebook.png" alt="Facebook" width={40} height={40} />
-          </a>
-          <a
-            href={contact.instagram}
-            target="_blank"
-            rel="noreferrer"
-            className="site-social"
-          >
-            <Image src="/brand/instagram.png" alt="Instagram" width={40} height={40} />
-          </a>
-          <a
-            href={contact.tiktok}
-            target="_blank"
-            rel="noreferrer"
-            className="site-social"
-          >
-            <Image src="/brand/tiktok.png" alt="TikTok" width={40} height={40} />
-          </a>
+            </ul>
+          </nav>
         </div>
-
-        <ol className="site-account-links">
-          <li>
-            <Link
-              href="/meus-ingressos"
-              className="site-account-link"
-            >
-              Meus Ingressos
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/minha-conta"
-              className="site-account-link"
-            >
-              Minha Conta
-            </Link>
-          </li>
-        </ol>
-
-        <div
-          aria-hidden
-          className="absolute bottom-[-13px] left-0 z-[1] h-9 w-full bg-cover bg-left-top bg-no-repeat"
-          style={{ backgroundImage: "url('/theme/color-bar.png')" }}
-        />
       </header>
 
       <main>{children}</main>
 
-      <footer className="relative mt-10 text-left">
-        <div
-          className="bg-cover bg-center bg-no-repeat px-4 py-10 text-center md:px-10"
-          style={{ backgroundImage: "url('/theme/pool-bg.jpg')" }}
-        >
-          <h2 className="legacy-rounded text-[26px] text-white drop-shadow-[2px_2px_6px_rgba(0,0,0,0.45)]">
-            Conheça nossa estrutura e agende seu evento
-          </h2>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            <a href={contact.whatsapp} className="legacy-button">
-              Solicite um orçamento
-            </a>
-            <Link
-              href="/estrutura"
-              className="legacy-rounded text-base text-white underline"
-            >
-              Conheça nossa estrutura
-            </Link>
+      <footer className="border-t border-[rgba(22,47,41,0.08)] bg-[linear-gradient(180deg,rgba(23,52,45,0.04),rgba(23,52,45,0.08))] px-5 py-10 text-left">
+        <div className="mx-auto grid max-w-[1240px] gap-7 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center">
+          <div>
+            <strong className="block text-[1.1rem] text-[#17342d]">
+              Estância e Parque Ecológico das Águas
+            </strong>
+            <p className="mt-2 max-w-[520px] text-[0.95rem] leading-7 text-[#5e746e]">
+              Turismo, lazer, natureza e eventos em uma experiência completa.
+            </p>
           </div>
-        </div>
 
-        <div className="bg-[#165189] px-5 py-6">
-          <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-center gap-6 md:justify-between">
-            <div className="flex items-center gap-6">
-              <a href={contact.instagram} target="_blank" rel="noreferrer">
-                <Image src="/brand/instagram.png" alt="Instagram" width={50} height={50} />
-              </a>
-              <a href={contact.tiktok} target="_blank" rel="noreferrer">
-                <Image src="/brand/tiktok.png" alt="TikTok" width={50} height={50} />
-              </a>
-              <a
-                href={contact.facebook}
-                target="_blank"
-                rel="noreferrer"
-                className="legacy-rounded flex items-center gap-3 text-base text-white"
-              >
-                <Image src="/brand/facebook.png" alt="Facebook" width={50} height={50} />
-                <span>Acompanhe nossa página no Facebook</span>
-              </a>
-            </div>
-          </div>
-        </div>
+          <nav className="flex flex-wrap gap-5 text-[0.96rem] font-bold text-[#17342d]">
+            <Link href="/">Início</Link>
+            <Link href="/#atracoes">Atrações</Link>
+            <Link href="/#eventos">Eventos</Link>
+            <Link href="/agenda">Comprar ingressos</Link>
+          </nav>
 
-        <div className="relative bg-[#1b5d96] px-5 pb-24 pt-6 text-white">
-          <div
-            aria-hidden
-            className="absolute left-0 top-[-20px] h-9 w-full bg-cover bg-left-top bg-no-repeat"
-            style={{ backgroundImage: "url('/theme/color-bar.png')" }}
-          />
-          <div className="mx-auto grid max-w-[1320px] gap-8 lg:grid-cols-[1fr_1fr_400px]">
-            <div className="flex gap-4">
-              <div className="pt-1">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/theme/mark.png"
-                  alt=""
-                  width={18}
-                  height={24}
-                  className="h-auto w-[18px]"
-                />
-              </div>
-              <div className="legacy-rounded text-[15px]">
-                <address className="not-italic">
-                  Av. do Jaceguava, 2.222
-                  <br />
-                  Jardim Casa Grande
-                  <br />
-                  São Paulo - SP
-                  <br />
-                  CEP: 04.870-425
-                </address>
-                <br />
-                <span>{contact.company}</span>
-                <br />
-                <span>CNPJ: {contact.cnpj}</span>
-                <br />
-                <br />
-                <Link href="/localizacao" className="underline">
-                  Como chegar
-                </Link>
-              </div>
-            </div>
-
-            <div className="legacy-rounded">
-              <a
-                href={`mailto:${contact.email}`}
-                className="text-[17px] text-white underline"
-              >
-                {contact.email}
-              </a>
-              <br />
-              <a href={contact.whatsapp} className="legacy-button mt-3">
-                entre em contato
-              </a>
-            </div>
-
-            <div className="site-facebook-box relative">
-              <a
-                href={contact.facebook}
-                target="_blank"
-                rel="noreferrer"
-                className="site-facebook-fallback absolute inset-0 z-0 flex flex-col justify-between p-5 text-[#1b5d96]"
-              >
-                <div>
-                  <p className="legacy-rounded text-[18px]">Estancia</p>
-                  <p className="mt-3 text-sm leading-6">
-                    Acompanhe novidades, agenda e conteúdos institucionais na nossa página oficial.
-                  </p>
-                </div>
-                <span className="legacy-button max-w-max">abrir Facebook</span>
-              </a>
-              <div
-                className="fb-page relative z-10"
-                data-href="#"
-                data-tabs="timeline"
-                data-width="400"
-                data-height="200"
-                data-small-header="false"
-                data-adapt-container-width="false"
-                data-hide-cover="false"
-                data-show-facepile="true"
-              >
-                <blockquote
-                  cite="#"
-                  className="fb-xfbml-parse-ignore"
-                >
-                  <a href="#">Estancia</a>
-                </blockquote>
-              </div>
-            </div>
-          </div>
+          <p className="m-0 text-[0.92rem] leading-7 text-[#5e746e]">
+            © 2026 Estância. Todos os direitos reservados.
+          </p>
         </div>
       </footer>
     </div>

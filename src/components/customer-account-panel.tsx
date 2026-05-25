@@ -356,7 +356,7 @@ export function CustomerAccountPanel({
               Meu cadastro
             </h2>
             <p className="mt-2 text-sm leading-6 text-[#587184]">
-              Edite seus dados basicos sem voltar para o fluxo antigo.
+              Atualize seus dados de cadastro.
             </p>
           </div>
           {profile ? (
@@ -599,7 +599,7 @@ export function CustomerAccountPanel({
           Alterar senha
         </h2>
         <p className="mt-2 text-sm leading-6 text-[#587184]">
-          A troca de senha agora tambem roda no BFF.
+          Defina uma nova senha de acesso.
         </p>
 
         {passwordError ? (

@@ -5,7 +5,6 @@ const getAuthSession = vi.fn();
 const getActivePublicUserByCpf = vi.fn();
 const getUserVoucherPurchaseById = vi.fn();
 const isCieloEcommerceConfigured = vi.fn();
-const isCielo3dsConfigured = vi.fn();
 const createNativeCieloCheckout = vi.fn();
 const getNativeCieloCheckoutStatus = vi.fn();
 const cancelCieloPayment = vi.fn();
@@ -30,10 +29,6 @@ vi.mock("@/lib/cielo-ecommerce", () => ({
   createNativeCieloCheckout,
   getNativeCieloCheckoutStatus,
   isCieloEcommerceConfigured,
-}));
-
-vi.mock("@/lib/cielo-3ds", () => ({
-  isCielo3dsConfigured,
 }));
 
 vi.mock("@/lib/ingresso-db", () => ({
@@ -70,7 +65,6 @@ describe("checkout-link BFF route", () => {
       totalValue: "129.90",
     });
     isCieloEcommerceConfigured.mockReturnValue(true);
-    isCielo3dsConfigured.mockReturnValue(true);
     createNativeCieloCheckout.mockResolvedValue({
       status: "00",
       paymentId: "pid-456",
@@ -156,8 +150,8 @@ describe("checkout-link BFF route", () => {
     ]);
   });
 
-  it("blocks checkout without falling back when native credentials are incomplete", async () => {
-    isCielo3dsConfigured.mockReturnValue(false);
+  it("blocks checkout without falling back when Cielo ecommerce credentials are missing", async () => {
+    isCieloEcommerceConfigured.mockReturnValue(false);
     vi.stubGlobal("fetch", vi.fn());
 
     const { POST } = await import("@/app/api/checkout/checkout-link/route");

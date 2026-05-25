@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PublicAgendaEvent } from "@/lib/agenda-contracts";
 import {
+  buildPublicAgendaPurchaseHref,
   buildPublicAgendaSelectionHref,
   resolveSelectedAgendaId,
 } from "@/lib/public-agenda-selection";
@@ -45,5 +46,9 @@ describe("public-agenda-selection", () => {
     expect(buildPublicAgendaSelectionHref(5, 2026, 2270)).toBe(
       "/agenda?mes=5&ano=2026&agendaId=2270",
     );
+  });
+
+  it("builds the purchase href for the selected date step", () => {
+    expect(buildPublicAgendaPurchaseHref(events[0])).toBe("/comprar/MjI3MA==");
   });
 });

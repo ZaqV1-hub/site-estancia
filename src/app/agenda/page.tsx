@@ -28,6 +28,7 @@ type AgendaPageProps = {
     month?: string;
     year?: string;
     agendaId?: string;
+    date?: string;
   }>;
 };
 
@@ -131,21 +132,20 @@ export default async function AgendaPage({ searchParams }: AgendaPageProps) {
   const initialSelectedAgendaId = resolveSelectedAgendaId(
     initialEvents,
     resolvedSearchParams?.agendaId,
+    resolvedSearchParams?.date,
   );
 
   return (
     <IngressoShell active="schedule" user={customer}>
-      <div className="mx-auto w-full max-w-[1180px] px-4 pt-6 text-left md:px-6">
-        <PublicAgenda
-          key={`${initial.year}-${initial.month}-${initialSelectedAgendaId ?? "none"}`}
-          initialMonth={initial.month}
-          initialYear={initial.year}
-          availableMonths={initial.availableMonths}
-          initialEvents={initialEvents}
-          initialError={initialError}
-          initialSelectedAgendaId={initialSelectedAgendaId}
-        />
-      </div>
+      <PublicAgenda
+        key={`${initial.year}-${initial.month}-${initialSelectedAgendaId ?? "none"}`}
+        initialMonth={initial.month}
+        initialYear={initial.year}
+        availableMonths={initial.availableMonths}
+        initialEvents={initialEvents}
+        initialError={initialError}
+        initialSelectedAgendaId={initialSelectedAgendaId}
+      />
     </IngressoShell>
   );
 }

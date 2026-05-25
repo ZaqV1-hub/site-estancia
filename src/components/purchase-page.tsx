@@ -1,9 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { IngressoShell } from "@/components/ingresso-shell";
+import {
+  buildB2cCartSummary,
+  getB2cProductUnitPrice,
+  listB2cAddons,
+  listB2cPassports,
+  type B2cProduct,
+} from "@/lib/b2c-catalog";
 import type { AuthUser } from "@/lib/auth-contracts";
 import type {
   CreatePurchaseResponse,
@@ -15,31 +23,25 @@ type PurchasePageProps = {
   user: AuthUser;
 };
 
-type Quantities = {
-  discountedNormal: number;
-  discountedChild: number;
-  normal: number;
-  child: number;
-  exempt: number;
+type PurchaseStep = "passports" | "addons" | "review";
+type Quantities = Record<string, number>;
+
+const stepOrder: PurchaseStep[] = ["passports", "addons", "review"];
+
+const stepLabels: Record<PurchaseStep, string> = {
+  passports: "1. Passaportes",
+  addons: "2. Adicionais",
+  review: "3. Pagamento",
 };
 
-type QuantityKey = keyof Quantities;
-
-function formatPrice(value: string) {
-  return new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(value));
-}
-
-function formatCurrency(value: number) {
+function formatCurrency(value: number | string) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
-  }).format(value);
+  }).format(Number(value));
 }
 
-function formatLegacyLongDate(date: string) {
+function formatLongDate(date: string) {
   const parsed = new Date(`${date}T12:00:00`);
 
   return new Intl.DateTimeFormat("pt-BR", {
@@ -47,24 +49,6 @@ function formatLegacyLongDate(date: string) {
     month: "long",
     year: "numeric",
   }).format(parsed);
-}
-
-function parseQuantity(value: string) {
-  const numericValue = Number(value);
-
-  if (!Number.isInteger(numericValue) || numericValue < 0) {
-    return 0;
-  }
-
-  return numericValue;
-}
-
-function pluralize(
-  count: number,
-  singular: string,
-  plural = `${singular}s`,
-) {
-  return `${count} ${count === 1 ? singular : plural}`;
 }
 
 async function readResponseBody<T>(response: Response) {
@@ -75,112 +59,150 @@ async function readResponseBody<T>(response: Response) {
   }
 }
 
+function StepNav({
+  currentStep,
+  setStep,
+}: {
+  currentStep: PurchaseStep;
+  setStep: (step: PurchaseStep) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-3">
+      {stepOrder.map((step) => {
+        const isActive = step === currentStep;
+
+        return (
+          <button
+            key={step}
+            type="button"
+            onClick={() => setStep(step)}
+            className={`min-h-11 rounded-full border px-5 text-[14px] font-bold uppercase tracking-[0.02em] transition md:text-[16px] ${
+              isActive
+                ? "border-[#27a51d] bg-[#27a51d] text-white shadow-[0_10px_24px_rgba(39,165,29,0.24)]"
+                : "border-[#d8e4d3] bg-white text-[#305037] hover:border-[#9dca8b] hover:bg-[#f2f8ee]"
+            }`}
+          >
+            {stepLabels[step]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProductCard({
+  product,
+  price,
+  quantity,
+  onStep,
+}: {
+  product: B2cProduct;
+  price: string;
+  quantity: number;
+  onStep: (delta: number) => void;
+}) {
+  return (
+    <article className="overflow-hidden rounded-[8px] border border-[#dce8d8] bg-white text-left shadow-[0_14px_32px_rgba(24,67,34,0.08)]">
+      <div className="relative h-[185px] bg-[#eef3e8]">
+        <Image
+          src={product.imageSrc}
+          alt={product.title}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 33vw"
+        />
+      </div>
+
+      <div className="flex min-h-[220px] flex-col px-4 py-4">
+        <h3 className="text-[22px] font-black leading-7 text-[#17351f]">
+          {product.title}
+        </h3>
+        <p className="mt-1 min-h-[42px] text-[15px] font-semibold leading-5 text-[#4f6953]">
+          {product.subtitle}
+        </p>
+        <strong className="mt-auto text-[27px] font-black text-[#17351f]">
+          {formatCurrency(price)}
+        </strong>
+
+        <div className="mt-4 flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={`Remover ${product.title}`}
+            onClick={() => onStep(-1)}
+            className="flex h-10 w-10 items-center justify-center rounded-[8px] border border-[#d7e3d2] bg-[#f7fbf5] text-[22px] font-black text-[#17351f] hover:border-[#9dca8b]"
+          >
+            -
+          </button>
+          <span className="flex h-10 min-w-12 items-center justify-center rounded-[8px] border border-[#d7e3d2] px-4 text-[18px] font-black text-[#17351f]">
+            {quantity}
+          </span>
+          <button
+            type="button"
+            aria-label={`Adicionar ${product.title}`}
+            onClick={() => onStep(1)}
+            className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#2b8c46] text-[22px] font-black text-white hover:bg-[#1f6b36]"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export function PurchasePage({ agenda, user }: PurchasePageProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [codindica, setCodindica] = useState("");
-  const [showStandardSection, setShowStandardSection] = useState(
-    agenda.pricing.mode === "dia" || agenda.pricing.discountedRemaining <= 0,
-  );
-  const [quantities, setQuantities] = useState<Quantities>({
-    discountedNormal: 0,
-    discountedChild: 0,
-    normal: 0,
-    child: 0,
-    exempt: 0,
-  });
+  const passports = listB2cPassports();
+  const addons = listB2cAddons();
+  const [step, setStep] = useState<PurchaseStep>("passports");
+  const [quantities, setQuantities] = useState<Quantities>({});
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const discountedNormal = Number(agenda.pricing.discountedNormal);
-  const discountedChild = Number(agenda.pricing.discountedChild);
-  const standardNormal = Number(agenda.pricing.standardNormal);
-  const standardChild = Number(agenda.pricing.standardChild);
-  const hasDiscountPricing = agenda.pricing.mode !== "dia";
-  const hasCodindica = codindica.trim().length > 0;
-  const discountedTotal =
-    quantities.discountedNormal + quantities.discountedChild;
-  const totalPaidTickets =
-    discountedTotal + quantities.normal + quantities.child;
-  const totalValue =
-    quantities.discountedNormal * discountedNormal +
-    quantities.discountedChild * discountedChild +
-    quantities.normal * standardNormal +
-    quantities.child * standardChild;
 
-  const cartRows = useMemo(
-    () => [
-      {
-        key: "discountedNormal",
-        visible: quantities.discountedNormal > 0,
-        description: `${pluralize(quantities.discountedNormal, "ingresso")} a partir de 10 anos com desconto`,
-        value: quantities.discountedNormal * discountedNormal,
-      },
-      {
-        key: "discountedChild",
-        visible: quantities.discountedChild > 0,
-        description: `${pluralize(quantities.discountedChild, "ingresso")} de 4 a 9 anos com desconto`,
-        value: quantities.discountedChild * discountedChild,
-      },
-      {
-        key: "normal",
-        visible: quantities.normal > 0,
-        description: `${pluralize(quantities.normal, "ingresso")} a partir de 10 anos`,
-        value: quantities.normal * standardNormal,
-      },
-      {
-        key: "child",
-        visible: quantities.child > 0,
-        description: `${pluralize(quantities.child, "ingresso")} de 4 a 9 anos`,
-        value: quantities.child * standardChild,
-      },
-      {
-        key: "exempt",
-        visible: quantities.exempt > 0,
-        description: `${pluralize(quantities.exempt, "ingresso")} de 0 a 3 anos (isento)`,
-        value: 0,
-      },
-    ].filter((item) => item.visible),
-    [
-      discountedChild,
-      discountedNormal,
-      quantities.child,
-      quantities.discountedChild,
-      quantities.discountedNormal,
-      quantities.exempt,
-      quantities.normal,
-      standardChild,
-      standardNormal,
-    ],
+  const lineItems = useMemo(
+    () =>
+      Object.entries(quantities)
+        .filter(([, quantity]) => quantity > 0)
+        .map(([productId, quantity]) => ({ productId, quantity })),
+    [quantities],
   );
+  const cart = useMemo(() => {
+    if (lineItems.length === 0) {
+      return null;
+    }
 
-  function setQuantity(key: QuantityKey, nextValue: number) {
+    try {
+      return buildB2cCartSummary(lineItems);
+    } catch {
+      return null;
+    }
+  }, [lineItems]);
+  const passportQuantity = cart?.passportQuantity ?? 0;
+  const totalValue = cart?.totalValue ?? "0.00";
+
+  function setProductQuantity(productId: string, delta: number) {
     setQuantities((current) => ({
       ...current,
-      [key]: Math.max(nextValue, 0),
+      [productId]: Math.max((current[productId] ?? 0) + delta, 0),
     }));
   }
 
-  function stepQuantity(key: QuantityKey, delta: number) {
-    setQuantities((current) => ({
-      ...current,
-      [key]: Math.max(current[key] + delta, 0),
-    }));
-  }
-
-  function updateQuantity(key: QuantityKey, value: string) {
-    setQuantity(key, parseQuantity(value));
-  }
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (totalPaidTickets <= 0) {
-      setError("Selecione pelo menos um ingresso pago para continuar.");
+  function goTo(nextStep: PurchaseStep) {
+    if (nextStep !== "passports" && passportQuantity <= 0) {
+      setError("Selecione pelo menos um passaporte para continuar.");
+      setStep("passports");
       return;
     }
 
-    if (discountedTotal > agenda.pricing.discountedRemaining) {
-      setError("A quantidade com desconto excede o limite disponivel.");
+    setError(null);
+    setStep(nextStep);
+  }
+
+  async function handleSubmit() {
+    if (!cart || passportQuantity <= 0) {
+      setError("Selecione pelo menos um passaporte para continuar.");
+      setStep("passports");
       return;
     }
 
@@ -195,8 +217,7 @@ export function PurchasePage({ agenda, user }: PurchasePageProps) {
         },
         body: JSON.stringify({
           agendaId: agenda.id,
-          codindica,
-          quantities,
+          lineItems,
         }),
       });
       const payload = await readResponseBody<
@@ -218,7 +239,7 @@ export function PurchasePage({ agenda, user }: PurchasePageProps) {
         setError(
           payload && !payload.ok
             ? payload.error.message
-            : "Nao foi possivel iniciar a compra agora.",
+            : "Não foi possível iniciar a compra agora.",
         );
         return;
       }
@@ -227,284 +248,173 @@ export function PurchasePage({ agenda, user }: PurchasePageProps) {
       router.refresh();
     } catch (requestError) {
       console.error("purchase-submit-failed", requestError);
-      setError("Nao foi possivel iniciar a compra agora.");
+      setError("Não foi possível iniciar a compra agora.");
     } finally {
       setPending(false);
     }
   }
 
-  function renderCounter(
-    key: QuantityKey,
-    price: string,
-    subtitle: string,
-    originalPrice?: string,
-  ) {
+  function renderProducts(products: B2cProduct[]) {
     return (
-      <div className="grid items-center gap-3 border-b border-[#d7e3ec] py-4 last:border-b-0 md:grid-cols-[1fr_110px_170px]">
-        <div>
-          <strong className="block text-[21px] leading-7 text-[#1d5b80]">
-            {price}
-          </strong>
-          <span className="text-[14px] leading-6 text-[#587184]">{subtitle}</span>
-        </div>
-        {originalPrice ? (
-          <div className="text-center text-[14px] text-[#6e8798]">
-            <strong className="block text-[18px] text-[#7d8fa0] line-through">
-              {originalPrice}
-            </strong>
-            valor do dia
-          </div>
-        ) : (
-          <div className="hidden md:block" />
-        )}
-        <div className="flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => stepQuantity(key, -1)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#b9cfe0] bg-white text-[20px] text-[#1d5b80] transition hover:border-[#3498db]"
-          >
-            -
-          </button>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={quantities[key]}
-            onChange={(event) => updateQuantity(key, event.target.value)}
-            className="h-10 w-16 rounded-full border border-[#b9cfe0] bg-white text-center text-[18px] text-[#1d5b80] outline-none focus:border-[#3498db]"
+      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
+        {products.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            price={getB2cProductUnitPrice(product.id) ?? "0.00"}
+            quantity={quantities[product.id] ?? 0}
+            onStep={(delta) => setProductQuantity(product.id, delta)}
           />
-          <button
-            type="button"
-            onClick={() => stepQuantity(key, 1)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#b9cfe0] bg-white text-[20px] text-[#1d5b80] transition hover:border-[#3498db]"
-          >
-            +
-          </button>
-        </div>
+        ))}
       </div>
     );
   }
 
   return (
     <IngressoShell active="buy" user={user}>
-      <div className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-8 md:px-6">
-        <h1 className="legacy-rounded text-center text-[25px] text-[#3393d6] sm:text-[34px]">
-          Escolha a quantidade de ingressos
-        </h1>
+      <div className="estancia-shell min-h-screen">
+        <div className="mx-auto w-full max-w-[1240px] px-4 pb-14 pt-8 md:px-6">
+          <StepNav currentStep={step} setStep={goTo} />
 
-        {error ? (
-          <div className="mx-auto mt-5 max-w-[1100px] rounded-[12px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-sm text-[#9f3f36]">
-            {error}
-          </div>
-        ) : null}
-
-        <form className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]" onSubmit={handleSubmit}>
-          <div className="space-y-5">
-            {hasDiscountPricing ? (
-              <div className="rounded-[26px] border border-[#d0e0eb] bg-white shadow-[0_16px_40px_rgba(17,66,97,0.09)]">
-                <div className="rounded-t-[26px] bg-[#edf6fd] px-6 py-5 text-[#1c5a80]">
-                  <p className="text-[16px] leading-7">
-                    Ola, identificamos que voce e{" "}
-                    <strong>{agenda.pricing.label}</strong>.
-                  </p>
-                  <p className="mt-1 text-[15px] leading-7 text-[#5d778b]">
-                    Voce possui direito a{" "}
-                    <strong>{agenda.pricing.discountedRemaining}</strong>{" "}
-                    ingresso
-                    {agenda.pricing.discountedRemaining === 1 ? "" : "s"} com
-                    desconto nesta data.
-                  </p>
-                </div>
-
-                <div className="px-6 pb-6 pt-2">
-                  <div className="mb-4 hidden items-center text-[12px] uppercase tracking-[0.12em] text-[#6f8598] md:grid md:grid-cols-[1fr_110px_170px]">
-                    <strong>Valores por pessoa ({agenda.pricing.label})</strong>
-                    <strong className="text-center">Valor do dia</strong>
-                    <strong className="text-right">Quantidade</strong>
-                  </div>
-
-                  {renderCounter(
-                    "discountedNormal",
-                    `R$ ${formatPrice(agenda.pricing.discountedNormal)}`,
-                    "a partir de 10 anos",
-                    `R$ ${formatPrice(agenda.pricing.standardNormal)}`,
-                  )}
-                  {renderCounter(
-                    "discountedChild",
-                    `R$ ${formatPrice(agenda.pricing.discountedChild)}`,
-                    "de 4 a 9 anos",
-                    `R$ ${formatPrice(agenda.pricing.standardChild)}`,
-                  )}
-                  {renderCounter("exempt", "Isento", "de 0 a 3 anos")}
-                </div>
-              </div>
-            ) : null}
-
-            {hasDiscountPricing ? (
-              <button
-                type="button"
-                onClick={() => setShowStandardSection(true)}
-                className="inline-flex rounded-full border border-[#bfd4e5] bg-white px-5 py-3 text-[15px] text-[#1c5a80] shadow-[0_10px_24px_rgba(17,66,97,0.08)] hover:border-[#3498db]"
-              >
-                Comprar ingresso com valor normal
-              </button>
-            ) : null}
-
-            {showStandardSection ? (
-              <div className="rounded-[26px] border border-[#d0e0eb] bg-white shadow-[0_16px_40px_rgba(17,66,97,0.09)]">
-                <div className="px-6 py-5">
-                  <div className="mb-4 hidden items-center text-[12px] uppercase tracking-[0.12em] text-[#6f8598] md:grid md:grid-cols-[1fr_110px_170px]">
-                    <strong>Valores por pessoa (R$)</strong>
-                    <strong className="text-center">
-                      {hasDiscountPricing ? " " : ""}
-                    </strong>
-                    <strong className="text-right">Quantidade</strong>
-                  </div>
-
-                  {renderCounter(
-                    "normal",
-                    `R$ ${formatPrice(agenda.pricing.standardNormal)}`,
-                    "a partir de 10 anos",
-                  )}
-                  {renderCounter(
-                    "child",
-                    `R$ ${formatPrice(agenda.pricing.standardChild)}`,
-                    "de 4 a 9 anos",
-                  )}
-                  {!hasDiscountPricing ? (
-                    renderCounter("exempt", "Isento", "de 0 a 3 anos")
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <aside className="h-fit rounded-[26px] border border-[#d0e0eb] bg-white shadow-[0_16px_40px_rgba(17,66,97,0.09)]">
-            <div className="rounded-t-[26px] bg-[#2f79ad] px-5 py-5 text-white">
-              <div className="flex items-center justify-between gap-3">
-                <strong className="legacy-rounded text-[18px]">
-                  {formatLegacyLongDate(agenda.date)}
-                </strong>
-                <Link href="/agenda" className="text-[13px] underline">
-                  alterar dia
-                </Link>
-              </div>
+          <div className="mt-7 flex flex-wrap items-center justify-between gap-4 text-left">
+            <div>
+              <p className="text-[14px] font-bold uppercase tracking-[0.14em] text-[#27731d]">
+                {formatLongDate(agenda.date)}
+              </p>
+              <h1 className="mt-2 text-[34px] font-black uppercase leading-tight text-[#080808] md:text-[43px]">
+                {step === "passports"
+                  ? "Escolha seus passaportes"
+                  : step === "addons"
+                    ? "Escolha seus adicionais"
+                    : "Resumo da compra"}
+              </h1>
             </div>
+            <Link
+              href="/agenda"
+              className="rounded-full border border-[#d2d2d2] bg-white px-5 py-3 text-[14px] font-bold uppercase text-[#111] hover:border-[#27a51d]"
+            >
+              Alterar data
+            </Link>
+          </div>
 
-            <div className="px-5 py-5">
-              <div className="space-y-3 text-[14px] text-[#4f6779]">
-                {cartRows.length > 0 ? (
-                  cartRows.map((row) => (
+          {error ? (
+            <div className="mt-5 rounded-[8px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-left text-sm font-semibold text-[#9f3f36]">
+              {error}
+            </div>
+          ) : null}
+
+          <div className="mt-7 grid gap-5 lg:grid-cols-[1fr_300px]">
+            <section>
+              {step === "passports" ? renderProducts(passports) : null}
+              {step === "addons" ? renderProducts(addons) : null}
+              {step === "review" ? (
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div className="rounded-[8px] border border-[#dce8d8] bg-white p-6 text-left shadow-[0_14px_32px_rgba(24,67,34,0.08)]">
+                    <h2 className="text-[27px] font-black text-[#17351f]">
+                      Carrinho
+                    </h2>
+                    <div className="mt-4 space-y-4">
+                      {cart?.lines.map((line) => (
+                        <div
+                          key={line.productId}
+                          className="flex items-start justify-between gap-4 border-b border-[#e1ebdd] pb-4"
+                        >
+                          <div>
+                            <strong className="block text-[20px] leading-6 text-[#17351f]">
+                              {line.quantity}x {line.title}
+                            </strong>
+                            <span className="text-[14px] font-semibold text-[#4f6953]">
+                              {formatCurrency(line.unitPrice)} por unidade
+                            </span>
+                          </div>
+                          <strong className="text-[20px] font-black text-[#17351f]">
+                            {formatCurrency(line.totalValue)}
+                          </strong>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-5 flex items-center justify-between text-[25px] font-black text-[#17351f]">
+                      <span>Total</span>
+                      <span>{formatCurrency(totalValue)}</span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[8px] border border-[#dce8d8] bg-white p-6 text-left shadow-[0_14px_32px_rgba(24,67,34,0.08)]">
+                    <h2 className="text-[27px] font-black text-[#17351f]">
+                      Seus dados
+                    </h2>
+                    <div className="mt-4 space-y-3 text-[16px] font-semibold text-[#17351f]">
+                      <p className="rounded-[18px] border border-[#d7e3d2] px-4 py-3">
+                        {user.name}
+                      </p>
+                      <p className="rounded-[18px] border border-[#d7e3d2] px-4 py-3">
+                        {user.email}
+                      </p>
+                      <p className="rounded-[18px] border border-[#d7e3d2] px-4 py-3">
+                        CPF {user.cpfMasked}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </section>
+
+            <aside className="h-fit rounded-[8px] border border-[#dce8d8] bg-white p-5 text-left shadow-[0_14px_32px_rgba(24,67,34,0.08)]">
+              <h2 className="text-[25px] font-black text-[#17351f]">Carrinho</h2>
+              <div className="mt-3 space-y-3">
+                {cart?.lines.length ? (
+                  cart.lines.map((line) => (
                     <div
-                      key={row.key}
-                      className="flex items-start justify-between gap-4 border-b border-[#edf3f7] pb-3"
+                      key={line.productId}
+                      className="flex items-start justify-between gap-3 border-b border-[#e1ebdd] pb-3 text-[15px] text-[#17351f]"
                     >
-                      <span>{row.description}</span>
-                      <strong className="text-[#1c5a80]">
-                        {formatCurrency(row.value)}
-                      </strong>
+                      <span>
+                        {line.title}
+                        <strong className="ml-2">x{line.quantity}</strong>
+                      </span>
+                      <strong>{formatCurrency(line.totalValue)}</strong>
                     </div>
                   ))
                 ) : (
-                  <div className="text-[#70879a]">Nenhum ingresso selecionado.</div>
+                  <p className="text-[14px] font-semibold text-[#5c745f]">
+                    Nenhum produto selecionado.
+                  </p>
                 )}
               </div>
-
-              <div className="mt-5 rounded-[20px] border border-[#d8e6f0] bg-[#f8fbfe] p-4">
-                <p className="legacy-rounded text-[15px] text-[#1c5a80]">
-                  Caso voce possua um Codigo de Indicacao
-                </p>
-                <p className="mt-2 text-[13px] leading-6 text-[#60768a]">
-                  {hasDiscountPricing
-                    ? "Esta conta ja possui tarifa especial ativa nesta data, entao o codigo nao pode ser aplicado."
-                    : "O valor final sera recalculado quando a compra for criada."}
-                </p>
-                <input
-                  type="text"
-                  inputMode="text"
-                  maxLength={6}
-                  value={codindica}
-                  onChange={(event) =>
-                    setCodindica(event.target.value.toUpperCase())
-                  }
-                  disabled={hasDiscountPricing || pending}
-                  placeholder="Digite aqui"
-                  className="mt-3 w-full rounded-full border border-[#c9d7e3] bg-white px-4 py-3 text-[15px] text-[#214d6b] outline-none placeholder:text-[#90a4b6] focus:border-[#3498db] disabled:cursor-not-allowed disabled:bg-[#eef3f7]"
-                />
+              <div className="mt-4 flex items-center justify-between border-t border-[#d7e3d2] pt-4 text-[18px] font-black text-[#17351f]">
+                <span>Subtotal</span>
+                <span>{formatCurrency(totalValue)}</span>
               </div>
 
-              <div className="mt-5 rounded-[20px] bg-[#edf6fd] p-4 text-[#33556d]">
-                <div className="flex items-center justify-between gap-4 text-sm leading-6">
-                  <span>Total de ingressos pagos</span>
-                  <strong className="legacy-rounded text-[18px] text-[#1c5a80]">
-                    {totalPaidTickets}
-                  </strong>
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-4 text-sm leading-6">
-                  <span>{hasCodindica ? "Total estimado" : "Total a pagar"}</span>
-                  <strong className="legacy-rounded text-[18px] text-[#1c5a80]">
-                    {formatCurrency(totalValue)}
-                  </strong>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={pending}
-                className="legacy-rounded mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-[#3394d6] px-5 py-3 text-[16px] text-white shadow-[2px_2px_4px_rgba(0,0,0,0.2)] transition hover:bg-[#246b99] disabled:cursor-not-allowed disabled:bg-[#8abfe7]"
-              >
-                {pending ? "Preparando..." : "Comprar Ingressos"}
-              </button>
-            </div>
-          </aside>
-        </form>
-
-        <div className="mt-8 rounded-[26px] border border-[#d0e0eb] bg-white shadow-[0_16px_40px_rgba(17,66,97,0.09)]">
-          <div className="px-6 py-6">
-            <strong className="block text-[18px] text-[#1c5a80]">
-              Informacoes:
-            </strong>
-            <div className="mt-3 space-y-2 text-[15px] leading-8 text-[#50697c]">
-              {agenda.information.length > 0 ? (
-                agenda.information.map((item) => (
-                  <p key={item}>› {item}</p>
-                ))
-              ) : (
-                <p>› Sem informacoes</p>
-              )}
-            </div>
-
-            <div className="mt-8 grid gap-6 border-t border-[#e8f0f5] pt-6 md:grid-cols-2">
-              <div>
-                <strong className="block text-[18px] text-[#1c5a80]">
-                  Pague com:
-                </strong>
-                <p className="mt-2 text-[15px] leading-7 text-[#50697c]">
-                  Pagamento processado pela Cielo
-                </p>
-                <Link
-                  href="/agenda"
-                  className="legacy-rounded mt-3 inline-flex rounded-full bg-[#3394d6] px-5 py-3 text-[15px] text-white shadow-[2px_2px_4px_rgba(0,0,0,0.2)] transition hover:bg-[#246b99]"
+              {step === "passports" ? (
+                <button
+                  type="button"
+                  onClick={() => goTo("addons")}
+                  className="mt-5 min-h-12 w-full rounded-full bg-[#27a51d] px-5 text-[15px] font-black uppercase text-white hover:bg-[#1f8818]"
                 >
-                  Comprar Ingressos
-                </Link>
-              </div>
-
-              <div>
-                <strong className="block text-[18px] text-[#1c5a80]">
-                  Agende sua visita
-                </strong>
-                <p className="mt-2 text-[15px] leading-7 text-[#50697c]">
-                  Caso prefira, voce pode agendar o dia da sua visita, escolher
-                  os ingressos e pagar na bilheteria do parque.
-                </p>
-                <Link
-                  href={`/agendar/${agenda.legacyEncodedId}`}
-                  className="legacy-rounded mt-3 inline-flex rounded-full bg-[#3394d6] px-5 py-3 text-[15px] text-white shadow-[2px_2px_4px_rgba(0,0,0,0.2)] transition hover:bg-[#246b99]"
+                  Avançar para adicionais
+                </button>
+              ) : null}
+              {step === "addons" ? (
+                <button
+                  type="button"
+                  onClick={() => goTo("review")}
+                  className="mt-5 min-h-12 w-full rounded-full bg-[#27a51d] px-5 text-[15px] font-black uppercase text-white hover:bg-[#1f8818]"
                 >
-                  Agendar visita
-                </Link>
-              </div>
-            </div>
+                  Avançar para pagamento
+                </button>
+              ) : null}
+              {step === "review" ? (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={pending}
+                  className="mt-5 min-h-12 w-full rounded-full bg-[#27a51d] px-5 text-[15px] font-black uppercase text-white hover:bg-[#1f8818] disabled:cursor-not-allowed disabled:bg-[#8ac785]"
+                >
+                  {pending ? "Preparando..." : "Finalizar e comprar"}
+                </button>
+              ) : null}
+            </aside>
           </div>
         </div>
       </div>

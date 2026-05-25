@@ -93,6 +93,58 @@ describe("me/purchases BFF route", () => {
     });
   });
 
+  it("creates an online purchase from Estancia B2C cart line items", async () => {
+    createOnlinePurchase.mockResolvedValue({
+      purchaseId: 655,
+      legacyEncodedId: "NjU1",
+      totalValue: "345.00",
+      voucherCount: 6,
+    });
+
+    const { POST } = await import("@/app/api/me/purchases/route");
+    const response = await POST(
+      new Request("https://example.com/api/me/purchases", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          agendaId: 123,
+          lineItems: [
+            { productId: "passaporte-explorador", quantity: 2 },
+            { productId: "passaporte-infantil", quantity: 1 },
+            { productId: "cafe-da-manha", quantity: 3 },
+          ],
+        }),
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(createOnlinePurchase).toHaveBeenCalledWith(
+      "52998224725",
+      123,
+      {
+        lineItems: [
+          { productId: "passaporte-explorador", quantity: 2 },
+          { productId: "passaporte-infantil", quantity: 1 },
+          { productId: "cafe-da-manha", quantity: 3 },
+        ],
+      },
+      undefined,
+    );
+    expect(body).toEqual({
+      ok: true,
+      data: {
+        purchaseId: 655,
+        legacyEncodedId: "NjU1",
+        totalValue: "345.00",
+        voucherCount: 6,
+        checkoutRedirect: "/checkout/655",
+      },
+    });
+  });
+
   it("rejects malformed payloads", async () => {
     const { POST } = await import("@/app/api/me/purchases/route");
     const response = await POST(

@@ -1,171 +1,366 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { HomeHeroSlider } from "@/components/home-hero-slider";
-import { homeServices } from "@/lib/site-content";
+import { useRef, useState, type PointerEvent } from "react";
 
-const structureMain = [
-  "6 piscinas sendo 3 adultas e 3 infantil com escorregadores e tendas",
-  "Toboáguas de 3 pistas e toboáguas simples",
-  "Playground aquático infantil",
-  "Quadra poli-esportiva",
-  "Campo de futebol society",
-  "Trilha ecológica com ponte pênsil, casa do índio e mirante",
-  "Playground coberto com kid-play, camas elásticas e casa de bolinhas",
-  "Mini-fazenda, parque de diversão, passeio de trenzinho e salão de jogos",
-  "Quadra de vôlei, tirolesa e casarão de antiquários",
+const heroImages = [
+  {
+    src: "/hero/current/banner-site-oficial-1.jpg",
+    alt: "Piscina e área verde do Estância",
+  },
+  {
+    src: "/hero/current/banner-onda.jpg",
+    alt: "Piscina de ondas do Estância",
+  },
+  {
+    src: "/hero/current/banner-14-06-2026.jpg",
+    alt: "Evento no Estância",
+  },
 ];
 
-const structureSupport = [
-  "Estacionamento com cobrança à parte",
-  "Portaria com equipe de segurança interna e externa",
-  "Vestiário masculino e feminino com sanitários e duchas",
-  "Enfermaria",
-  "Guarda-volumes",
-  "Salões para refeições e reuniões",
-  "Palco para shows e apresentações",
-  "Amplas cozinhas equipadas",
+const attractions = [
+  {
+    title: "Piscina Natural",
+    description:
+      "Água, sombra e área verde para aproveitar o dia em família com conforto.",
+    imageSrc: "/photos/estrutura-piscina.jpg",
+    imageAlt: "Piscina natural do Estância",
+  },
+  {
+    title: "Trilhas e Natureza",
+    description:
+      "Caminhos ao ar livre, paisagens do parque e contato direto com a natureza.",
+    imageSrc: "/photos/day-use.jpg",
+    imageAlt: "Área verde e trilhas do Estância",
+  },
+  {
+    title: "Piscina de Ondas",
+    description:
+      "Uma das experiências mais procuradas para quem quer brincar na água.",
+    imageSrc: "/hero/current/banner-onda.jpg",
+    imageAlt: "Piscina de ondas do Estância",
+  },
+  {
+    title: "Buffet Caipira",
+    description:
+      "Sabores do parque em uma experiência gastronômica simples e bem servida.",
+    imageSrc: "/photos/estrutura-galeria.jpg",
+    imageAlt: "Buffet e estrutura gastronômica do Estância",
+  },
 ];
 
-const structureGallery = [
-  { src: "/photos/estrutura-galeria.jpg", alt: "Galeria da estrutura do Estancia", className: "md:col-span-2 md:row-span-2" },
-  { src: "/photos/estrutura-piscina.jpg", alt: "Piscina da estrutura do Estancia", className: "" },
-  { src: "/photos/day-use.jpg", alt: "Area verde do Estancia", className: "" },
-  { src: "/photos/escola.jpg", alt: "Area infantil do Estancia", className: "" },
-  { src: "/photos/confraternizacao.jpg", alt: "Grupo em evento no Estancia", className: "" },
+const events = [
+  {
+    category: "Evento especial",
+    title: "Festa Junina",
+    description:
+      "Comidas típicas, música, brincadeiras e lazer ao ar livre em um dia preparado para curtir com a família no Estância.",
+    imageSrc: "/hero/current/banner-14-06-2026.jpg",
+    imageAlt: "Festa Junina no Estância e Parque Ecológico das Águas",
+    href: "/agenda?mes=6&ano=2026&date=2026-06-14",
+    buttonLabel: "Compre seu ingresso!",
+  },
 ];
+
+function moveIndex(current: number, direction: -1 | 1, length: number) {
+  return (current + direction + length) % length;
+}
+
+function scrollCarousel(element: HTMLDivElement | null, direction: -1 | 1) {
+  if (!element) {
+    return;
+  }
+
+  element.scrollBy({
+    left: direction * Math.max(320, element.clientWidth * 0.86),
+    behavior: "smooth",
+  });
+}
 
 export default function Home() {
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [heroDragStart, setHeroDragStart] = useState<number | null>(null);
+  const attractionsRef = useRef<HTMLDivElement>(null);
+  const eventsRef = useRef<HTMLDivElement>(null);
+  const carouselDragRef = useRef<{
+    element: HTMLDivElement;
+    x: number;
+    scrollLeft: number;
+  } | null>(null);
+
+  function handleHeroPointerUp(event: PointerEvent<HTMLElement>) {
+    if (heroDragStart === null) {
+      return;
+    }
+
+    const distance = event.clientX - heroDragStart;
+    setHeroDragStart(null);
+
+    if (Math.abs(distance) < 34) {
+      return;
+    }
+
+    setHeroIndex((current) =>
+      moveIndex(current, distance < 0 ? 1 : -1, heroImages.length),
+    );
+  }
+
+  function handleCarouselPointerDown(event: PointerEvent<HTMLDivElement>) {
+    carouselDragRef.current = {
+      element: event.currentTarget,
+      x: event.clientX,
+      scrollLeft: event.currentTarget.scrollLeft,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handleCarouselPointerMove(event: PointerEvent<HTMLDivElement>) {
+    const drag = carouselDragRef.current;
+
+    if (!drag || drag.element !== event.currentTarget) {
+      return;
+    }
+
+    event.currentTarget.scrollLeft = drag.scrollLeft - (event.clientX - drag.x);
+  }
+
+  function handleCarouselPointerEnd() {
+    carouselDragRef.current = null;
+  }
+
   return (
-    <div className="w-full">
-      <HomeHeroSlider />
-
-      <section className="site-home-services">
-        <ul>
-          {homeServices.map((service) => (
-            <li
-              key={service.title}
-              className="site-home-service"
-            >
-              <div className="site-home-service-icon">
-                <Image
-                  src={service.iconSrc}
-                  alt={service.title}
-                  width={36}
-                  height={36}
-                  className="object-contain"
-                />
-              </div>
-              <strong className="site-home-service-title legacy-condensed">
-                {service.title}
-              </strong>
-              <br />
-              <Link href={service.href} className="legacy-button green">
-                saiba mais
-              </Link>
-            </li>
+    <div className="min-h-screen bg-[#fbfaf7] text-[#17342d]">
+      <section
+        id="inicio"
+        onPointerDown={(event) => setHeroDragStart(event.clientX)}
+        onPointerUp={handleHeroPointerUp}
+        onPointerCancel={() => setHeroDragStart(null)}
+        className="relative h-[76svh] min-h-[520px] cursor-grab overflow-hidden bg-[#17342d] active:cursor-grabbing"
+      >
+        <div className="absolute inset-0">
+          {heroImages.map((image, index) => (
+            <Image
+              key={image.src}
+              src={image.src}
+              alt={image.alt}
+              fill
+              priority={index === 0}
+              className={`object-cover transition-opacity duration-500 ${
+                index === heroIndex ? "opacity-100" : "opacity-0"
+              }`}
+              sizes="100vw"
+            />
           ))}
-        </ul>
+        </div>
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.64)_0%,rgba(0,0,0,0.28)_28%,rgba(16,43,37,0.05)_58%,rgba(0,0,0,0.36)_100%)]" />
+
+        <button
+          type="button"
+          aria-label="Imagem anterior"
+          onClick={() =>
+            setHeroIndex((current) => moveIndex(current, -1, heroImages.length))
+          }
+          className="absolute left-5 top-1/2 z-10 hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-3xl font-black text-white shadow-[0_16px_30px_rgba(0,0,0,0.22)] transition hover:bg-black/55 md:flex"
+        >
+          ‹
+        </button>
+        <button
+          type="button"
+          aria-label="Próxima imagem"
+          onClick={() =>
+            setHeroIndex((current) => moveIndex(current, 1, heroImages.length))
+          }
+          className="absolute right-5 top-1/2 z-10 hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-3xl font-black text-white shadow-[0_16px_30px_rgba(0,0,0,0.22)] transition hover:bg-black/55 md:flex"
+        >
+          ›
+        </button>
+
+        <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+          {heroImages.map((image, index) => (
+            <button
+              key={image.src}
+              type="button"
+              aria-label={`Ver imagem ${index + 1}`}
+              onClick={() => setHeroIndex(index)}
+              className={`h-2.5 rounded-full bg-white/85 transition-all ${
+                index === heroIndex ? "w-9" : "w-2.5 opacity-60"
+              }`}
+            />
+          ))}
+        </div>
       </section>
 
-      <section className="relative mt-2 w-full overflow-hidden bg-[#125948] md:pl-[50%]">
-        <div className="relative h-[320px] w-full md:absolute md:left-0 md:top-0 md:h-full md:w-1/2">
-          <Image
-            src="/photos/day-use.jpg"
-            alt="Day-Use Familia no Estancia"
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-          <div
-            aria-hidden
-            className="absolute right-[-40px] top-0 hidden h-full w-[90px] bg-left bg-no-repeat md:block"
-            style={{ backgroundImage: "url('/theme/divider.png')" }}
-          />
-        </div>
+      <main>
+        <section id="atracoes" className="px-5 py-16 md:py-24">
+          <div className="mx-auto w-full max-w-[1240px]">
+            <div className="mb-10 flex items-end justify-between gap-5">
+              <div className="text-left md:text-center md:mx-auto">
+                <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.18em] text-[#1f6b36]">
+                  Parque
+                </p>
+                <h2 className="m-0 text-[clamp(2.4rem,5vw,4.2rem)] font-black leading-none text-[#7a7a7a]">
+                  Atrações
+                </h2>
+              </div>
+              <div className="flex shrink-0 gap-3">
+                <button
+                  type="button"
+                  aria-label="Atração anterior"
+                  onClick={() => scrollCarousel(attractionsRef.current, -1)}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-3xl font-black text-[#17342d] shadow-[0_14px_30px_rgba(19,48,41,0.12)]"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  aria-label="Próxima atração"
+                  onClick={() => scrollCarousel(attractionsRef.current, 1)}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-3xl font-black text-[#17342d] shadow-[0_14px_30px_rgba(19,48,41,0.12)]"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
 
-        <div className="bg-[radial-gradient(circle_at_center,#1f8970_0%,#135d4c_100%)] px-6 py-8 md:px-[10%]">
-          <div className="inline-block w-full max-w-[320px] text-left">
-            <h2 className="legacy-rounded text-[44px] font-normal text-white md:text-[50px]">
-              Day-Use Família
-            </h2>
-            <p className="mt-2 text-xl leading-5 text-white">
-              Passe um dia especial com sua família por (R$)
-            </p>
             <div
-              className="legacy-condensed mt-4 h-[170px] w-[280px] bg-contain bg-left-top bg-no-repeat pl-[68px] pt-6 text-[#176754]"
-              style={{ backgroundImage: "url('/theme/ingresso-bg.png')" }}
+              ref={attractionsRef}
+              onPointerDown={handleCarouselPointerDown}
+              onPointerMove={handleCarouselPointerMove}
+              onPointerUp={handleCarouselPointerEnd}
+              onPointerCancel={handleCarouselPointerEnd}
+              className="-mx-5 flex cursor-grab snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-5 [scrollbar-width:thin] active:cursor-grabbing md:mx-0 md:px-0"
             >
-              <div className="leading-none">
-                <span className="text-[64px] font-bold">80</span>
-                <span className="ml-1 text-[42px] font-bold">,00*</span>
-              </div>
-              <div className="mt-1 text-[28px] font-bold leading-none">por pessoa</div>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-3">
-              <Link href="/agenda" className="legacy-button green">
-                comprar ingresso
-              </Link>
-              <Link href="/day-camp" className="legacy-button green">
-                saiba mais
-              </Link>
-            </div>
-            <p className="mt-3 text-[11px] text-white">
-              *Crianças de 4 a 9 anos R$ 60,00 (Almoço - Não Incluso)
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6">
-        <h2 className="legacy-condensed text-left text-[32px] text-[#705434] md:text-[28px]">
-          Conheça nossa estrutura e venha aproveitar
-        </h2>
-
-        <div className="mt-4 grid gap-8 lg:grid-cols-2">
-          <div className="text-left">
-            <ul className="space-y-2">
-              {structureMain.map((item) => (
-                <li
-                  key={item}
-                  className="legacy-rounded bg-[url('/theme/bullet.png')] bg-[position:left_6px] bg-no-repeat pl-6 text-[15px] text-[#5d462c]"
+              {attractions.map((attraction) => (
+                <article
+                  key={attraction.title}
+                  className="grid min-w-[86vw] snap-center overflow-hidden rounded-[8px] bg-[#efeded] md:min-w-[920px] md:grid-cols-[0.98fr_1fr] lg:min-w-[1120px]"
                 >
-                  {item}
-                </li>
+                  <div className="order-2 min-h-[240px] md:order-none">
+                    <div className="relative h-full min-h-[240px] md:min-h-[360px]">
+                      <Image
+                        src={attraction.imageSrc}
+                        alt={attraction.imageAlt}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 86vw, 560px"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-center px-6 py-8 text-left md:px-10">
+                    <h3 className="text-[2rem] font-black uppercase leading-none text-[#7a7a7a] md:text-[2.8rem]">
+                      {attraction.title}
+                    </h3>
+                    <p className="mt-5 max-w-[560px] text-[1rem] leading-8 text-[#273b45]">
+                      {attraction.description}
+                    </p>
+                  </div>
+                </article>
               ))}
-            </ul>
-            <ul className="mt-5 bg-[#ece9e5] p-4">
-              {structureSupport.map((item) => (
-                <li
-                  key={item}
-                  className="bg-[url('/theme/bullet-2.png')] bg-[position:left_11px] bg-no-repeat py-1 pl-3 text-[13px] text-[#5d462c]"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
+            </div>
           </div>
+        </section>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            {structureGallery.map((item, index) => (
-              <div
-                key={item.src}
-                className={`relative min-h-[180px] overflow-hidden bg-[#eaeaea] ${
-                  index === 0 ? "md:min-h-[300px]" : "md:min-h-[145px]"
-                } ${item.className}`}
-              >
-                <Image
-                  src={item.src}
-                  alt={item.alt}
-                  fill
-                  className="object-cover transition-transform duration-300 hover:scale-110"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
+        <section id="eventos" className="bg-[#dff2f7] px-5 py-16 md:py-24">
+          <div className="mx-auto w-full max-w-[1240px]">
+            <div className="mb-10 flex items-end justify-between gap-5">
+              <div className="text-left">
+                <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.18em] text-[#096b81]">
+                  Eventos
+                </p>
+                <h2 className="m-0 text-[clamp(2rem,4vw,3.4rem)] font-semibold leading-none text-[#071514]">
+                  Programação do Estância
+                </h2>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              <div className="flex shrink-0 gap-3">
+                <button
+                  type="button"
+                  aria-label="Evento anterior"
+                  onClick={() => scrollCarousel(eventsRef.current, -1)}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-3xl font-black text-[#071514] shadow-[0_14px_30px_rgba(0,83,111,0.12)]"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  aria-label="Próximo evento"
+                  onClick={() => scrollCarousel(eventsRef.current, 1)}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-3xl font-black text-[#071514] shadow-[0_14px_30px_rgba(0,83,111,0.12)]"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
 
+            <div
+              ref={eventsRef}
+              onPointerDown={handleCarouselPointerDown}
+              onPointerMove={handleCarouselPointerMove}
+              onPointerUp={handleCarouselPointerEnd}
+              onPointerCancel={handleCarouselPointerEnd}
+              className="-mx-5 flex cursor-grab snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-5 [scrollbar-width:thin] active:cursor-grabbing md:mx-0 md:px-0"
+            >
+              {events.map((event) => (
+                <article
+                  key={event.title}
+                  className="grid min-w-[86vw] snap-center items-stretch gap-9 lg:min-w-[1120px] lg:grid-cols-[minmax(0,1fr)_420px]"
+                >
+                  <Link
+                    href={event.href}
+                    className="relative block min-h-[360px] overflow-hidden rounded-[8px] bg-white shadow-[0_22px_44px_rgba(0,83,111,0.12)] md:min-h-[460px]"
+                    aria-label={event.title}
+                  >
+                    <Image
+                      src={event.imageSrc}
+                      alt={event.imageAlt}
+                      fill
+                      className="object-cover transition-transform duration-500 hover:scale-[1.03]"
+                      sizes="(max-width: 1024px) 100vw, 760px"
+                    />
+                  </Link>
+
+                  <div className="flex flex-col justify-center text-left">
+                    <p className="mb-4 text-[12px] font-bold uppercase tracking-[0.18em] text-[#096b81]">
+                      {event.category}
+                    </p>
+                    <h3 className="mb-5 text-[clamp(2.2rem,4vw,3.2rem)] font-black leading-none text-[#071514]">
+                      {event.title}
+                    </h3>
+                    <p className="mb-7 text-[1.04rem] leading-8 text-[#4b6570]">
+                      {event.description}
+                    </p>
+                    <Link
+                      href={event.href}
+                      className="inline-flex min-h-[58px] w-fit items-center justify-center rounded-full bg-[#086eb8] px-10 text-[1rem] font-black text-white shadow-[0_16px_28px_rgba(8,110,184,0.18)] transition hover:-translate-y-0.5 hover:bg-[#045d9e]"
+                    >
+                      {event.buttonLabel}
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-5 py-16 md:py-20">
+          <div className="mx-auto grid max-w-[1180px] items-center gap-8 rounded-[8px] border border-[rgba(35,73,63,0.1)] bg-white p-7 shadow-[0_20px_48px_rgba(19,48,41,0.08)] md:grid-cols-[1fr_auto] md:p-9">
+            <div className="text-left">
+              <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.18em] text-[#1f6b36]">
+                Data da visita
+              </p>
+              <h2 className="m-0 max-w-[720px] text-[clamp(2rem,4vw,3.2rem)] font-semibold leading-none text-[#17342d]">
+                Compre agora seu passaporte.
+              </h2>
+            </div>
+            <Link
+              href="/agenda"
+              className="inline-flex min-h-[58px] w-fit items-center justify-center rounded-full bg-[#1f6b36] px-9 text-[1rem] font-black text-white shadow-[0_14px_26px_rgba(31,107,54,0.18)] transition hover:-translate-y-0.5 hover:bg-[#17342d]"
+            >
+              Comprar ingressos
+            </Link>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

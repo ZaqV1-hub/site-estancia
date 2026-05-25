@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { Open_Sans, Varela_Round } from "next/font/google";
+import { Rubik, Salsa } from "next/font/google";
 import "./globals.css";
 import { SiteShell } from "@/components/site-shell";
 import { getSiteUrl, robotsForEnvironment } from "@/lib/site-metadata";
 
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
+const rubik = Rubik({
+  variable: "--font-rubik",
   subsets: ["latin"],
+  weight: ["400", "500", "700", "800"],
 });
 
-const varelaRound = Varela_Round({
-  variable: "--font-varela-round",
+const salsa = Salsa({
+  variable: "--font-salsa",
   subsets: ["latin"],
   weight: "400",
 });
@@ -47,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${openSans.variable} ${varelaRound.variable} h-full antialiased`}
+      className={`${rubik.variable} ${salsa.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <SiteShell>{children}</SiteShell>

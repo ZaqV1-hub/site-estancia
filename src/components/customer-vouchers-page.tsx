@@ -90,6 +90,22 @@ function purchaseStatusLabel(purchase: UserVoucherPurchase) {
   return purchase.payment.statusLabel;
 }
 
+function canResumeCheckout(purchase: UserVoucherPurchase) {
+  return purchase.type === "ponli" && purchase.status !== "conc" && purchase.status !== "canc";
+}
+
+function statusBadgeClass(purchase: UserVoucherPurchase) {
+  if (purchase.status === "conc") {
+    return "bg-[#e8f4e2] text-[#275330]";
+  }
+
+  if (purchase.status === "canc") {
+    return "bg-[#fff3f1] text-[#9f3f36]";
+  }
+
+  return "bg-[#fff3d8] text-[#7a4b00]";
+}
+
 function groupPurchases(purchases: UserVoucherPurchase[]) {
   return purchases.reduce(
     (groups, purchase) => {
@@ -144,6 +160,7 @@ function VoucherRow({
   selectable,
   onToggle,
   onVoucherRescheduled,
+  layout = "table",
 }: {
   purchase: UserVoucherPurchase;
   voucher: UserVoucher;
@@ -151,6 +168,7 @@ function VoucherRow({
   selectable: boolean;
   onToggle: (voucherId: number, checked: boolean) => void;
   onVoucherRescheduled: (voucherId: number, visitDate: string) => void;
+  layout?: "table" | "card";
 }) {
   const [options, setOptions] = useState<UserVoucherRescheduleOption[] | null>(null);
   const [selectedAgendaId, setSelectedAgendaId] = useState("");
@@ -234,6 +252,120 @@ function VoucherRow({
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (layout === "card") {
+    return (
+      <div className="overflow-hidden rounded-[24px] border border-[#dbe7d7] bg-[#fbfdf9]">
+        <div className="grid gap-4 px-4 py-4 md:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(120px,1fr))] md:items-start md:px-5">
+          <div>
+            <div className="flex items-start gap-3">
+              {selectable ? (
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  onChange={(event) => onToggle(voucher.id, event.target.checked)}
+                  className="mt-1"
+                />
+              ) : null}
+              <div>
+                <p className="text-[20px] font-black text-[#17351f]">
+                  {voucher.typeLabel}
+                </p>
+                {voucher.schoolName ? (
+                  <p className="mt-1 text-sm text-[#5b745f]">{voucher.schoolName}</p>
+                ) : null}
+                {voucher.participantName ? (
+                  <p className="mt-1 text-sm font-semibold text-[#275330]">
+                    {voucher.participantName}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-[#719168]">Visita</p>
+            <p className="mt-2 text-[16px] font-bold text-[#17351f]">
+              {formatDate(voucher.visitDate)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-[#719168]">Uso</p>
+            <p className="mt-2 text-[16px] font-bold text-[#17351f]">
+              {formatDate(voucher.useDate)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-[#719168]">Valor</p>
+            <p className="mt-2 text-[16px] font-bold text-[#17351f]">
+              {formatCurrency(voucher.unitValue)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-[#719168]">Pagamento</p>
+            <span className="mt-2 inline-flex rounded-full bg-[#e8f4e2] px-3 py-1 text-[12px] font-bold text-[#275330]">
+              {purchaseStatusLabel(purchase)}
+            </span>
+          </div>
+          <div className="flex flex-col items-start gap-2 md:items-end">
+            {voucher.canReschedule ? (
+              <button
+                id={`reschedule-${purchase.id}-${voucher.id}`}
+                type="button"
+                onClick={() => void handleLoadOptions()}
+                disabled={loadingOptions || submitting}
+                className="text-sm font-semibold text-[#2b8c46] underline underline-offset-2"
+              >
+                {loadingOptions ? "Carregando..." : "Reagendar"}
+              </button>
+            ) : null}
+            {purchase.status === "conc" && !voucher.used && voucher.expiredForGeneration ? (
+              <span className="inline-flex rounded-full bg-[#fff3f1] px-3 py-1 text-[12px] font-semibold text-[#9f3f36]">
+                Voucher vencido
+              </span>
+            ) : null}
+          </div>
+        </div>
+        {options || actionError || successMessage ? (
+          <div className="border-t border-[#e7efe4] px-4 py-4 md:px-5">
+            {options ? (
+              <div className="flex flex-col gap-3 rounded-[20px] border border-[#dbe7d7] bg-white p-4 md:flex-row">
+                <select
+                  value={selectedAgendaId}
+                  onChange={(event) => setSelectedAgendaId(event.target.value)}
+                  className="estancia-field min-h-[48px] flex-1 px-4"
+                >
+                  {options.length === 0 ? <option value="">Nenhuma data disponivel</option> : null}
+                  {options.map((option) => (
+                    <option key={option.id} value={String(option.id)}>
+                      {formatDate(option.date)}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => void handleRescheduleSubmit()}
+                  disabled={submitting || options.length === 0}
+                  className="estancia-button px-5 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {submitting ? "Salvando..." : "Confirmar reagendamento"}
+                </button>
+              </div>
+            ) : null}
+            {successMessage ? (
+              <div className="mt-3 rounded-[18px] border border-[#cbe9d7] bg-[#eefaf2] px-4 py-3 text-sm text-[#287450]">
+                {successMessage}
+              </div>
+            ) : null}
+            {actionError ? (
+              <div className="mt-3 rounded-[18px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-sm text-[#9f3f36]">
+                {actionError}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    );
   }
 
   return (
@@ -356,6 +488,7 @@ function PurchaseTicket({
   const [selectedVoucherIds, setSelectedVoucherIds] = useState<number[]>(exportableVoucherIds);
   const [cancelPending, setCancelPending] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   const selectableCount = exportableVoucherIds.length;
   const allSelected =
@@ -402,71 +535,94 @@ function PurchaseTicket({
   }
 
   return (
-    <article className="rounded-[24px] border border-[#d6e5ef] bg-white p-5 shadow-[0_12px_32px_rgba(18,68,99,0.07)]">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h3 className="legacy-rounded text-[24px] text-[#1d5b80]">
-            Pedido: {purchase.id}
+    <article className="estancia-card p-6">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+        <div className="min-w-0">
+          <p className="text-[12px] uppercase tracking-[0.18em] text-[#719168]">
+            {purchase.type === "reser" ? "Reserva" : "Compra"}
+          </p>
+          <h3 className="mt-2 text-[30px] font-black text-[#17351f]">
+            Pedido #{purchase.id}
           </h3>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className={`inline-flex rounded-full px-3 py-1 text-[12px] font-black ${statusBadgeClass(purchase)}`}>
+              {purchaseStatusLabel(purchase)}
+            </span>
+            <span className="inline-flex rounded-full bg-[#f2f7ef] px-3 py-1 text-[12px] font-bold text-[#4f6953]">
+              {purchase.voucherCount} item(ns)
+            </span>
+          </div>
           {purchase.type === "reser" && purchase.status !== "canc" && purchase.canCancelReservation ? (
             <button
               type="button"
               onClick={handleCancelReservation}
               disabled={cancelPending}
-              className="mt-2 text-[14px] text-[#1d5b80] underline underline-offset-2"
+              className="mt-3 text-[14px] font-semibold text-[#a34335] underline underline-offset-2"
             >
               {cancelPending ? "Cancelando..." : "Cancelar Agendamento"}
             </button>
           ) : null}
           {purchase.type === "reser" && purchase.status === "canc" ? (
-            <p className="mt-2 text-[14px] text-[#9f3f36]">Cancelada</p>
+            <p className="mt-3 text-[14px] font-semibold text-[#9f3f36]">Cancelada</p>
           ) : null}
         </div>
 
-        <div className="text-right">
-          <strong className="legacy-rounded text-[20px] text-[#214d6b]">
-            Valor Total: {formatCurrency(purchase.totalValue)}
-          </strong>
-          {purchase.canGenerateVoucher && selectedVoucherIds.length > 0 ? (
-            <div className="mt-3">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,220px)_auto] lg:min-w-[440px]">
+          <div className="rounded-[24px] border border-[#dbe7d7] bg-[#f7fbf5] px-5 py-4 text-left sm:text-right">
+            <p className="text-[12px] uppercase tracking-[0.18em] text-[#719168]">
+              Valor total
+            </p>
+            <strong className="mt-2 block text-[30px] font-black text-[#17351f]">
+              {formatCurrency(purchase.totalValue)}
+            </strong>
+          </div>
+          <div className="flex flex-col gap-2 sm:min-w-[190px]">
+            <button
+              type="button"
+              onClick={() => setExpanded((current) => !current)}
+              className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#cfe0ca] bg-white px-5 text-sm font-black text-[#17351f] transition hover:border-[#2b8c46]"
+            >
+              {expanded ? "Recolher" : "Ver detalhes"}
+            </button>
+          {canResumeCheckout(purchase) ? (
               <a
-                href={buildVoucherExportHref(purchase.id, selectedVoucherIds)}
-                target="_blank"
-                rel="noreferrer"
-                className="legacy-button mt-0 inline-flex"
+                href={`/checkout/${purchase.id}`}
+                className="inline-flex min-h-[46px] items-center justify-center rounded-full bg-[#5464ff] px-5 text-sm font-black text-white shadow-[0_14px_28px_rgba(84,100,255,0.22)] transition hover:bg-[#4150df]"
               >
-                Gerar {selectedVoucherIds.length} Voucher
-                {selectedVoucherIds.length === 1 ? "" : "s"}
+                Continuar pagamento
               </a>
-            </div>
           ) : null}
+          </div>
         </div>
       </div>
 
-      {purchase.canGenerateVoucher && selectableCount > 0 ? (
-        <label className="mt-4 inline-flex items-center gap-2 text-sm text-[#31556d]">
-          <input
-            type="checkbox"
-            checked={allSelected}
-            onChange={(event) => toggleAll(event.target.checked)}
-          />
-          Selecionar Todos
-        </label>
-      ) : null}
+      {expanded ? (
+        <>
+          {purchase.canGenerateVoucher && selectableCount > 0 ? (
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#e7efe4] pt-5">
+              <label className="inline-flex items-center gap-2 text-sm font-semibold text-[#4f6953]">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={(event) => toggleAll(event.target.checked)}
+                />
+                Selecionar todos
+              </label>
+              {selectedVoucherIds.length > 0 ? (
+                <a
+                  href={buildVoucherExportHref(purchase.id, selectedVoucherIds)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="estancia-button mt-0 inline-flex px-5 py-3 text-sm"
+                >
+                  Gerar {selectedVoucherIds.length} Voucher
+                  {selectedVoucherIds.length === 1 ? "" : "s"}
+                </a>
+              ) : null}
+            </div>
+          ) : null}
 
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[760px] border-collapse">
-          <thead>
-            <tr className="border-b border-[#dce8f0] text-left text-[12px] uppercase tracking-[0.14em] text-[#7892a5]">
-              <th className="px-3 py-3 font-normal">tipo do ingresso</th>
-              <th className="px-3 py-3 text-center font-normal">data da visita</th>
-              <th className="px-3 py-3 text-center font-normal">data de uso</th>
-              <th className="px-3 py-3 text-center font-normal">valor do ingresso</th>
-              <th className="px-3 py-3 text-center font-normal">Pagamento</th>
-              <th className="px-3 py-3 text-right font-normal"></th>
-            </tr>
-          </thead>
-          <tbody>
+          <div className="mt-5 space-y-3">
             {purchase.vouchers.map((voucher) => (
               <VoucherRow
                 key={voucher.id}
@@ -478,11 +634,12 @@ function PurchaseTicket({
                 onVoucherRescheduled={(voucherId, visitDate) =>
                   onVoucherRescheduled(purchase.id, voucherId, visitDate)
                 }
+                layout="card"
               />
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        </>
+      ) : null}
 
       {actionError ? (
         <div className="mt-4 rounded-[18px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-sm text-[#9f3f36]">
@@ -508,9 +665,14 @@ function PurchaseGroup({
 }) {
   return (
     <section className="space-y-4">
-      <h2 className="legacy-rounded text-[24px] text-[#1d5b80]">{title}</h2>
+      <div>
+        <p className="text-[12px] uppercase tracking-[0.18em] text-[#719168]">
+          Area do cliente
+        </p>
+        <h2 className="mt-2 text-[30px] font-black text-[#17351f]">{title}</h2>
+      </div>
       {purchases.length === 0 ? (
-        <div className="rounded-[24px] border border-[#d6e5ef] bg-white px-5 py-8 text-sm text-[#5c7284] shadow-[0_12px_32px_rgba(18,68,99,0.07)]">
+        <div className="estancia-card px-5 py-8 text-sm text-[#5c745f]">
           {emptyMessage}
         </div>
       ) : (
@@ -611,6 +773,19 @@ export function CustomerVouchersPage({
     <IngressoShell active="tickets" user={user}>
       <div className="mx-auto w-full max-w-[1180px] px-4 pt-6 md:px-6">
         <div className="mt-6 space-y-8">
+          <section className="overflow-hidden rounded-[32px] border border-[#dce8d8] bg-[linear-gradient(135deg,#1f6b36,#2c7b40_52%,#7bc043_100%)] px-6 py-7 text-white shadow-[0_24px_60px_rgba(24,67,34,0.18)]">
+            <p className="text-[12px] uppercase tracking-[0.22em] text-white/70">
+              Area do cliente
+            </p>
+            <h1 className="mt-3 text-[34px] font-black leading-tight md:text-[42px]">
+              Meus ingressos e pedidos
+            </h1>
+            <p className="mt-3 max-w-[760px] text-[15px] leading-7 text-white/84">
+              Consulte compras, gere vouchers e acompanhe reagendamentos em um
+              unico lugar.
+            </p>
+          </section>
+
           {error ? (
             <div className="rounded-[24px] border border-[#efc3c3] bg-[#fff3f1] px-5 py-4 text-left text-sm text-[#9f3f36]">
               {error}
@@ -639,7 +814,7 @@ export function CustomerVouchersPage({
                 type="button"
                 onClick={handleLoadMore}
                 disabled={loadingMore}
-                className="legacy-rounded inline-flex min-h-[42px] items-center justify-center rounded-full border border-[#c5d8e6] bg-white px-5 text-[14px] text-[#295c7b] shadow-[0_10px_26px_rgba(17,66,97,0.06)] hover:bg-[#f3f9fd] disabled:cursor-not-allowed disabled:text-[#94a9ba]"
+                className="estancia-button-secondary"
               >
                 {loadingMore ? "Carregando..." : "Carregar mais pedidos"}
               </button>

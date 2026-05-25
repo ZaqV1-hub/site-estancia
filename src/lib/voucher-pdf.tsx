@@ -1,7 +1,5 @@
 /* eslint-disable jsx-a11y/alt-text */
 
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import {
   Document,
   Image,
@@ -42,27 +40,34 @@ type VoucherPdfInput = {
 const styles = StyleSheet.create({
   page: {
     padding: 28,
-    backgroundColor: "#f3f7fb",
-    color: "#355063",
+    backgroundColor: "#f4f6f1",
+    color: "#35503b",
     fontSize: 11,
     fontFamily: "Helvetica",
   },
   card: {
     backgroundColor: "#ffffff",
     borderRadius: 18,
-    border: "1 solid #0d4872",
+    border: "1 solid #cfe0ca",
     overflow: "hidden",
   },
   header: {
-    backgroundColor: "#175387",
+    backgroundColor: "#1f6b36",
     paddingHorizontal: 24,
     paddingVertical: 18,
     alignItems: "center",
   },
-  logo: {
-    width: 152,
-    height: 48,
-    objectFit: "contain",
+  logoTitle: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  logoSubtitle: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 10,
   },
   headerBadge: {
@@ -70,7 +75,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    color: "#175387",
+    color: "#1f6b36",
     fontSize: 8,
     textTransform: "uppercase",
   },
@@ -85,7 +90,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   sectionTitle: {
-    color: "#2f90d1",
+    color: "#2b8c46",
     fontSize: 13,
     fontWeight: "bold",
     marginBottom: 6,
@@ -93,7 +98,7 @@ const styles = StyleSheet.create({
   },
   primaryValue: {
     fontSize: 15,
-    color: "#175387",
+    color: "#17351f",
     fontWeight: "bold",
   },
   row: {
@@ -117,30 +122,30 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: "#d9e6ef",
+    backgroundColor: "#dce8d8",
   },
   footer: {
-    borderTop: "1 solid #d0ddea",
+    borderTop: "1 solid #dce8d8",
     paddingHorizontal: 22,
     paddingVertical: 16,
-    color: "#b1452f",
+    color: "#5b6f5e",
     textAlign: "center",
     fontSize: 10,
     lineHeight: 1.5,
   },
   infoPage: {
     padding: 28,
-    backgroundColor: "#eef2f6",
+    backgroundColor: "#eef4eb",
   },
   infoCard: {
     backgroundColor: "#ffffff",
     borderRadius: 18,
     padding: 24,
     lineHeight: 1.6,
-    color: "#3f5668",
+    color: "#4f6953",
   },
   infoTitle: {
-    color: "#175387",
+    color: "#17351f",
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 16,
@@ -149,8 +154,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 });
-
-let logoDataUrlPromise: Promise<string | null> | null = null;
 
 function formatDate(value: string | null) {
   if (!value) {
@@ -177,18 +180,6 @@ function formatCurrency(value: string | null) {
       }).format(amount);
 }
 
-async function getLogoDataUrl() {
-  if (!logoDataUrlPromise) {
-    logoDataUrlPromise = readFile(
-      path.join(process.cwd(), "public", "brand", "rincao-logo.png"),
-    )
-      .then((buffer) => `data:image/png;base64,${buffer.toString("base64")}`)
-      .catch(() => null);
-  }
-
-  return logoDataUrlPromise;
-}
-
 function splitInformation(text: string | null) {
   if (!text) {
     return [];
@@ -202,10 +193,8 @@ function splitInformation(text: string | null) {
 
 function VoucherDocument({
   input,
-  logoDataUrl,
 }: {
   input: VoucherPdfInput;
-  logoDataUrl: string | null;
 }) {
   const infoParagraphs = splitInformation(input.information);
 
@@ -215,7 +204,8 @@ function VoucherDocument({
         <Page key={voucher.id} size="A4" style={styles.page}>
           <View style={styles.card}>
             <View style={styles.header}>
-              {logoDataUrl ? <Image src={logoDataUrl} style={styles.logo} /> : null}
+              <Text style={styles.logoTitle}>Estancia e Parque</Text>
+              <Text style={styles.logoSubtitle}>Ecologica das Aguas</Text>
               <Text style={styles.headerBadge}>
                 {input.purchase.type === "reser" ? "Voucher de reserva" : "Voucher"}
               </Text>
@@ -320,7 +310,5 @@ function VoucherDocument({
 }
 
 export async function renderVoucherPdfBuffer(input: VoucherPdfInput) {
-  const logoDataUrl = await getLogoDataUrl();
-
-  return renderToBuffer(<VoucherDocument input={input} logoDataUrl={logoDataUrl} />);
+  return renderToBuffer(<VoucherDocument input={input} />);
 }

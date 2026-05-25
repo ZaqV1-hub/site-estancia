@@ -3,6 +3,7 @@ import {
   isAgendaDateExpired,
 } from "@/lib/agenda-repository";
 import { encodeLegacyId } from "@/lib/agenda-id";
+import { buildB2cCartSummary } from "@/lib/b2c-catalog";
 import {
   calculateCodindicaTotals,
   CodindicaValidationError,
@@ -12,6 +13,8 @@ import {
 } from "@/lib/codindica";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 import type {
+  CreatePurchaseQuantities,
+  CreatePurchaseSelection,
   CreatePurchaseRequest,
   PurchaseAgendaDetail,
   PurchasePricing,
@@ -38,8 +41,6 @@ type SocioRow = {
 type DiscountPurchaseCountRow = {
   total: string;
 };
-
-type CreatePurchaseQuantities = CreatePurchaseRequest["quantities"];
 
 type PurchaseInsertRow = {
   idcompra: number;
@@ -284,6 +285,12 @@ function validateQuantities(
   }
 }
 
+function isB2cLineItemSelection(
+  selection: CreatePurchaseSelection,
+): selection is { lineItems: NonNullable<CreatePurchaseRequest["lineItems"]> } {
+  return "lineItems" in selection;
+}
+
 function resolveVoucherValidityDate(agenda: PurchaseAgendaDetail, now = new Date()) {
   if (agenda.type === "promo") {
     return agenda.date;
@@ -295,7 +302,7 @@ function resolveVoucherValidityDate(agenda: PurchaseAgendaDetail, now = new Date
 export async function createOnlinePurchase(
   cpf: string,
   agendaId: number,
-  quantities: CreatePurchaseQuantities,
+  selection: CreatePurchaseSelection,
   codindicaInput?: string,
 ) {
   const agenda = await getPurchaseAgendaContext(cpf, agendaId);
@@ -315,6 +322,114 @@ export async function createOnlinePurchase(
       409,
     );
   }
+
+  if (isB2cLineItemSelection(selection)) {
+    if (normalizeCodindica(codindicaInput)) {
+      throw new PurchaseCreationError(
+        "codindica_unavailable",
+        "Codigo de indicacao nao pode ser combinado com o carrinho de produtos.",
+        409,
+      );
+    }
+
+    const cart = buildB2cCartSummary(selection.lineItems);
+    const validityDate = resolveVoucherValidityDate(agenda);
+    const pool = getIngressoDbPool();
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const purchaseResult = await client.query<PurchaseInsertRow>(
+        `
+          INSERT INTO compra (
+            cpf,
+            tpcompra,
+            dtcompra,
+            hrcompra,
+            formapag,
+            vltotcompra,
+            vltotdesc,
+            codindica,
+            stcompra,
+            flenvio
+          )
+          VALUES (
+            $1,
+            'ponli',
+            CURRENT_DATE,
+            CURRENT_TIME,
+            'pgseg',
+            $2,
+            $3,
+            $4,
+            'pend',
+            'nao'
+          )
+          RETURNING idcompra
+        `,
+        [cpf, cart.totalValue, null, null],
+      );
+      const purchaseId = purchaseResult.rows[0]?.idcompra;
+
+      if (!purchaseId) {
+        throw new Error("purchase_insert_failed");
+      }
+
+      for (const line of cart.lines) {
+        for (let index = 0; index < line.quantity; index += 1) {
+          const voucherNumber = await generateUniqueVoucherNumber(
+            client,
+            line.voucherPrefix,
+          );
+
+          await client.query(
+            `
+              INSERT INTO voucher (
+                idcompra,
+                numvoucher,
+                idagenda,
+                tpvoucher,
+                vlunicompra,
+                vldesc,
+                codindica,
+                stusado,
+                fldesconto,
+                dtvalidade,
+                descricao
+              )
+              VALUES ($1, $2, $3, $4, $5, NULL, NULL, 'n', 'n', $6, $7)
+            `,
+            [
+              purchaseId,
+              voucherNumber,
+              agendaId,
+              line.voucherType,
+              line.unitPrice,
+              validityDate,
+              line.description,
+            ],
+          );
+        }
+      }
+
+      await client.query("COMMIT");
+
+      return {
+        purchaseId,
+        legacyEncodedId: encodeLegacyId(purchaseId),
+        totalValue: cart.totalValue,
+        voucherCount: cart.voucherCount,
+      };
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  const quantities = selection;
 
   validateQuantities(agenda.pricing, quantities);
 

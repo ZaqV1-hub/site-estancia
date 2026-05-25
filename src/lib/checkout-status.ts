@@ -2,6 +2,7 @@ import {
   getNativeCieloCheckoutStatus,
   isCieloEcommerceConfigured,
 } from "@/lib/cielo-ecommerce";
+import { isLocalCheckoutMockEnabled } from "@/lib/checkout-mode";
 import {
   mapGatewayStatusToPurchaseStatus,
   reconcilePaymentFromGatewayPayload,
@@ -139,10 +140,49 @@ async function syncNativeCheckoutStatus(
   };
 }
 
+async function syncMockCheckoutStatus(
+  purchase: Pick<UserVoucherPurchase, "id" | "status">,
+) {
+  const purchaseStatus =
+    purchase.status === "conc" || purchase.status === "canc"
+      ? purchase.status
+      : "pend";
+  const gatewayStatus =
+    purchaseStatus === "conc" ? 3 : purchaseStatus === "canc" ? 7 : 1;
+
+  return {
+    status: 200,
+    contentType: "application/json; charset=UTF-8",
+    body: {
+      ok: true,
+      mock: true,
+      purchaseId: purchase.id,
+      gatewayStatus,
+    },
+    mapped: {
+      ok: true,
+      gatewayStatus,
+      gatewayStatusLabel:
+        gatewayStatusLabels[gatewayStatus] ?? String(gatewayStatus),
+      purchaseStatus,
+      raw: {
+        mock: true,
+        purchaseId: purchase.id,
+        gatewayStatus,
+      },
+    },
+    reconciliation: null,
+  };
+}
+
 export async function syncCheckoutStatus(
-  purchase: Pick<UserVoucherPurchase, "id">,
+  purchase: Pick<UserVoucherPurchase, "id" | "status">,
   searchParams: URLSearchParams,
 ) {
+  if (!isCieloEcommerceConfigured() && isLocalCheckoutMockEnabled()) {
+    return syncMockCheckoutStatus(purchase);
+  }
+
   return await syncNativeCheckoutStatus(
     purchase,
     searchParams,

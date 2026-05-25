@@ -311,7 +311,7 @@ export function CustomerCheckoutPage({
 
   return (
     <IngressoShell active="buy" user={user}>
-      <div className="mx-auto w-full max-w-[1480px] px-4 pb-12 pt-8 md:px-8">
+      <div className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-8 md:px-8">
         {mode === "widget" ? (
           <>
             <Script
@@ -329,6 +329,21 @@ export function CustomerCheckoutPage({
           </>
         ) : null}
 
+        {mode === "widget" ? (
+          <section>
+            {widgetError ? (
+              <div className="mb-5 rounded-[18px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-sm text-[#9f3f36]">
+                {widgetError}
+              </div>
+            ) : null}
+
+            <div id="cieloCheckoutInline" className="min-h-[620px]">
+              <div className="flex min-h-[520px] items-center justify-center text-center text-sm text-[#4f6953]">
+                Carregando pagamento...
+              </div>
+            </div>
+          </section>
+        ) : (
         <section className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_340px]">
           <section className="rounded-[28px] border border-[#e4e8e2] bg-white p-6 shadow-[0_22px_55px_rgba(15,23,42,0.08)] md:p-8">
             <div className="flex flex-col gap-5 border-b border-[#d9dfd4] pb-7 md:flex-row md:items-center">
@@ -345,24 +360,7 @@ export function CustomerCheckoutPage({
               </div>
             </div>
 
-            {mode === "widget" ? (
-              <div className="mt-7">
-                {widgetError ? (
-                  <div className="mb-5 rounded-[18px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-sm text-[#9f3f36]">
-                    {widgetError}
-                  </div>
-                ) : null}
-
-                <div
-                  id="cieloCheckoutInline"
-                  className="min-h-[660px] overflow-hidden rounded-[24px] bg-white"
-                >
-                  <div className="flex min-h-[560px] items-center justify-center text-center text-sm text-[#4f6953]">
-                    Carregando pagamento...
-                  </div>
-                </div>
-              </div>
-            ) : mode === "mock" ? (
+            {mode === "mock" ? (
               <>
                 <div className="mt-8 text-center">
                   <p className="text-[18px] font-semibold text-[#111827]">
@@ -482,6 +480,7 @@ export function CustomerCheckoutPage({
             </a>
           </aside>
         </section>
+        )}
       </div>
     </IngressoShell>
   );

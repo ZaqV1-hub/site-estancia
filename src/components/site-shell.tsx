@@ -82,6 +82,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           <EstanciaLogo
             href="/"
             compact
+            light={!headerIsSolid}
             className="h-[62px] max-w-[260px]"
           />
 
@@ -105,8 +106,8 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           >
             <ul className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-[34px]">
               {[
-                ["Início", "/"],
-                ["Atrações", "/#atracoes"],
+                ["In\u00edcio", "/"],
+                ["Atra\u00e7\u00f5es", "/#atracoes"],
                 ["Eventos", "/#eventos"],
                 ["Comprar ingressos", "/agenda"],
               ].map(([label, href]) => (
@@ -133,22 +134,22 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto grid max-w-[1240px] gap-7 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center">
           <div>
             <strong className="block text-[1.1rem] text-[#17342d]">
-              Estância e Parque Ecológico das Águas
+              {"Est\u00e2ncia e Parque Ecol\u00f3gico das \u00c1guas"}
             </strong>
             <p className="mt-2 max-w-[520px] text-[0.95rem] leading-7 text-[#5e746e]">
-              Turismo, lazer, natureza e eventos em uma experiência completa.
+              {"Turismo, lazer, natureza e eventos em uma experi\u00eancia completa."}
             </p>
           </div>
 
           <nav className="flex flex-wrap gap-5 text-[0.96rem] font-bold text-[#17342d]">
-            <Link href="/">Início</Link>
-            <Link href="/#atracoes">Atrações</Link>
+            <Link href="/">{"In\u00edcio"}</Link>
+            <Link href="/#atracoes">{"Atra\u00e7\u00f5es"}</Link>
             <Link href="/#eventos">Eventos</Link>
             <Link href="/agenda">Comprar ingressos</Link>
           </nav>
 
           <p className="m-0 text-[0.92rem] leading-7 text-[#5e746e]">
-            © 2026 Estância. Todos os direitos reservados.
+            {"\u00a9 2026 Est\u00e2ncia. Todos os direitos reservados."}
           </p>
         </div>
       </footer>

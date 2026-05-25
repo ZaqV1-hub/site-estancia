@@ -472,19 +472,11 @@
         $container.empty();
 
         var methodsHtml = this._buildMethodsMarkup();
-        var logoHtml = this.config.logoUrl ? '<img class="cielo-header__logo" src="' + this.config.logoUrl + '" alt="Estância e Parque Ecológico das Águas">' : '';
         var brandOptions = this._buildBrandOptions();
 
         var html = '' +
             '<div class="cielo-checkout" id="cieloCheckoutModal" style="display:none;">' +
                 '<div class="cielo-checkout__main">' +
-                    '<div class="cielo-header">' +
-                        logoHtml +
-                        '<div>' +
-                            '<p class="cielo-checkout__title">Checkout de Pagamento - Estância</p>' +
-                            '<p class="cielo-checkout__order">ID da compra: <strong id="cieloOrderId">-</strong></p>' +
-                        '</div>' +
-                    '</div>' +
                     '<div class="cielo-section">' +
                         '<p class="cielo-section__title">Escolha a forma de pagamento:</p>' +
                         '<div class="cielo-methods">' + methodsHtml + '</div>' +
@@ -492,7 +484,6 @@
                     '</div>' +
                     '<div class="cielo-form-head">' +
                         '<h4 id="cieloFormTitle">Cartão de Crédito</h4>' +
-                        '<p>ID da compra: <strong id="cieloFormOrderId">-</strong></p>' +
                         '<div class="cielo-divider"></div>' +
                     '</div>' +
                     '<form id="cieloCheckoutForm">' +
@@ -566,14 +557,10 @@
                 '</div>' +
             '</div>' +
             '<style id="cielo-modal-style">' +
-                '.cielo-checkout{display:flex;flex-wrap:wrap;gap:24px;background:#f8f8fb;border-radius:28px;padding:24px;margin-top:20px;font-family:"Poppins","Segoe UI",Arial,sans-serif;}' +
+                '.cielo-checkout{display:flex;flex-wrap:wrap;gap:24px;background:#f8f8fb;border-radius:28px;padding:24px;margin-top:0;font-family:"Poppins","Segoe UI",Arial,sans-serif;}' +
                 '.cielo-checkout__main{flex:1 1 420px;background:#fff;border-radius:24px;padding:30px;border:1px solid #ececf3;box-shadow:0 25px 45px rgba(15,23,42,.08);box-sizing:border-box;}' +
                 '.cielo-checkout__summary{flex:0 0 280px;background:#f1f1f6;border-radius:30px;padding:28px 24px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;box-shadow:0 18px 32px rgba(15,23,42,.08);}' +
-                '.cielo-header{display:flex;align-items:center;gap:16px;margin-bottom:20px;}' +
-                '.cielo-header__logo{width:96px;height:auto;}' +
-                '.cielo-checkout__title{margin:0;font-size:18px;font-weight:600;color:#222;}' +
-                '.cielo-checkout__order{margin:4px 0 0;font-size:14px;color:#666;}' +
-                '.cielo-section__title{font-weight:600;margin:0 0 8px;color:#2a2a38;}' +
+                '.cielo-section__title{font-weight:700;margin:0 0 12px;color:#2a2a38;text-align:center;}' +
                 '.cielo-section__note{font-size:12px;color:#8f8fa0;margin:8px 0 0;}' +
                 '.cielo-methods{display:flex;flex-wrap:wrap;gap:12px;}' +
                 '.cielo-method{display:flex;align-items:center;gap:14px;border:1px solid #d5d5e5;border-radius:50px;padding:12px 18px;background:#f4f4f9;cursor:pointer;transition:all .15s;text-decoration:none;min-width:180px;flex:1 1 180px;}' +
@@ -584,7 +571,7 @@
                 '.cielo-method--pix .cielo-method__icon{background:linear-gradient(135deg,#22c55e,#4ade80);}' +
                 '.cielo-method__texts strong{display:block;font-size:15px;color:#1b1c32;}' +
                 '.cielo-method__texts small{display:block;font-size:13px;color:#6c6c80;}' +
-                '.cielo-form-head{margin:26px 0 18px;}' +
+                '.cielo-form-head{margin:26px 0 18px;text-align:center;}' +
                 '.cielo-form-head h4{margin:0;font-size:20px;color:#1a1b2c;}' +
                 '.cielo-form-head p{margin:6px 0 0;font-size:14px;color:#60606f;}' +
                 '.cielo-divider{height:1px;background:#ddd;border:0;margin:18px 0 0;}' +
@@ -919,7 +906,6 @@
         this.$modal.find('#cieloResumoValor, #cieloResumoTotal').text(formatCurrencyBRL(this.current.valor));
         this.$modal.find('#cieloResumoMetodo').text(meta ? meta.label : type);
         this.$modal.find('#cieloFormTitle').text(meta ? meta.label : type);
-        this.$modal.find('#cieloOrderId, #cieloFormOrderId').text(this.current.idcompra || '-');
     };
 
     CieloCheckout.prototype._renderInstallments = function () {

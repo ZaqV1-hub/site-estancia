@@ -535,13 +535,13 @@ function PurchaseTicket({
   }
 
   return (
-    <article className="estancia-card p-6">
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+    <article className="estancia-card p-5 md:p-6">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px_230px] lg:items-center">
         <div className="min-w-0">
           <p className="text-[12px] uppercase tracking-[0.18em] text-[#719168]">
             {purchase.type === "reser" ? "Reserva" : "Compra"}
           </p>
-          <h3 className="mt-2 text-[30px] font-black text-[#17351f]">
+          <h3 className="mt-2 text-[26px] font-black text-[#17351f] md:text-[30px]">
             Pedido #{purchase.id}
           </h3>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -567,16 +567,15 @@ function PurchaseTicket({
           ) : null}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-[minmax(0,220px)_auto] lg:min-w-[440px]">
-          <div className="rounded-[24px] border border-[#dbe7d7] bg-[#f7fbf5] px-5 py-4 text-left sm:text-right">
+        <div className="rounded-[22px] border border-[#dbe7d7] bg-[#f7fbf5] px-5 py-4 text-left lg:text-center">
             <p className="text-[12px] uppercase tracking-[0.18em] text-[#719168]">
               Valor total
             </p>
-            <strong className="mt-2 block text-[30px] font-black text-[#17351f]">
+            <strong className="mt-2 block text-[26px] font-black text-[#17351f]">
               {formatCurrency(purchase.totalValue)}
             </strong>
-          </div>
-          <div className="flex flex-col gap-2 sm:min-w-[190px]">
+        </div>
+        <div className="flex flex-col gap-2">
             <button
               type="button"
               onClick={() => setExpanded((current) => !current)}
@@ -592,7 +591,6 @@ function PurchaseTicket({
                 Continuar pagamento
               </a>
           ) : null}
-          </div>
         </div>
       </div>
 
@@ -665,14 +663,16 @@ function PurchaseGroup({
 }) {
   return (
     <section className="space-y-4">
-      <div>
+      <div className="text-center">
         <p className="text-[12px] uppercase tracking-[0.18em] text-[#719168]">
-          Area do cliente
+          {"\u00c1rea do cliente"}
         </p>
-        <h2 className="mt-2 text-[30px] font-black text-[#17351f]">{title}</h2>
+        <h2 className="mt-2 text-[26px] font-black text-[#17351f] md:text-[32px]">
+          {title}
+        </h2>
       </div>
       {purchases.length === 0 ? (
-        <div className="estancia-card px-5 py-8 text-sm text-[#5c745f]">
+        <div className="estancia-card px-5 py-8 text-center text-sm text-[#5c745f]">
           {emptyMessage}
         </div>
       ) : (
@@ -771,21 +771,8 @@ export function CustomerVouchersPage({
 
   return (
     <IngressoShell active="tickets" user={user}>
-      <div className="mx-auto w-full max-w-[1180px] px-4 pt-6 md:px-6">
-        <div className="mt-6 space-y-8">
-          <section className="overflow-hidden rounded-[32px] border border-[#dce8d8] bg-[linear-gradient(135deg,#1f6b36,#2c7b40_52%,#7bc043_100%)] px-6 py-7 text-white shadow-[0_24px_60px_rgba(24,67,34,0.18)]">
-            <p className="text-[12px] uppercase tracking-[0.22em] text-white/70">
-              Area do cliente
-            </p>
-            <h1 className="mt-3 text-[34px] font-black leading-tight md:text-[42px]">
-              Meus ingressos e pedidos
-            </h1>
-            <p className="mt-3 max-w-[760px] text-[15px] leading-7 text-white/84">
-              Consulte compras, gere vouchers e acompanhe reagendamentos em um
-              unico lugar.
-            </p>
-          </section>
-
+      <div className="mx-auto w-full max-w-[1180px] px-4 pt-8 md:px-6">
+        <div className="space-y-8">
           {error ? (
             <div className="rounded-[24px] border border-[#efc3c3] bg-[#fff3f1] px-5 py-4 text-left text-sm text-[#9f3f36]">
               {error}

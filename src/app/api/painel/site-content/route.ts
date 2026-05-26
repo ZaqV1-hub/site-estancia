@@ -32,7 +32,7 @@ async function authorize(request: Request) {
     return auth.response;
   }
 
-  const painelAuth = await authorizePainelApiAccess(request, "vis_param");
+  const painelAuth = await authorizePainelApiAccess(request, ["vis_info", "vis_param"]);
   return painelAuth.ok ? null : painelAuth.response;
 }
 
@@ -105,6 +105,12 @@ export async function POST(request: Request) {
     const id = asText(formData.get("id")) || makeContentId(title);
     const current = data.events.find((item) => item.id === id);
     const imageUpload = await saveUploadedSiteImage(formData.get("image"));
+    const hasDate = asText(formData.get("eventMode")) === "date";
+    const eventDate = asText(formData.get("eventDate"));
+    const derivedHref =
+      hasDate && eventDate
+        ? `/agenda?mes=${Number(eventDate.slice(5, 7))}&ano=${eventDate.slice(0, 4)}&date=${eventDate}`
+        : "";
 
     writeEstanciaContent({
       ...data,
@@ -115,7 +121,7 @@ export async function POST(request: Request) {
           title: title || current?.title || "Novo evento",
           description: asText(formData.get("description")) || current?.description || "",
           imageSrc: imageUpload ?? current?.imageSrc ?? "/hero/current/banner-14-06-2026.jpg",
-          href: asText(formData.get("href")) || current?.href || "/agenda",
+          href: derivedHref || asText(formData.get("href")) || current?.href || "/agenda",
           buttonLabel: asText(formData.get("buttonLabel")) || current?.buttonLabel || "Compre seu ingresso!",
           active: asBool(formData.get("active")),
           sortOrder: Number(formData.get("sortOrder")) || current?.sortOrder || data.events.length + 1,

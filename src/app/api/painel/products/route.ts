@@ -5,7 +5,6 @@ import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
 import {
   makeContentId,
   normalizePrice,
-  normalizeVoucherType,
   readEstanciaContent,
   saveUploadedSiteImage,
   writeEstanciaContent,
@@ -59,6 +58,7 @@ export async function POST(request: Request) {
   const id = asText(formData.get("id")) || makeContentId(title);
   const current = data.products.find((item) => item.id === id);
   const imageSrc = await saveUploadedSiteImage(formData.get("image"));
+  const voucherType = type === "addon" ? "espec" : "norma";
   const product: B2cProduct = {
     id,
     type,
@@ -67,11 +67,8 @@ export async function POST(request: Request) {
     description: asText(formData.get("description")) || current?.description || "",
     imageSrc: imageSrc ?? current?.imageSrc ?? "/photos/day-use.jpg",
     fixedPrice: normalizePrice(formData.get("fixedPrice")),
-    voucherType: normalizeVoucherType(formData.get("voucherType")),
-    voucherPrefix:
-      asText(formData.get("voucherPrefix")) ||
-      current?.voucherPrefix ||
-      (type === "addon" ? "E" : "A"),
+    voucherType,
+    voucherPrefix: type === "addon" ? "E" : "A",
     active: asBool(formData.get("active")),
     sortOrder: Number(formData.get("sortOrder")) || current?.sortOrder || data.products.length + 1,
   };

@@ -68,6 +68,8 @@ export function PainelSiteManager({ content }: { content: EstanciaContentData })
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const currentEvent = editing?.section === "event" ? (editing.item as ManagedEvent | null) : null;
+  const currentEventUsesManualLink = Boolean(currentEvent?.href?.startsWith("http"));
 
   async function submitForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -204,11 +206,41 @@ export function PainelSiteManager({ content }: { content: EstanciaContentData })
                 </Field>
                 {editing.section === "event" ? (
                   <>
+                    <fieldset className="grid gap-3 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
+                      <legend className="px-1 text-sm font-black text-[#17351f]">
+                        Esse evento tem data?
+                      </legend>
+                      <label className="flex items-center gap-2 text-sm font-bold text-[#17351f]">
+                        <input name="eventMode" type="radio" value="date" defaultChecked={!currentEventUsesManualLink} />
+                        Sim, criar como data promocional
+                      </label>
+                      <label className="flex items-center gap-2 text-sm font-bold text-[#17351f]">
+                        <input
+                          name="eventMode"
+                          type="radio"
+                          value="link"
+                          defaultChecked={currentEventUsesManualLink}
+                        />
+                        Não, usar link manual no botão
+                      </label>
+                    </fieldset>
+                    <Field label="Data do evento">
+                      <input
+                        name="eventDate"
+                        type="date"
+                        className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                      />
+                    </Field>
                     <Field label="Link do botão">
-                      <input name="href" defaultValue={(editing.item as ManagedEvent | null)?.href ?? "/agenda"} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+                      <input
+                        name="href"
+                        defaultValue={currentEvent?.href ?? ""}
+                        placeholder="https://site.com.br ou /agenda"
+                        className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                      />
                     </Field>
                     <Field label="Texto do botão">
-                      <input name="buttonLabel" defaultValue={(editing.item as ManagedEvent | null)?.buttonLabel ?? "Compre seu ingresso!"} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+                      <input name="buttonLabel" defaultValue={currentEvent?.buttonLabel ?? "Compre seu ingresso!"} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
                     </Field>
                   </>
                 ) : null}

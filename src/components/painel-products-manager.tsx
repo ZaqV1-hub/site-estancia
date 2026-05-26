@@ -145,17 +145,7 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
             <Field label="Valor">
               <input name="fixedPrice" defaultValue={editing.product?.fixedPrice ?? ""} placeholder="100,00" className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
             </Field>
-            <div className="grid gap-3 md:grid-cols-3">
-              <Field label="Voucher">
-                <select name="voucherType" defaultValue={editing.product?.voucherType ?? (editing.type === "addon" ? "espec" : "norma")} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3">
-                  <option value="norma">Normal</option>
-                  <option value="infan">Infantil</option>
-                  <option value="espec">Especial</option>
-                </select>
-              </Field>
-              <Field label="Prefixo">
-                <input name="voucherPrefix" defaultValue={editing.product?.voucherPrefix ?? (editing.type === "addon" ? "E" : "A")} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
-              </Field>
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="Ordem">
                 <input name="sortOrder" type="number" min="1" defaultValue={editing.product?.sortOrder ?? ""} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
               </Field>

@@ -287,15 +287,16 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
 
   function renderProducts(products: B2cProduct[]) {
     return (
-      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
+      <div className="flex gap-4 overflow-x-auto pb-4 pr-2">
         {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            price={product.fixedPrice}
-            quantity={quantities[product.id] ?? 0}
-            onStep={(delta) => setProductQuantity(product.id, delta)}
-          />
+          <div key={product.id} className="min-w-[250px] max-w-[250px] md:min-w-[270px] md:max-w-[270px]">
+            <ProductCard
+              product={product}
+              price={product.fixedPrice}
+              quantity={quantities[product.id] ?? 0}
+              onStep={(delta) => setProductQuantity(product.id, delta)}
+            />
+          </div>
         ))}
       </div>
     );

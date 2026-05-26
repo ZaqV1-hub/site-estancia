@@ -1,0 +1,298 @@
+"use client";
+
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
+import { PainelModal } from "@/components/painel-modal";
+import type {
+  EstanciaContentData,
+  ManagedAttraction,
+  ManagedEvent,
+  ManagedHomeImage,
+} from "@/lib/estancia-content-store";
+
+type EditableItem =
+  | { section: "home"; item: ManagedHomeImage | null }
+  | { section: "attraction"; item: ManagedAttraction | null }
+  | { section: "event"; item: ManagedEvent | null };
+
+type DeleteTarget = {
+  section: "home" | "attraction" | "event";
+  id: string;
+  title: string;
+};
+
+function itemTitle(item: EditableItem) {
+  if (item.section === "home") {
+    return item.item ? "Editar imagem da home" : "Adicionar imagem da home";
+  }
+
+  if (item.section === "attraction") {
+    return item.item ? "Editar atração" : "Adicionar atração";
+  }
+
+  return item.item ? "Editar evento" : "Adicionar evento";
+}
+
+function ImagePicker({ name, label }: { name: string; label: string }) {
+  return (
+    <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+      {label}
+      <input
+        name={name}
+        type="file"
+        accept="image/*"
+        className="rounded-[8px] border border-dashed border-[#9bbd91] bg-white px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-[#17342d] file:px-4 file:py-2 file:text-sm file:font-black file:text-white"
+      />
+      <span className="text-xs font-medium text-[#6a806e]">
+        Clique em escolher arquivo para enviar a imagem.
+      </span>
+    </label>
+  );
+}
+
+function SubmitButton({ pending }: { pending: boolean }) {
+  return (
+    <button
+      disabled={pending}
+      className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white disabled:opacity-60"
+    >
+      {pending ? "Salvando..." : "Salvar"}
+    </button>
+  );
+}
+
+export function PainelSiteManager({ content }: { content: EstanciaContentData }) {
+  const router = useRouter();
+  const [editing, setEditing] = useState<EditableItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submitForm(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPending(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/painel/site-content", {
+        method: "POST",
+        body: new FormData(event.currentTarget),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: { message?: string };
+      } | null;
+
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.error?.message || "Não foi possível salvar.");
+      }
+
+      setEditing(null);
+      router.refresh();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Não foi possível salvar.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) {
+      return;
+    }
+
+    setPending(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/painel/site-content", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(deleteTarget),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: { message?: string };
+      } | null;
+
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.error?.message || "Não foi possível excluir.");
+      }
+
+      setDeleteTarget(null);
+      router.refresh();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Não foi possível excluir.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <>
+      <section className="panel-section p-5">
+        <p className="panel-eyebrow">Imagens da home</p>
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <h3 className="text-[24px] font-black text-[#17351f]">Banners publicados</h3>
+          <button
+            type="button"
+            onClick={() => setEditing({ section: "home", item: null })}
+            className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white"
+          >
+            Adicionar imagem
+          </button>
+        </div>
+        <div className="mt-5 flex gap-4 overflow-x-auto pb-3">
+          {content.homeImages.map((item) => (
+            <article key={item.id} className="min-w-[320px] rounded-[8px] border border-[#dbe7d7] bg-white p-4">
+              <div className="relative h-36 overflow-hidden rounded-[8px] bg-[#eef3e8]">
+                <Image src={item.desktopSrc} alt={item.alt} fill className="object-cover" sizes="320px" />
+              </div>
+              <h4 className="mt-3 text-lg font-black text-[#17351f]">{item.alt}</h4>
+              <p className="text-sm text-[#5f7564]">{item.active ? "Publicado" : "Oculto"}</p>
+              <div className="mt-4 flex gap-2">
+                <button onClick={() => setEditing({ section: "home", item })} className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]">Editar</button>
+                <button onClick={() => setDeleteTarget({ section: "home", id: item.id, title: item.alt })} className="rounded-full border border-[#f0c3bc] px-4 py-2 text-xs font-black text-[#a33b31]">Excluir</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-5 xl:grid-cols-2">
+        <ContentList
+          title="Atrações"
+          buttonLabel="Adicionar atração"
+          items={content.attractions}
+          section="attraction"
+          onEdit={(item) => setEditing({ section: "attraction", item })}
+          onCreate={() => setEditing({ section: "attraction", item: null })}
+          onDelete={(item) => setDeleteTarget({ section: "attraction", id: item.id, title: item.title })}
+        />
+        <ContentList
+          title="Eventos"
+          buttonLabel="Adicionar evento"
+          items={content.events}
+          section="event"
+          onEdit={(item) => setEditing({ section: "event", item })}
+          onCreate={() => setEditing({ section: "event", item: null })}
+          onDelete={(item) => setDeleteTarget({ section: "event", id: item.id, title: item.title })}
+        />
+      </section>
+
+      <PainelModal title={editing ? itemTitle(editing) : ""} open={Boolean(editing)} onClose={() => setEditing(null)}>
+        {editing ? (
+          <form onSubmit={submitForm} className="grid gap-4">
+            <input type="hidden" name="section" value={editing.section} />
+            {editing.item ? <input type="hidden" name="id" value={editing.item.id} /> : null}
+            {editing.section === "home" ? (
+              <>
+                <Field label="Texto da imagem">
+                  <input name="alt" defaultValue={editing.item?.alt ?? ""} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+                </Field>
+                <ImagePicker name="desktopImage" label="Imagem desktop" />
+                <ImagePicker name="mobileImage" label="Imagem mobile" />
+              </>
+            ) : (
+              <>
+                <Field label="Título">
+                  <input name="title" defaultValue={editing.item?.title ?? ""} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+                </Field>
+                <Field label="Descrição">
+                  <textarea name="description" defaultValue={editing.item?.description ?? ""} rows={4} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+                </Field>
+                {editing.section === "event" ? (
+                  <>
+                    <Field label="Link do botão">
+                      <input name="href" defaultValue={(editing.item as ManagedEvent | null)?.href ?? "/agenda"} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+                    </Field>
+                    <Field label="Texto do botão">
+                      <input name="buttonLabel" defaultValue={(editing.item as ManagedEvent | null)?.buttonLabel ?? "Compre seu ingresso!"} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+                    </Field>
+                  </>
+                ) : null}
+                <ImagePicker name="image" label="Imagem" />
+              </>
+            )}
+            <Field label="Ordem">
+              <input name="sortOrder" type="number" min="1" defaultValue={editing.item?.sortOrder ?? ""} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+            </Field>
+            <label className="flex items-center gap-2 text-sm font-black text-[#17351f]">
+              <input name="active" type="checkbox" defaultChecked={editing.item?.active ?? true} /> Publicar
+            </label>
+            {error ? <p className="rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">{error}</p> : null}
+            <SubmitButton pending={pending} />
+          </form>
+        ) : null}
+      </PainelModal>
+
+      <PainelModal title="Confirmar exclusão" open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
+        <p className="text-sm leading-7 text-[#5f7564]">
+          Tem certeza que deseja excluir <strong>{deleteTarget?.title}</strong>?
+        </p>
+        {error ? <p className="mt-3 rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">{error}</p> : null}
+        <div className="mt-5 flex gap-3">
+          <button onClick={confirmDelete} disabled={pending} className="rounded-full bg-[#b24239] px-5 py-3 text-sm font-black text-white disabled:opacity-60">
+            {pending ? "Excluindo..." : "Excluir"}
+          </button>
+          <button onClick={() => setDeleteTarget(null)} className="rounded-full border border-[#dbe7d7] px-5 py-3 text-sm font-black text-[#17351f]">
+            Cancelar
+          </button>
+        </div>
+      </PainelModal>
+    </>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+      {label}
+      {children}
+    </label>
+  );
+}
+
+function ContentList<T extends ManagedAttraction | ManagedEvent>({
+  title,
+  buttonLabel,
+  items,
+  onEdit,
+  onCreate,
+  onDelete,
+}: {
+  title: string;
+  buttonLabel: string;
+  section: "attraction" | "event";
+  items: T[];
+  onEdit: (item: T) => void;
+  onCreate: () => void;
+  onDelete: (item: T) => void;
+}) {
+  return (
+    <article className="panel-section p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="panel-eyebrow">{title}</p>
+        <button onClick={onCreate} className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white">
+          {buttonLabel}
+        </button>
+      </div>
+      <div className="mt-5 grid max-h-[520px] gap-3 overflow-y-auto pr-2">
+        {items.map((item) => (
+          <div key={item.id} className="rounded-[8px] border border-[#dbe7d7] bg-white p-4">
+            <div className="relative h-32 overflow-hidden rounded-[8px] bg-[#eef3e8]">
+              <Image src={item.imageSrc} alt={item.title} fill className="object-cover" sizes="420px" />
+            </div>
+            <h3 className="mt-3 text-lg font-black text-[#17351f]">{item.title}</h3>
+            <p className="mt-1 line-clamp-3 text-sm leading-6 text-[#5f7564]">{item.description}</p>
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => onEdit(item)} className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]">Editar</button>
+              <button onClick={() => onDelete(item)} className="rounded-full border border-[#f0c3bc] px-4 py-2 text-xs font-black text-[#a33b31]">Excluir</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}

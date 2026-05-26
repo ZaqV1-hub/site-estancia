@@ -3,14 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type {
-  PainelAgendaOption,
   PainelAgendaScreenData,
   PainelAgendaStatus,
   PainelAgendaType,
 } from "@/lib/painel-agenda";
 import {
   formatPainelAgendaDateLabel,
-  getPainelAgendaStatusOptions,
   getPainelAgendaTypeOptions,
 } from "@/lib/painel-agenda-ui";
 
@@ -22,6 +20,7 @@ type PainelAgendaEditorProps = {
   };
   mode: "create" | "edit";
   returnHref: string;
+  initialType?: PainelAgendaType;
 };
 
 type RangePreviewState =
@@ -41,38 +40,57 @@ type MutationState =
   | { status: "error"; message: string }
   | { status: "success"; message: string };
 
-function toDateInputValue(value: string | null) {
-  return value ?? "";
+function defaultReason(selectedDate: string | null) {
+  return selectedDate
+    ? `Atualização da agenda de ${formatPainelAgendaDateLabel(selectedDate)}`
+    : "Criação de agenda pelo painel";
 }
 
-function buildDefaultForm(data: PainelAgendaScreenData) {
+function buildDefaultForm(
+  data: PainelAgendaScreenData,
+  initialType?: PainelAgendaType,
+) {
   const selectedDate = data.selectedDate ?? null;
   const agenda = data.selectedDay?.agenda ?? null;
   const firstPriceTable = data.priceTables[0]?.id ?? 0;
   const firstInformation = data.informationOptions[0]?.id ?? 0;
 
   return {
-    startDate: toDateInputValue(selectedDate),
-    endDate: toDateInputValue(selectedDate),
+    startDate: selectedDate ?? "",
+    endDate: selectedDate ?? "",
     priceTableId: agenda?.priceTableId ?? firstPriceTable,
     informationId: agenda?.informationId ?? firstInformation,
-    type: (agenda?.type ?? "padra") as PainelAgendaType,
+    type: (agenda?.type ?? initialType ?? "padra") as PainelAgendaType,
     status: (agenda?.status ?? "abe") as PainelAgendaStatus,
     promotionName: agenda?.promotionName ?? "",
     promotionDescription: agenda?.promotionDescription ?? "",
-    reason: "",
+    reason: defaultReason(selectedDate),
   };
 }
+
+const defaultPassports = [
+  "Passaporte Explorador",
+  "Passaporte Aventura",
+  "Passaporte Infantil",
+];
+
+const defaultAddons = [
+  "Almoço Caipira",
+  "Café da Manhã",
+  "Ecobag",
+  "Kit Bebidas",
+];
 
 export function PainelAgendaEditor({
   data,
   actor,
   mode,
   returnHref,
+  initialType,
 }: PainelAgendaEditorProps) {
   const router = useRouter();
   const selectedAgenda = data.selectedDay?.agenda ?? null;
-  const [form, setForm] = useState(() => buildDefaultForm(data));
+  const [form, setForm] = useState(() => buildDefaultForm(data, initialType));
   const [rangePreview, setRangePreview] = useState<RangePreviewState>({
     status: "idle",
     existingDates: [],
@@ -82,7 +100,6 @@ export function PainelAgendaEditor({
   const [mutationState, setMutationState] = useState<MutationState>({
     status: "idle",
   });
-  const [deleteReason, setDeleteReason] = useState("");
 
   useEffect(() => {
     if (!form.startDate || !form.endDate) {
@@ -128,7 +145,9 @@ export function PainelAgendaEditor({
 
         if (!response.ok || !payload.ok) {
           throw new Error(
-            payload.ok ? "Nao foi possivel verificar a faixa." : payload.error.message,
+            payload.ok
+              ? "Não foi possível verificar a faixa."
+              : payload.error.message,
           );
         }
 
@@ -149,7 +168,7 @@ export function PainelAgendaEditor({
           message:
             error instanceof Error
               ? error.message
-              : "Nao foi possivel verificar a faixa.",
+              : "Não foi possível verificar a faixa.",
         });
       }
     }
@@ -160,7 +179,6 @@ export function PainelAgendaEditor({
   }, [form.startDate, form.endDate, selectedAgenda?.id]);
 
   const typeOptions = getPainelAgendaTypeOptions(selectedAgenda?.type ?? null);
-  const statusOptions = getPainelAgendaStatusOptions();
   const overwriteRequired = rangePreview.existingDates.length > 0;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -186,7 +204,7 @@ export function PainelAgendaEditor({
 
       if (!response.ok || !payload.ok) {
         throw new Error(
-          payload.ok ? "Nao foi possivel salvar a agenda." : payload.error.message,
+          payload.ok ? "Não foi possível salvar a agenda." : payload.error.message,
         );
       }
 
@@ -202,21 +220,13 @@ export function PainelAgendaEditor({
         message:
           error instanceof Error
             ? error.message
-            : "Nao foi possivel salvar a agenda.",
+            : "Não foi possível salvar a agenda.",
       });
     }
   }
 
   async function handleDelete() {
     if (mode !== "edit" || !selectedAgenda) {
-      return;
-    }
-
-    if (!deleteReason.trim()) {
-      setMutationState({
-        status: "error",
-        message: "Informe o motivo da exclusao da agenda.",
-      });
       return;
     }
 
@@ -229,7 +239,7 @@ export function PainelAgendaEditor({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          reason: deleteReason,
+          reason: "Remoção da agenda pelo painel",
           actor,
         }),
       });
@@ -239,13 +249,11 @@ export function PainelAgendaEditor({
 
       if (!response.ok || !payload.ok) {
         throw new Error(
-          payload.ok ? "Nao foi possivel remover a agenda." : payload.error.message,
+          payload.ok ? "Não foi possível remover a agenda." : payload.error.message,
         );
       }
 
-      router.replace(
-        `/painel/agenda?mes=${data.month}&ano=${data.year}`,
-      );
+      router.replace(`/painel/agenda?mes=${data.month}&ano=${data.year}`);
       router.refresh();
     } catch (error) {
       setMutationState({
@@ -253,33 +261,33 @@ export function PainelAgendaEditor({
         message:
           error instanceof Error
             ? error.message
-            : "Nao foi possivel remover a agenda.",
+            : "Não foi possível remover a agenda.",
       });
     }
   }
 
   return (
-    <section className="rounded-[28px] border border-[#d7e5ef] bg-white p-6 shadow-[0_12px_34px_rgba(31,67,98,0.08)]">
+    <section className="panel-section p-5">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#5d7282]">
+        <p className="panel-eyebrow">
           {mode === "create" ? "Adicionar" : "Editar"}
         </p>
-        <h2 className="legacy-condensed mt-2 text-4xl text-[#205a7f]">
+        <h2 className="mt-2 text-[34px] font-black leading-tight text-[#17351f]">
           {data.selectedDate
             ? formatPainelAgendaDateLabel(data.selectedDate)
             : "Nova agenda"}
         </h2>
-        <p className="mt-3 text-sm leading-6 text-[#5d7282]">
+        <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
           {mode === "create"
-            ? "Crie uma agenda por dia ou replique a configuracao para uma faixa de datas."
-            : "Atualize a configuracao do dia selecionado ou replique a alteracao para a faixa informada."}
+            ? "Configure a data, os passaportes e os itens disponíveis."
+            : "Atualize a data, os passaportes e os itens disponíveis."}
         </p>
       </div>
 
       <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm font-semibold text-[#345062]">
-            Dia inicio
+        <div className="grid gap-4 lg:grid-cols-[0.7fr_0.5fr]">
+          <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+            Data
             <input
               type="date"
               value={form.startDate}
@@ -287,72 +295,14 @@ export function PainelAgendaEditor({
                 setForm((current) => ({
                   ...current,
                   startDate: event.target.value,
-                }))
-              }
-              className="rounded-2xl border border-[#c8d8e3] px-4 py-3 text-sm font-normal text-[#1b3447]"
-            />
-          </label>
-
-          <label className="grid gap-2 text-sm font-semibold text-[#345062]">
-            Dia fim
-            <input
-              type="date"
-              value={form.endDate}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
                   endDate: event.target.value,
                 }))
               }
-              className="rounded-2xl border border-[#c8d8e3] px-4 py-3 text-sm font-normal text-[#1b3447]"
+              className="rounded-[8px] border border-[#dbe7d7] px-4 py-3 text-sm font-normal text-[#17351f]"
             />
           </label>
-        </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm font-semibold text-[#345062]">
-            Tabela de preco
-            <select
-              value={form.priceTableId}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  priceTableId: Number(event.target.value),
-                }))
-              }
-              className="rounded-2xl border border-[#c8d8e3] px-4 py-3 text-sm font-normal text-[#1b3447]"
-            >
-              {data.priceTables.map((option: PainelAgendaOption) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="grid gap-2 text-sm font-semibold text-[#345062]">
-            Informacoes
-            <select
-              value={form.informationId}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  informationId: Number(event.target.value),
-                }))
-              }
-              className="rounded-2xl border border-[#c8d8e3] px-4 py-3 text-sm font-normal text-[#1b3447]"
-            >
-              {data.informationOptions.map((option: PainelAgendaOption) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm font-semibold text-[#345062]">
+          <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
             Tipo da agenda
             <select
               value={form.type}
@@ -362,29 +312,9 @@ export function PainelAgendaEditor({
                   type: event.target.value as PainelAgendaType,
                 }))
               }
-              className="rounded-2xl border border-[#c8d8e3] px-4 py-3 text-sm font-normal text-[#1b3447]"
+              className="rounded-[8px] border border-[#dbe7d7] px-4 py-3 text-sm font-normal text-[#17351f]"
             >
               {typeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="grid gap-2 text-sm font-semibold text-[#345062]">
-            Status da agenda
-            <select
-              value={form.status}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  status: event.target.value as PainelAgendaStatus,
-                }))
-              }
-              className="rounded-2xl border border-[#c8d8e3] px-4 py-3 text-sm font-normal text-[#1b3447]"
-            >
-              {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -394,9 +324,9 @@ export function PainelAgendaEditor({
         </div>
 
         {form.type === "promo" ? (
-          <div className="grid gap-4">
-            <label className="grid gap-2 text-sm font-semibold text-[#345062]">
-              Nome promocional
+          <div className="grid gap-4 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
+            <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+              Nome da promoção
               <input
                 type="text"
                 value={form.promotionName}
@@ -406,11 +336,11 @@ export function PainelAgendaEditor({
                     promotionName: event.target.value,
                   }))
                 }
-                className="rounded-2xl border border-[#c8d8e3] px-4 py-3 text-sm font-normal text-[#1b3447]"
+                className="rounded-[8px] border border-[#dbe7d7] px-4 py-3 text-sm font-normal text-[#17351f]"
               />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-[#345062]">
-              Descricao promocional
+            <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+              Descrição da promoção
               <textarea
                 value={form.promotionDescription}
                 onChange={(event) =>
@@ -420,35 +350,76 @@ export function PainelAgendaEditor({
                   }))
                 }
                 rows={3}
-                className="rounded-2xl border border-[#c8d8e3] px-4 py-3 text-sm font-normal text-[#1b3447]"
+                className="rounded-[8px] border border-[#dbe7d7] px-4 py-3 text-sm font-normal text-[#17351f]"
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+              Imagem do evento
+              <input
+                type="file"
+                accept="image/*"
+                className="rounded-[8px] border border-dashed border-[#b9d3b1] bg-white px-4 py-3 text-sm font-normal text-[#17351f]"
               />
             </label>
           </div>
         ) : null}
 
-        <label className="grid gap-2 text-sm font-semibold text-[#345062]">
-          Motivo da alteracao
-          <textarea
-            value={form.reason}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                reason: event.target.value,
-              }))
-            }
-            rows={3}
-            className="rounded-2xl border border-[#c8d8e3] px-4 py-3 text-sm font-normal text-[#1b3447]"
-          />
-        </label>
+        <section className="grid gap-4 rounded-[8px] border border-[#dbe7d7] bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="panel-eyebrow">Passaportes</p>
+              <h3 className="mt-1 text-xl font-black text-[#17351f]">
+                Seleção de passaportes
+              </h3>
+            </div>
+            <button
+              type="button"
+              className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]"
+            >
+              Adicionar especial
+            </button>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {defaultPassports.map((item) => (
+              <label
+                key={item}
+                className="flex items-center gap-3 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-3 text-sm font-black text-[#17351f]"
+              >
+                <input type="checkbox" defaultChecked className="h-4 w-4" />
+                {item}
+              </label>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-4 rounded-[8px] border border-[#dbe7d7] bg-white p-4">
+          <div>
+            <p className="panel-eyebrow">Itens adicionais</p>
+            <h3 className="mt-1 text-xl font-black text-[#17351f]">
+              Itens disponíveis na data
+            </h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-4">
+            {defaultAddons.map((item) => (
+              <label
+                key={item}
+                className="flex items-center gap-3 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-3 text-sm font-black text-[#17351f]"
+              >
+                <input type="checkbox" defaultChecked className="h-4 w-4" />
+                {item}
+              </label>
+            ))}
+          </div>
+        </section>
 
         {rangePreview.status === "error" ? (
-          <div className="rounded-2xl border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
+          <div className="rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
             {rangePreview.message}
           </div>
         ) : null}
 
         {overwriteRequired ? (
-          <label className="flex items-start gap-3 rounded-2xl border border-[#f0d9aa] bg-[#fff7ea] px-4 py-3 text-sm text-[#7a5b20]">
+          <label className="flex items-start gap-3 rounded-[8px] border border-[#f0d9aa] bg-[#fff7ea] px-4 py-3 text-sm text-[#7a5b20]">
             <input
               type="checkbox"
               checked={confirmOverwrite}
@@ -456,7 +427,7 @@ export function PainelAgendaEditor({
               className="mt-1"
             />
             <span>
-              Atualizar as datas ja existentes:{" "}
+              Atualizar as datas já existentes:{" "}
               {rangePreview.existingDates
                 .map(formatPainelAgendaDateLabel)
                 .join(", ")}
@@ -465,19 +436,19 @@ export function PainelAgendaEditor({
         ) : null}
 
         {rangePreview.hasSchoolDates && form.type !== "escol" ? (
-          <div className="rounded-2xl border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
-            A faixa selecionada contem agendas escolares. So e permitido manter o tipo escolar nesses dias.
+          <div className="rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
+            A faixa selecionada contém agendas escolares. Só é permitido manter o tipo escolar nesses dias.
           </div>
         ) : null}
 
         {mutationState.status === "error" ? (
-          <div className="rounded-2xl border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
+          <div className="rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
             {mutationState.message}
           </div>
         ) : null}
 
         {mutationState.status === "success" ? (
-          <div className="rounded-2xl border border-[#c8e5cf] bg-[#f2fbf5] px-4 py-3 text-sm text-[#2f6a3f]">
+          <div className="rounded-[8px] border border-[#c8e5cf] bg-[#f2fbf5] px-4 py-3 text-sm text-[#2f6a3f]">
             {mutationState.message}
           </div>
         ) : null}
@@ -490,7 +461,7 @@ export function PainelAgendaEditor({
               (overwriteRequired && !confirmOverwrite) ||
               (rangePreview.hasSchoolDates && form.type !== "escol")
             }
-            className="rounded-full bg-[#246b99] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+            className="rounded-full bg-[#2b8c46] px-5 py-3 text-sm font-black text-white disabled:opacity-60"
           >
             {mutationState.status === "submitting" ? "Salvando..." : "Salvar agenda"}
           </button>
@@ -498,28 +469,20 @@ export function PainelAgendaEditor({
           <button
             type="button"
             onClick={() => router.replace(returnHref)}
-            className="rounded-full border border-[#c8d8e3] px-5 py-3 text-sm font-semibold text-[#35576f]"
+            className="rounded-full border border-[#dbe7d7] px-5 py-3 text-sm font-black text-[#17351f]"
           >
             Voltar
           </button>
+
           {mode === "edit" && selectedAgenda ? (
-            <>
-              <input
-                type="text"
-                value={deleteReason}
-                onChange={(event) => setDeleteReason(event.target.value)}
-                placeholder="Motivo da exclusao"
-                className="min-w-[220px] rounded-full border border-[#c8d8e3] px-4 py-3 text-sm text-[#1b3447]"
-              />
-              <button
-                type="button"
-                onClick={() => void handleDelete()}
-                disabled={mutationState.status === "submitting"}
-                className="rounded-full border border-[#d05f56] px-5 py-3 text-sm font-semibold text-[#b24239] disabled:opacity-60"
-              >
-                Remover dia
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => void handleDelete()}
+              disabled={mutationState.status === "submitting"}
+              className="rounded-full border border-[#d05f56] px-5 py-3 text-sm font-black text-[#b24239] disabled:opacity-60"
+            >
+              Remover dia
+            </button>
           ) : null}
         </div>
       </form>

@@ -21,6 +21,7 @@ export default async function PainelAgendaAddPage({
     mes?: string;
     ano?: string;
     dia?: string;
+    tipo?: string;
   }>;
 }) {
   const session = await requirePainelAccess("vis_agenda", "/painel/agenda/adicionar");
@@ -56,6 +57,7 @@ export default async function PainelAgendaAddPage({
         }}
         mode="create"
         returnHref={returnHref}
+        initialType={params.tipo === "promo" ? "promo" : "padra"}
       />
     </div>
   );

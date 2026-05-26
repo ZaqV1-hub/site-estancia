@@ -25,12 +25,11 @@ export default async function PainelEventosRoute() {
               Datas promocionais
             </h2>
             <p className="mt-3 max-w-[720px] text-[15px] leading-7 text-[#5f7564]">
-              Crie eventos para a tela inicial e vincule uma data de venda com
-              valores especiais.
+              Crie eventos para a tela inicial e vincule uma data de venda com valores especiais.
             </p>
           </div>
           <Link
-            href="/painel/agenda/adicionar"
+            href="/painel/agenda/adicionar?tipo=promo"
             className="inline-flex min-h-11 items-center justify-center rounded-[8px] bg-[#17342d] px-5 text-sm font-black text-white"
           >
             Adicionar data promocional
@@ -41,54 +40,46 @@ export default async function PainelEventosRoute() {
       <section className="grid gap-5 xl:grid-cols-[1fr_0.9fr]">
         <article className="panel-section p-5">
           <p className="panel-eyebrow">Evento em destaque</p>
-          <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
-            Festa Junina
-          </h3>
+          <h3 className="mt-2 text-[24px] font-black text-[#17351f]">Festa Junina</h3>
           <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
-            Comidas t\u00edpicas, m\u00fasica, brincadeiras e lazer ao ar livre.
+            Comidas típicas, música, brincadeiras e lazer ao ar livre.
           </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-[8px] border border-[#dbe7d7] bg-[#f6faf3] p-4">
               <p className="panel-eyebrow">Data</p>
-              <p className="mt-2 text-[20px] font-black text-[#17351f]">
-                14/06/2026
-              </p>
+              <p className="mt-2 text-[20px] font-black text-[#17351f]">14/06/2026</p>
             </div>
             <div className="rounded-[8px] border border-[#dbe7d7] bg-[#f6faf3] p-4">
-              <p className="panel-eyebrow">Bot\u00e3o</p>
+              <p className="panel-eyebrow">Botão</p>
               <p className="mt-2 text-[18px] font-black text-[#17351f]">
                 Compre seu ingresso!
               </p>
             </div>
             <div className="rounded-[8px] border border-[#dbe7d7] bg-[#f6faf3] p-4">
               <p className="panel-eyebrow">Status</p>
-              <p className="mt-2 text-[18px] font-black text-[#17351f]">
-                Publicado
-              </p>
+              <p className="mt-2 text-[18px] font-black text-[#17351f]">Publicado</p>
             </div>
           </div>
         </article>
 
         <article className="panel-section p-5">
-          <p className="panel-eyebrow">Configura\u00e7\u00e3o</p>
-          <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
-            Publica\u00e7\u00e3o do evento
-          </h3>
+          <p className="panel-eyebrow">Estrutura do cadastro</p>
+          <h3 className="mt-2 text-[24px] font-black text-[#17351f]">Evento na agenda</h3>
           <div className="mt-5 grid gap-3">
             {[
-              "Nome",
-              "Descri\u00e7\u00e3o",
+              "Data",
+              "Nome da promoção",
               "Imagem",
-              "Data vinculada",
+              "Passaportes disponíveis",
+              "Itens adicionais",
               "Valores",
-              "Produtos dispon\u00edveis",
             ].map((item) => (
               <div
                 key={item}
                 className="flex items-center justify-between rounded-[8px] border border-[#dbe7d7] bg-white px-4 py-3 text-sm font-bold text-[#17351f]"
               >
                 <span>{item}</span>
-                <span className="text-[#6e9464]">Configurado</span>
+                <span className="text-[#6e9464]">Agenda promocional</span>
               </div>
             ))}
           </div>

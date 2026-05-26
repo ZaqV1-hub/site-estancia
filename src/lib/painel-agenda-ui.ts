@@ -8,13 +8,13 @@ type CalendarCell = {
 };
 
 const painelAgendaTypeLabels: Record<PainelAgendaType, string> = {
-  padra: "Data padrao",
+  padra: "Data padrão",
   promo: "Data promocional",
   escol: "Data escolar",
   igrej: "Igreja",
   casam: "Casamento",
   melho: "Melhor idade",
-  confr: "Confraternizacao",
+  confr: "Confraternização",
   ongs: "ONG",
   grmix: "Grupo misto",
 };
@@ -96,11 +96,10 @@ export function getPainelAgendaTypeOptions(currentType?: PainelAgendaType | null
     return [{ value: "escol", label: painelAgendaTypeLabels.escol }];
   }
 
-  return (
-    Object.entries(painelAgendaTypeLabels) as Array<[PainelAgendaType, string]>
-  )
-    .filter(([value]) => value !== "escol")
-    .map(([value, label]) => ({ value, label }));
+  return (["padra", "promo"] as PainelAgendaType[]).map((value) => ({
+    value,
+    label: painelAgendaTypeLabels[value],
+  }));
 }
 
 export function getPainelAgendaStatusOptions() {
@@ -108,4 +107,3 @@ export function getPainelAgendaStatusOptions() {
     Object.entries(painelAgendaStatusLabels) as Array<[PainelAgendaStatus, string]>
   ).map(([value, label]) => ({ value, label }));
 }
-

@@ -142,13 +142,13 @@ type OptionRow = {
 };
 
 const painelAgendaTypeLabels: Record<PainelAgendaType, string> = {
-  padra: "Data padrao",
+  padra: "Data padrão",
   promo: "Data promocional",
   escol: "Data escolar",
   igrej: "Igreja",
   casam: "Casamento",
   melho: "Melhor idade",
-  confr: "Confraternizacao",
+  confr: "Confraternização",
   ongs: "ONG",
   grmix: "Grupo misto",
 };
@@ -454,7 +454,7 @@ function validateMutationInput(input: PainelAgendaMutationInput) {
   if (!Number.isInteger(input.priceTableId) || input.priceTableId <= 0) {
     throw new PainelAgendaError(
       "agenda_invalid_price_table",
-      "Selecione uma tabela de preco valida.",
+      "Selecione uma tabela de preço válida.",
       400,
     );
   }
@@ -462,7 +462,7 @@ function validateMutationInput(input: PainelAgendaMutationInput) {
   if (!Number.isInteger(input.informationId) || input.informationId <= 0) {
     throw new PainelAgendaError(
       "agenda_invalid_information",
-      "Selecione uma informacao valida.",
+      "Selecione uma informação válida.",
       400,
     );
   }
@@ -486,7 +486,7 @@ function validateMutationInput(input: PainelAgendaMutationInput) {
   if (String(input.reason ?? "").trim().length === 0) {
     throw new PainelAgendaError(
       "agenda_reason_required",
-      "Informe o motivo da alteracao.",
+      "Informe o motivo da alteração.",
       400,
     );
   }
@@ -503,7 +503,7 @@ function validateMutationInput(input: PainelAgendaMutationInput) {
     if (String(input.promotionDescription ?? "").trim().length === 0) {
       throw new PainelAgendaError(
         "agenda_promotion_description_required",
-        "Informe a descricao promocional.",
+        "Informe a descrição promocional.",
         400,
       );
     }
@@ -582,7 +582,7 @@ export async function upsertPainelAgendaRange(input: PainelAgendaMutationInput) 
   if (preview.hasSchoolDates && normalized.type !== "escol") {
     throw new PainelAgendaError(
       "agenda_school_conflict",
-      "Nao e possivel alterar a faixa informada porque existem agendas escolares nas datas selecionadas.",
+      "Não é possível alterar a faixa informada porque existem agendas escolares nas datas selecionadas.",
       409,
     );
   }
@@ -590,7 +590,7 @@ export async function upsertPainelAgendaRange(input: PainelAgendaMutationInput) 
   if (preview.existingDates.length > 0 && !normalized.confirmOverwrite) {
     throw new PainelAgendaError(
       "agenda_confirmation_required",
-      `Existem datas ja cadastradas na faixa selecionada: ${preview.existingDates
+      `Existem datas já cadastradas na faixa selecionada: ${preview.existingDates
         .map(formatPainelAgendaDateLabel)
         .join(", ")}.`,
       409,
@@ -722,7 +722,7 @@ export async function upsertPainelAgendaRange(input: PainelAgendaMutationInput) 
     }
     throw new PainelAgendaError(
       "agenda_upsert_failed",
-      "Nao foi possivel salvar a agenda agora.",
+      "Não foi possível salvar a agenda agora.",
       500,
     );
   } finally {
@@ -743,7 +743,7 @@ export async function deletePainelAgenda(
   if (!Number.isInteger(agendaId) || agendaId <= 0) {
     throw new PainelAgendaError(
       "agenda_invalid_id",
-      "Informe uma agenda valida para exclusao.",
+      "Informe uma agenda válida para exclusão.",
       400,
     );
   }
@@ -751,7 +751,7 @@ export async function deletePainelAgenda(
   if (String(input.reason ?? "").trim().length === 0) {
     throw new PainelAgendaError(
       "agenda_reason_required",
-      "Informe o motivo da exclusao.",
+      "Informe o motivo da exclusão.",
       400,
     );
   }
@@ -825,7 +825,7 @@ export async function deletePainelAgenda(
 
     throw new PainelAgendaError(
       "agenda_delete_failed",
-      "Nao foi possivel remover a agenda. Verifique se existem relacionamentos ativos.",
+      "Não foi possível remover a agenda. Verifique se existem relacionamentos ativos.",
       409,
     );
   } finally {
@@ -840,7 +840,7 @@ export function asPainelAgendaError(error: unknown) {
 
   return new PainelAgendaError(
     "agenda_unknown_error",
-    "Nao foi possivel concluir a operacao da agenda.",
+    "Não foi possível concluir a operação da agenda.",
     500,
   );
 }

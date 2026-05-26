@@ -8,7 +8,7 @@ type PainelHomePageProps = {
 const quickLinks = [
   { href: "/painel/agenda", label: "Agenda" },
   { href: "/painel/bilheteria", label: "Bilheteria" },
-  { href: "/painel/clientes", label: "Clientes" },
+  { href: "/painel/passaportes-itens", label: "Passaportes e itens" },
   { href: "/painel/administrativo", label: "Administrativo" },
 ];
 
@@ -23,7 +23,7 @@ export function PainelHomePage({ data }: PainelHomePageProps) {
   return (
     <div className="space-y-6 text-[#35503b]">
       <section className="panel-section px-5 py-5">
-        <p className="panel-eyebrow">Vis\u00e3o geral</p>
+        <p className="panel-eyebrow">Visão geral</p>
         <div className="mt-3 grid gap-5 xl:grid-cols-[1fr_0.85fr]">
           <div>
             <h2 className="text-[30px] font-black leading-tight text-[#17351f]">
@@ -64,7 +64,7 @@ export function PainelHomePage({ data }: PainelHomePageProps) {
       </section>
 
       <section className="panel-section p-5">
-        <p className="panel-eyebrow">Acesso r\u00e1pido</p>
+        <p className="panel-eyebrow">Acesso rápido</p>
         <div className="mt-4 grid gap-3 md:grid-cols-4">
           {quickLinks.map((item) => (
             <Link
@@ -99,11 +99,11 @@ export function PainelHomePage({ data }: PainelHomePageProps) {
         <article className="panel-section p-5">
           <p className="panel-eyebrow">Site</p>
           <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
-            Imagens e atra\u00e7\u00f5es
+            Imagens e atrações
           </h3>
           <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
-            Organize imagens da home, vers\u00f5es mobile e desktop,
-            atra\u00e7\u00f5es e chamadas do site.
+            Organize imagens da home, versões mobile e desktop,
+            atrações e chamadas do site.
           </p>
           <Link
             href="/painel/site"

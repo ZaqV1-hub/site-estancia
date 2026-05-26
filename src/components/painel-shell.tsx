@@ -55,6 +55,12 @@ const navItems: PainelNavItem[] = [
     resources: ["vis_agenda"],
   },
   {
+    href: "/painel/passaportes-itens",
+    label: "Passaportes e itens",
+    icon: "products",
+    resources: ["vis_agenda", "vis_tabpre"],
+  },
+  {
     href: "/painel/bilheteria",
     label: "Bilheteria",
     icon: "ticket",
@@ -65,12 +71,6 @@ const navItems: PainelNavItem[] = [
     label: "Compras",
     icon: "cart",
     resources: ["vis_compra"],
-  },
-  {
-    href: "/painel/clientes",
-    label: "Clientes",
-    icon: "users",
-    resources: ["vis_clientes", "vis_escola"],
   },
   {
     href: "/painel/descontos",
@@ -131,6 +131,12 @@ function PanelIcon({ name }: { name: string }) {
       <>
         <path d="M5 5h14v15H5z" />
         <path d="M8 3v4M16 3v4M5 10h14" />
+      </>
+    ),
+    products: (
+      <>
+        <path d="M4 7h16v10H4z" />
+        <path d="M8 7V5h8v2M8 11h8M8 14h5" />
       </>
     ),
     ticket: (

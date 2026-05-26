@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PainelAgendaEditor } from "@/components/painel-agenda-editor";
+import { readEstanciaContent } from "@/lib/estancia-content-store";
 import { getPainelAgendaScreenData } from "@/lib/painel-agenda";
 import { requirePainelAccess } from "@/lib/painel-session";
 
@@ -65,6 +66,7 @@ export default async function PainelAgendaEditPage({
         }}
         mode="edit"
         returnHref={returnHref}
+        products={readEstanciaContent().products}
       />
     </div>
   );

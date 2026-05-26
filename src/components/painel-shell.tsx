@@ -37,12 +37,6 @@ type PainelNavItem = {
 const navItems: PainelNavItem[] = [
   { href: "/painel", label: "Vis\u00e3o geral", icon: "overview" },
   {
-    href: "/painel/eventos",
-    label: "Eventos",
-    icon: "events",
-    resources: ["vis_info", "vis_agenda"],
-  },
-  {
     href: "/painel/site",
     label: "Site",
     icon: "site",

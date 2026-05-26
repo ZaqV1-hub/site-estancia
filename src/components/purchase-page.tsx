@@ -5,13 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { IngressoShell } from "@/components/ingresso-shell";
-import {
-  buildB2cCartSummary,
-  getB2cProductUnitPrice,
-  listB2cAddons,
-  listB2cPassports,
-  type B2cProduct,
-} from "@/lib/b2c-catalog";
+import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
 import type { AuthUser } from "@/lib/auth-contracts";
 import type {
   CreatePurchaseResponse,
@@ -21,6 +15,7 @@ import type {
 type PurchasePageProps = {
   agenda: PurchaseAgendaDetail;
   user: AuthUser;
+  products: B2cProduct[];
 };
 
 type PurchaseStep = "passports" | "addons" | "review";
@@ -39,6 +34,44 @@ function formatCurrency(value: number | string) {
     style: "currency",
     currency: "BRL",
   }).format(Number(value));
+}
+
+function normalizeMoney(value: number) {
+  return value.toFixed(2);
+}
+
+function buildClientCartSummary(
+  products: B2cProduct[],
+  lineItems: { productId: string; quantity: number }[],
+) {
+  const lines = lineItems.map((item) => {
+    const product = products.find((current) => current.id === item.productId);
+    const unitPrice = product ? Number(product.fixedPrice) : 0;
+
+    if (!product || !Number.isFinite(unitPrice)) {
+      throw new Error("Produto indisponivel para compra.");
+    }
+
+    return {
+      productId: product.id,
+      type: product.type,
+      title: product.title,
+      quantity: item.quantity,
+      unitPrice: normalizeMoney(unitPrice),
+      totalValue: normalizeMoney(unitPrice * item.quantity),
+    };
+  });
+  const passportQuantity = lines
+    .filter((line) => line.type === "passport")
+    .reduce((total, line) => total + line.quantity, 0);
+  const addonQuantity = lines
+    .filter((line) => line.type === "addon")
+    .reduce((total, line) => total + line.quantity, 0);
+  const totalValue = normalizeMoney(
+    lines.reduce((total, line) => total + Number(line.totalValue), 0),
+  );
+
+  return { lines, passportQuantity, addonQuantity, totalValue };
 }
 function formatLongDate(date: string) {
   const parsed = new Date(`${date}T12:00:00`);
@@ -148,11 +181,11 @@ function ProductCard({
   );
 }
 
-export function PurchasePage({ agenda, user }: PurchasePageProps) {
+export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const passports = listB2cPassports();
-  const addons = listB2cAddons();
+  const passports = products.filter((product) => product.type === "passport");
+  const addons = products.filter((product) => product.type === "addon");
   const [step, setStep] = useState<PurchaseStep>("passports");
   const [quantities, setQuantities] = useState<Quantities>({});
   const [pending, setPending] = useState(false);
@@ -171,11 +204,11 @@ export function PurchasePage({ agenda, user }: PurchasePageProps) {
     }
 
     try {
-      return buildB2cCartSummary(lineItems);
+      return buildClientCartSummary(products, lineItems);
     } catch {
       return null;
     }
-  }, [lineItems]);
+  }, [lineItems, products]);
   const passportQuantity = cart?.passportQuantity ?? 0;
   const totalValue = cart?.totalValue ?? "0.00";
 
@@ -259,7 +292,7 @@ export function PurchasePage({ agenda, user }: PurchasePageProps) {
           <ProductCard
             key={product.id}
             product={product}
-            price={getB2cProductUnitPrice(product.id) ?? "0.00"}
+            price={product.fixedPrice}
             quantity={quantities[product.id] ?? 0}
             onStep={(delta) => setProductQuantity(product.id, delta)}
           />

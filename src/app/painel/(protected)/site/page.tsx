@@ -1,9 +1,18 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import type { ReactNode } from "react";
+import Image from "next/image";
+import { revalidatePath } from "next/cache";
+import {
+  makeContentId,
+  readEstanciaContent,
+  saveUploadedSiteImage,
+  writeEstanciaContent,
+  type EstanciaContentData,
+} from "@/lib/estancia-content-store";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Site | Estância",
+  title: "Painel - Site | Estancia",
   robots: {
     index: false,
     follow: false,
@@ -12,168 +21,263 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-const homeImages = [
-  { title: "Banner desktop", size: "1920 x 760 px", status: "Publicado" },
-  { title: "Banner mobile", size: "1080 x 1500 px", status: "Publicado" },
-];
+function asText(value: FormDataEntryValue | null) {
+  return String(value ?? "").trim();
+}
 
-const attractions = [
-  {
-    title: "Piscina Natural",
-    description: "Água, sombra e área verde para aproveitar o dia em família.",
-  },
-  {
-    title: "Trilhas e Natureza",
-    description: "Caminhos verdes para passeio, descanso e contato com o parque.",
-  },
-];
+function asBool(value: FormDataEntryValue | null) {
+  return value === "on";
+}
 
-const events = [
-  {
-    title: "Festa Junina",
-    description: "Comidas típicas, música, brincadeiras e lazer ao ar livre.",
-  },
-];
+function saveAndRevalidate(data: EstanciaContentData) {
+  writeEstanciaContent(data);
+  revalidatePath("/");
+  revalidatePath("/painel/site");
+}
 
-function ActionButtons() {
+async function upsertHomeImage(formData: FormData) {
+  "use server";
+
+  const data = readEstanciaContent();
+  const id = asText(formData.get("id")) || makeContentId(asText(formData.get("alt")));
+  const current = data.homeImages.find((item) => item.id === id);
+  const desktopUpload = await saveUploadedSiteImage(formData.get("desktopImage"));
+  const mobileUpload = await saveUploadedSiteImage(formData.get("mobileImage"));
+  const nextItem = {
+    id,
+    desktopSrc: desktopUpload ?? current?.desktopSrc ?? "/hero/current/banner-site-oficial-1.jpg",
+    mobileSrc: mobileUpload ?? current?.mobileSrc ?? desktopUpload ?? "/hero/current/banner-site-oficial-1.jpg",
+    alt: asText(formData.get("alt")) || current?.alt || "Imagem da home",
+    active: asBool(formData.get("active")),
+    sortOrder: Number(formData.get("sortOrder")) || current?.sortOrder || data.homeImages.length + 1,
+  };
+
+  saveAndRevalidate({
+    ...data,
+    homeImages: [...data.homeImages.filter((item) => item.id !== id), nextItem],
+  });
+}
+
+async function upsertAttraction(formData: FormData) {
+  "use server";
+
+  const data = readEstanciaContent();
+  const title = asText(formData.get("title"));
+  const id = asText(formData.get("id")) || makeContentId(title);
+  const current = data.attractions.find((item) => item.id === id);
+  const imageSrc = await saveUploadedSiteImage(formData.get("image"));
+  const nextItem = {
+    id,
+    title: title || current?.title || "Nova atracao",
+    description: asText(formData.get("description")) || current?.description || "",
+    imageSrc: imageSrc ?? current?.imageSrc ?? "/photos/day-use.jpg",
+    active: asBool(formData.get("active")),
+    sortOrder: Number(formData.get("sortOrder")) || current?.sortOrder || data.attractions.length + 1,
+  };
+
+  saveAndRevalidate({
+    ...data,
+    attractions: [...data.attractions.filter((item) => item.id !== id), nextItem],
+  });
+}
+
+async function upsertEvent(formData: FormData) {
+  "use server";
+
+  const data = readEstanciaContent();
+  const title = asText(formData.get("title"));
+  const id = asText(formData.get("id")) || makeContentId(title);
+  const current = data.events.find((item) => item.id === id);
+  const imageSrc = await saveUploadedSiteImage(formData.get("image"));
+  const nextItem = {
+    id,
+    title: title || current?.title || "Novo evento",
+    description: asText(formData.get("description")) || current?.description || "",
+    imageSrc: imageSrc ?? current?.imageSrc ?? "/hero/current/banner-14-06-2026.jpg",
+    href: asText(formData.get("href")) || current?.href || "/agenda",
+    buttonLabel: asText(formData.get("buttonLabel")) || current?.buttonLabel || "Compre seu ingresso!",
+    active: asBool(formData.get("active")),
+    sortOrder: Number(formData.get("sortOrder")) || current?.sortOrder || data.events.length + 1,
+  };
+
+  saveAndRevalidate({
+    ...data,
+    events: [...data.events.filter((item) => item.id !== id), nextItem],
+  });
+}
+
+async function deleteContentItem(formData: FormData) {
+  "use server";
+
+  const data = readEstanciaContent();
+  const section = asText(formData.get("section"));
+  const id = asText(formData.get("id"));
+
+  if (section === "home") {
+    saveAndRevalidate({ ...data, homeImages: data.homeImages.filter((item) => item.id !== id) });
+  }
+
+  if (section === "attraction") {
+    saveAndRevalidate({ ...data, attractions: data.attractions.filter((item) => item.id !== id) });
+  }
+
+  if (section === "event") {
+    saveAndRevalidate({ ...data, events: data.events.filter((item) => item.id !== id) });
+  }
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-wrap gap-2">
-      <button className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]">
-        Editar
-      </button>
+    <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+      {label}
+      {children}
+    </label>
+  );
+}
+
+function ImageInput({ name, label }: { name: string; label: string }) {
+  return (
+    <Field label={label}>
+      <input
+        name={name}
+        type="file"
+        accept="image/*"
+        className="rounded-[8px] border border-dashed border-[#9bbd91] bg-white px-4 py-3 text-sm text-[#17351f] file:mr-4 file:rounded-full file:border-0 file:bg-[#17342d] file:px-4 file:py-2 file:text-sm file:font-black file:text-white"
+      />
+      <span className="text-xs font-medium text-[#6a806e]">
+        Clique em escolher arquivo e envie uma imagem em PNG, JPG ou WEBP.
+      </span>
+    </Field>
+  );
+}
+
+function DeleteButton({ section, id }: { section: string; id: string }) {
+  return (
+    <form action={deleteContentItem}>
+      <input type="hidden" name="section" value={section} />
+      <input type="hidden" name="id" value={id} />
       <button className="rounded-full border border-[#f0c3bc] px-4 py-2 text-xs font-black text-[#a33b31]">
         Excluir
       </button>
-    </div>
+    </form>
   );
 }
 
 export default async function PainelSiteRoute() {
   await requirePainelAccess(["vis_info", "vis_param"], "/painel/site");
+  const content = readEstanciaContent();
 
   return (
     <div className="space-y-5">
       <section className="panel-section p-5">
         <p className="panel-eyebrow">Site</p>
-        <div className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h2 className="text-[28px] font-black leading-tight text-[#17351f]">
-              Conteúdo da página inicial
-            </h2>
-            <p className="mt-3 max-w-[720px] text-[15px] leading-7 text-[#5f7564]">
-              Gerencie imagens da home, atrações e eventos publicados.
-            </p>
-          </div>
-        </div>
+        <h2 className="mt-2 text-[28px] font-black leading-tight text-[#17351f]">
+          Conteudo publicado
+        </h2>
+        <p className="mt-3 max-w-[760px] text-[15px] leading-7 text-[#5f7564]">
+          Gerencie imagens da home, atracoes e eventos exibidos no site.
+        </p>
       </section>
 
       <section className="panel-section p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="panel-eyebrow">Imagens da home</p>
-            <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
-              Desktop e mobile
-            </h3>
-          </div>
-          <button className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white">
-            Adicionar imagem
-          </button>
-        </div>
-
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          {homeImages.map((item) => (
-            <article
-              key={item.title}
-              className="rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-4"
-            >
-              <div className="h-32 rounded-[8px] border border-dashed border-[#b9d3b1] bg-white" />
-              <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h4 className="text-lg font-black text-[#17351f]">
-                    {item.title}
-                  </h4>
-                  <p className="mt-1 text-sm font-bold text-[#6e9464]">
-                    {item.size}
-                  </p>
-                  <p className="mt-1 text-sm text-[#5f7564]">{item.status}</p>
+        <p className="panel-eyebrow">Imagens da home</p>
+        <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_0.75fr]">
+          <div className="grid gap-3">
+            {content.homeImages.map((item) => (
+              <article key={item.id} className="rounded-[8px] border border-[#dbe7d7] bg-white p-4">
+                <div className="relative h-36 overflow-hidden rounded-[8px] bg-[#eef3e8]">
+                  <Image src={item.desktopSrc} alt={item.alt} fill className="object-cover" sizes="420px" />
                 </div>
-                <ActionButtons />
-              </div>
-            </article>
-          ))}
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-black text-[#17351f]">{item.alt}</h3>
+                    <p className="text-sm text-[#5f7564]">{item.active ? "Publicado" : "Oculto"}</p>
+                  </div>
+                  <DeleteButton section="home" id={item.id} />
+                </div>
+              </article>
+            ))}
+          </div>
+          <form action={upsertHomeImage} className="grid gap-4 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
+            <h3 className="text-xl font-black text-[#17351f]">Adicionar imagem</h3>
+            <Field label="Texto alternativo">
+              <input name="alt" className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+            </Field>
+            <ImageInput name="desktopImage" label="Imagem desktop" />
+            <ImageInput name="mobileImage" label="Imagem mobile" />
+            <Field label="Ordem">
+              <input name="sortOrder" type="number" min="1" className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+            </Field>
+            <label className="flex items-center gap-2 text-sm font-black text-[#17351f]">
+              <input name="active" type="checkbox" defaultChecked /> Publicar
+            </label>
+            <button className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white">
+              Salvar imagem
+            </button>
+          </form>
         </div>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-2">
         <article className="panel-section p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="panel-eyebrow">Atrações</p>
-              <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
-                Carrossel do parque
-              </h3>
-            </div>
-            <button className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white">
-              Adicionar atração
-            </button>
-          </div>
+          <p className="panel-eyebrow">Atracoes</p>
           <div className="mt-5 grid gap-3">
-            {attractions.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-[8px] border border-[#dbe7d7] bg-white p-4"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
+            {content.attractions.map((item) => (
+              <div key={item.id} className="rounded-[8px] border border-[#dbe7d7] bg-white p-4">
+                <div className="relative h-32 overflow-hidden rounded-[8px] bg-[#eef3e8]">
+                  <Image src={item.imageSrc} alt={item.title} fill className="object-cover" sizes="420px" />
+                </div>
+                <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h4 className="text-lg font-black text-[#17351f]">
-                      {item.title}
-                    </h4>
-                    <p className="mt-1 text-sm leading-6 text-[#5f7564]">
-                      {item.description}
-                    </p>
+                    <h3 className="text-lg font-black text-[#17351f]">{item.title}</h3>
+                    <p className="mt-1 text-sm leading-6 text-[#5f7564]">{item.description}</p>
                   </div>
-                  <ActionButtons />
+                  <DeleteButton section="attraction" id={item.id} />
                 </div>
               </div>
             ))}
           </div>
+          <form action={upsertAttraction} className="mt-5 grid gap-4 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
+            <h3 className="text-xl font-black text-[#17351f]">Adicionar atracao</h3>
+            <Field label="Titulo"><input name="title" className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" /></Field>
+            <Field label="Descricao"><textarea name="description" rows={3} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" /></Field>
+            <ImageInput name="image" label="Imagem da atracao" />
+            <Field label="Ordem"><input name="sortOrder" type="number" min="1" className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" /></Field>
+            <label className="flex items-center gap-2 text-sm font-black text-[#17351f]"><input name="active" type="checkbox" defaultChecked /> Publicar</label>
+            <button className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white">Salvar atracao</button>
+          </form>
         </article>
 
         <article className="panel-section p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="panel-eyebrow">Eventos</p>
-              <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
-                Programações publicadas
-              </h3>
-            </div>
-            <Link
-              href="/painel/agenda/adicionar?tipo=promo"
-              className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white"
-            >
-              Criar evento
-            </Link>
-          </div>
+          <p className="panel-eyebrow">Eventos</p>
           <div className="mt-5 grid gap-3">
-            {events.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-[8px] border border-[#dbe7d7] bg-white p-4"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
+            {content.events.map((item) => (
+              <div key={item.id} className="rounded-[8px] border border-[#dbe7d7] bg-white p-4">
+                <div className="relative h-32 overflow-hidden rounded-[8px] bg-[#eef3e8]">
+                  <Image src={item.imageSrc} alt={item.title} fill className="object-cover" sizes="420px" />
+                </div>
+                <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h4 className="text-lg font-black text-[#17351f]">
-                      {item.title}
-                    </h4>
-                    <p className="mt-1 text-sm leading-6 text-[#5f7564]">
-                      {item.description}
-                    </p>
+                    <h3 className="text-lg font-black text-[#17351f]">{item.title}</h3>
+                    <p className="mt-1 text-sm leading-6 text-[#5f7564]">{item.description}</p>
+                    <p className="mt-1 text-xs font-bold text-[#6e9464]">{item.href}</p>
                   </div>
-                  <ActionButtons />
+                  <DeleteButton section="event" id={item.id} />
                 </div>
               </div>
             ))}
           </div>
+          <form action={upsertEvent} className="mt-5 grid gap-4 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
+            <h3 className="text-xl font-black text-[#17351f]">Adicionar evento</h3>
+            <Field label="Nome"><input name="title" className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" /></Field>
+            <Field label="Descricao"><textarea name="description" rows={3} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" /></Field>
+            <Field label="Link do botao"><input name="href" defaultValue="/agenda" className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" /></Field>
+            <Field label="Texto do botao"><input name="buttonLabel" defaultValue="Compre seu ingresso!" className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" /></Field>
+            <ImageInput name="image" label="Imagem do evento" />
+            <Field label="Ordem"><input name="sortOrder" type="number" min="1" className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" /></Field>
+            <label className="flex items-center gap-2 text-sm font-black text-[#17351f]"><input name="active" type="checkbox" defaultChecked /> Publicar</label>
+            <button className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white">Salvar evento</button>
+          </form>
         </article>
       </section>
     </div>

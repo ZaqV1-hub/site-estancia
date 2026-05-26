@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { IngressoShell } from "@/components/ingresso-shell";
 import { PurchasePage } from "@/components/purchase-page";
 import { parseAgendaId } from "@/lib/agenda-id";
+import { listB2cProducts } from "@/lib/b2c-catalog";
 import {
   getPublicAgendaEventById,
   isAgendaDateExpired,
@@ -65,5 +66,5 @@ export default async function BuyRoutePage({ params }: BuyRoutePageProps) {
     notFound();
   }
 
-  return <PurchasePage agenda={agenda} user={customer} />;
+  return <PurchasePage agenda={agenda} user={customer} products={listB2cProducts()} />;
 }

@@ -82,14 +82,13 @@ export function PainelHomePage({ data }: PainelHomePageProps) {
         <article className="panel-section p-5">
           <p className="panel-eyebrow">Eventos</p>
           <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
-            Datas promocionais
+            Eventos
           </h3>
           <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
-            Cadastre eventos, destaque na tela inicial e abra o dia com os
-            valores do evento.
+            Publique eventos na home e leve o visitante direto para a data de compra.
           </p>
           <Link
-            href="/painel/eventos"
+            href="/painel/site#eventos"
             className="mt-5 inline-flex min-h-11 items-center rounded-[8px] bg-[#17342d] px-5 text-sm font-black text-white"
           >
             Configurar eventos

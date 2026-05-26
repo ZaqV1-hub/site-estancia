@@ -11,6 +11,7 @@ import {
   formatPainelAgendaDateLabel,
   getPainelAgendaTypeOptions,
 } from "@/lib/painel-agenda-ui";
+import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
 
 type PainelAgendaEditorProps = {
   data: PainelAgendaScreenData;
@@ -21,6 +22,7 @@ type PainelAgendaEditorProps = {
   mode: "create" | "edit";
   returnHref: string;
   initialType?: PainelAgendaType;
+  products: B2cProduct[];
 };
 
 type RangePreviewState =
@@ -68,18 +70,6 @@ function buildDefaultForm(
   };
 }
 
-const defaultPassports = [
-  "Passaporte Explorador",
-  "Passaporte Aventura",
-  "Passaporte Infantil",
-];
-
-const defaultAddons = [
-  "Almoço Caipira",
-  "Café da Manhã",
-  "Ecobag",
-  "Kit Bebidas",
-];
 
 export function PainelAgendaEditor({
   data,
@@ -87,6 +77,7 @@ export function PainelAgendaEditor({
   mode,
   returnHref,
   initialType,
+  products,
 }: PainelAgendaEditorProps) {
   const router = useRouter();
   const selectedAgenda = data.selectedDay?.agenda ?? null;
@@ -100,6 +91,8 @@ export function PainelAgendaEditor({
   const [mutationState, setMutationState] = useState<MutationState>({
     status: "idle",
   });
+  const passports = products.filter((product) => product.type === "passport");
+  const addons = products.filter((product) => product.type === "addon");
 
   useEffect(() => {
     if (!form.startDate || !form.endDate) {
@@ -374,19 +367,25 @@ export function PainelAgendaEditor({
             </div>
             <button
               type="button"
+              onClick={() => router.push("/painel/passaportes-itens")}
               className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]"
             >
-              Adicionar especial
+              Adicionar passaporte
             </button>
           </div>
-          <div className="grid gap-3 md:grid-cols-3">
-            {defaultPassports.map((item) => (
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {passports.map((item) => (
               <label
-                key={item}
-                className="flex items-center gap-3 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-3 text-sm font-black text-[#17351f]"
+                key={item.id}
+                className="min-w-[230px] rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-3 text-sm font-black text-[#17351f]"
               >
-                <input type="checkbox" defaultChecked className="h-4 w-4" />
-                {item}
+                <span className="flex items-center gap-3">
+                  <input type="checkbox" defaultChecked className="h-4 w-4" />
+                  {item.title}
+                </span>
+                <span className="mt-2 block text-xs font-semibold text-[#5f7564]">
+                  R$ {item.fixedPrice.replace(".", ",")}
+                </span>
               </label>
             ))}
           </div>
@@ -399,17 +398,31 @@ export function PainelAgendaEditor({
               Itens disponíveis na data
             </h3>
           </div>
-          <div className="grid gap-3 md:grid-cols-4">
-            {defaultAddons.map((item) => (
-              <label
-                key={item}
-                className="flex items-center gap-3 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-3 text-sm font-black text-[#17351f]"
-              >
+          <details className="rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
+            <summary className="cursor-pointer text-sm font-black text-[#17351f]">
+              Selecionar itens adicionais
+            </summary>
+            <div className="mt-4 grid max-h-[260px] gap-2 overflow-y-auto pr-2">
+              <label className="flex items-center gap-3 rounded-[8px] bg-white p-3 text-sm font-black text-[#17351f]">
                 <input type="checkbox" defaultChecked className="h-4 w-4" />
-                {item}
+                Selecionar todos
               </label>
-            ))}
-          </div>
+              {addons.map((item) => (
+                <label
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 rounded-[8px] bg-white p-3 text-sm font-black text-[#17351f]"
+                >
+                  <span className="flex items-center gap-3">
+                    <input type="checkbox" defaultChecked className="h-4 w-4" />
+                    {item.title}
+                  </span>
+                  <span className="text-xs font-semibold text-[#5f7564]">
+                    R$ {item.fixedPrice.replace(".", ",")}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </details>
         </section>
 
         {rangePreview.status === "error" ? (

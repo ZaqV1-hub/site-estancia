@@ -7,9 +7,6 @@ import type { AuthErrorResponse, AuthUser } from "@/lib/auth-contracts";
 import type {
   UserVoucher,
   UserVoucherPurchase,
-  UserVoucherRescheduleOption,
-  UserVoucherRescheduleOptionsResponse,
-  UserVoucherRescheduleResponse,
 } from "@/lib/voucher-contracts";
 
 type CustomerVouchersPageProps = {
@@ -134,32 +131,12 @@ function applyCanceledPurchase(purchase: UserVoucherPurchase) {
   };
 }
 
-function applyRescheduledVoucher(
-  purchase: UserVoucherPurchase,
-  voucherId: number,
-  visitDate: string,
-) {
-  return {
-    ...purchase,
-    vouchers: purchase.vouchers.map((voucher) =>
-      voucher.id === voucherId
-        ? {
-            ...voucher,
-            visitDate,
-            canReschedule: false,
-          }
-        : voucher,
-    ),
-  };
-}
-
 function VoucherRow({
   purchase,
   voucher,
   selected,
   selectable,
   onToggle,
-  onVoucherRescheduled,
   layout = "table",
 }: {
   purchase: UserVoucherPurchase;
@@ -167,93 +144,8 @@ function VoucherRow({
   selected: boolean;
   selectable: boolean;
   onToggle: (voucherId: number, checked: boolean) => void;
-  onVoucherRescheduled: (voucherId: number, visitDate: string) => void;
   layout?: "table" | "card";
 }) {
-  const [options, setOptions] = useState<UserVoucherRescheduleOption[] | null>(null);
-  const [selectedAgendaId, setSelectedAgendaId] = useState("");
-  const [loadingOptions, setLoadingOptions] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  async function handleLoadOptions() {
-    setLoadingOptions(true);
-    setActionError(null);
-    setSuccessMessage(null);
-
-    try {
-      const response = await fetch(`/api/me/vouchers/${voucher.id}/reschedule`, {
-        cache: "no-store",
-      });
-      const payload = await readResponseBody<
-        UserVoucherRescheduleOptionsResponse | AuthErrorResponse
-      >(response);
-
-      if (!response.ok || !payload?.ok) {
-        setActionError(
-          payload && !payload.ok
-            ? payload.error.message
-            : "Nao foi possivel consultar as datas agora.",
-        );
-        return;
-      }
-
-      setOptions(payload.data.options);
-      setSelectedAgendaId(payload.data.options[0]?.id ? String(payload.data.options[0].id) : "");
-    } catch (error) {
-      console.error("customer-voucher-reschedule-options-failed", error);
-      setActionError("Nao foi possivel consultar as datas agora.");
-    } finally {
-      setLoadingOptions(false);
-    }
-  }
-
-  async function handleRescheduleSubmit() {
-    const agendaId = Number(selectedAgendaId);
-
-    if (!Number.isInteger(agendaId) || agendaId <= 0) {
-      setActionError("Escolha uma nova data para reagendamento.");
-      return;
-    }
-
-    setSubmitting(true);
-    setActionError(null);
-    setSuccessMessage(null);
-
-    try {
-      const response = await fetch(`/api/me/vouchers/${voucher.id}/reschedule`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ agendaId }),
-      });
-      const payload = await readResponseBody<
-        UserVoucherRescheduleResponse | AuthErrorResponse
-      >(response);
-
-      if (!response.ok || !payload?.ok) {
-        setActionError(
-          payload && !payload.ok
-            ? payload.error.message
-            : "Nao foi possivel concluir o reagendamento agora.",
-        );
-        return;
-      }
-
-      setSuccessMessage(`Voucher reagendado para ${formatDate(payload.data.visitDate)}.`);
-      setOptions(null);
-      setSelectedAgendaId("");
-      onVoucherRescheduled(voucher.id, payload.data.visitDate);
-    } catch (error) {
-      console.error("customer-voucher-reschedule-submit-failed", error);
-      setActionError("Nao foi possivel concluir o reagendamento agora.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   if (layout === "card") {
     return (
       <div className="overflow-hidden rounded-[24px] border border-[#dbe7d7] bg-[#fbfdf9]">
@@ -308,17 +200,6 @@ function VoucherRow({
             </span>
           </div>
           <div className="flex flex-col items-start gap-2 md:items-end">
-            {voucher.canReschedule ? (
-              <button
-                id={`reschedule-${purchase.id}-${voucher.id}`}
-                type="button"
-                onClick={() => void handleLoadOptions()}
-                disabled={loadingOptions || submitting}
-                className="text-sm font-semibold text-[#2b8c46] underline underline-offset-2"
-              >
-                {loadingOptions ? "Carregando..." : "Reagendar"}
-              </button>
-            ) : null}
             {purchase.status === "conc" && !voucher.used && voucher.expiredForGeneration ? (
               <span className="inline-flex rounded-full bg-[#fff3f1] px-3 py-1 text-[12px] font-semibold text-[#9f3f36]">
                 Voucher vencido
@@ -326,44 +207,6 @@ function VoucherRow({
             ) : null}
           </div>
         </div>
-        {options || actionError || successMessage ? (
-          <div className="border-t border-[#e7efe4] px-4 py-4 md:px-5">
-            {options ? (
-              <div className="flex flex-col gap-3 rounded-[20px] border border-[#dbe7d7] bg-white p-4 md:flex-row">
-                <select
-                  value={selectedAgendaId}
-                  onChange={(event) => setSelectedAgendaId(event.target.value)}
-                  className="estancia-field min-h-[48px] flex-1 px-4"
-                >
-                  {options.length === 0 ? <option value="">Nenhuma data disponivel</option> : null}
-                  {options.map((option) => (
-                    <option key={option.id} value={String(option.id)}>
-                      {formatDate(option.date)}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => void handleRescheduleSubmit()}
-                  disabled={submitting || options.length === 0}
-                  className="estancia-button px-5 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {submitting ? "Salvando..." : "Confirmar reagendamento"}
-                </button>
-              </div>
-            ) : null}
-            {successMessage ? (
-              <div className="mt-3 rounded-[18px] border border-[#cbe9d7] bg-[#eefaf2] px-4 py-3 text-sm text-[#287450]">
-                {successMessage}
-              </div>
-            ) : null}
-            {actionError ? (
-              <div className="mt-3 rounded-[18px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-sm text-[#9f3f36]">
-                {actionError}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     );
   }
@@ -398,19 +241,6 @@ function VoucherRow({
         </td>
         <td className="px-3 py-3 text-center">
           <strong>{formatDate(voucher.visitDate)}</strong>
-          {voucher.canReschedule ? (
-            <>
-              <br />
-              <button
-                type="button"
-                onClick={handleLoadOptions}
-                disabled={loadingOptions || submitting}
-                className="mt-2 text-[13px] text-[#1d5b80] underline underline-offset-2"
-              >
-                {loadingOptions ? "Carregando..." : "Reagendar"}
-              </button>
-            </>
-          ) : null}
         </td>
         <td className="px-3 py-3 text-center">
           <strong>{formatDate(voucher.useDate)}</strong>
@@ -429,46 +259,6 @@ function VoucherRow({
           ) : null}
         </td>
       </tr>
-      {options || actionError || successMessage ? (
-        <tr className="border-t border-[#eef4f8]">
-          <td colSpan={6} className="px-3 py-3">
-            {options ? (
-              <div className="flex flex-col gap-3 rounded-[18px] border border-[#dbe8f1] bg-[#f8fbfe] p-4 md:flex-row">
-                <select
-                  value={selectedAgendaId}
-                  onChange={(event) => setSelectedAgendaId(event.target.value)}
-                  className="min-h-[44px] flex-1 rounded-[16px] border border-[#c9d7e3] bg-white px-4 text-sm text-[#214d6b] outline-none"
-                >
-                  {options.length === 0 ? <option value="">Nenhuma data disponivel</option> : null}
-                  {options.map((option) => (
-                    <option key={option.id} value={String(option.id)}>
-                      {formatDate(option.date)}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={handleRescheduleSubmit}
-                  disabled={submitting || options.length === 0}
-                  className="legacy-button mt-0"
-                >
-                  {submitting ? "salvando..." : "confirmar reagendamento"}
-                </button>
-              </div>
-            ) : null}
-            {successMessage ? (
-              <div className="mt-3 rounded-[18px] border border-[#cbe9d7] bg-[#eefaf2] px-4 py-3 text-sm text-[#287450]">
-                {successMessage}
-              </div>
-            ) : null}
-            {actionError ? (
-              <div className="mt-3 rounded-[18px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-sm text-[#9f3f36]">
-                {actionError}
-              </div>
-            ) : null}
-          </td>
-        </tr>
-      ) : null}
     </>
   );
 }
@@ -476,11 +266,9 @@ function VoucherRow({
 function PurchaseTicket({
   purchase,
   onPurchaseCanceled,
-  onVoucherRescheduled,
 }: {
   purchase: UserVoucherPurchase;
   onPurchaseCanceled: (purchaseId: number) => void;
-  onVoucherRescheduled: (purchaseId: number, voucherId: number, visitDate: string) => void;
 }) {
   const exportableVoucherIds = purchase.vouchers
     .filter((voucher) => voucher.canSelectForVoucher)
@@ -629,9 +417,6 @@ function PurchaseTicket({
                 selected={selectedVoucherIds.includes(voucher.id)}
                 selectable={voucher.canSelectForVoucher}
                 onToggle={toggleVoucherSelection}
-                onVoucherRescheduled={(voucherId, visitDate) =>
-                  onVoucherRescheduled(purchase.id, voucherId, visitDate)
-                }
                 layout="card"
               />
             ))}
@@ -653,13 +438,11 @@ function PurchaseGroup({
   purchases,
   emptyMessage,
   onPurchaseCanceled,
-  onVoucherRescheduled,
 }: {
   title: string;
   purchases: UserVoucherPurchase[];
   emptyMessage: string;
   onPurchaseCanceled: (purchaseId: number) => void;
-  onVoucherRescheduled: (purchaseId: number, voucherId: number, visitDate: string) => void;
 }) {
   return (
     <section className="space-y-4">
@@ -681,7 +464,6 @@ function PurchaseGroup({
             key={purchase.id}
             purchase={purchase}
             onPurchaseCanceled={onPurchaseCanceled}
-            onVoucherRescheduled={onVoucherRescheduled}
           />
         ))
       )}
@@ -752,20 +534,6 @@ export function CustomerVouchersPage({
     );
   }
 
-  function handleVoucherRescheduled(
-    purchaseId: number,
-    voucherId: number,
-    visitDate: string,
-  ) {
-    setPurchases((current) =>
-      current.map((purchase) =>
-        purchase.id === purchaseId
-          ? applyRescheduledVoucher(purchase, voucherId, visitDate)
-          : purchase,
-      ),
-    );
-  }
-
   const groups = groupPurchases(purchases);
   const hasMore = purchases.length < totalPurchases;
 
@@ -784,7 +552,6 @@ export function CustomerVouchersPage({
             purchases={groups.online}
             emptyMessage="Nenhuma compra realizada."
             onPurchaseCanceled={handlePurchaseCanceled}
-            onVoucherRescheduled={handleVoucherRescheduled}
           />
 
           <PurchaseGroup
@@ -792,7 +559,6 @@ export function CustomerVouchersPage({
             purchases={groups.reservations}
             emptyMessage="Nenhuma reserva encontrada."
             onPurchaseCanceled={handlePurchaseCanceled}
-            onVoucherRescheduled={handleVoucherRescheduled}
           />
 
           {hasMore ? (

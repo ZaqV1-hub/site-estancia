@@ -56,7 +56,8 @@ const events = [
     description:
       "Comidas t\u00edpicas, m\u00fasica, brincadeiras e lazer ao ar livre em um dia preparado para curtir com a fam\u00edlia no Est\u00e2ncia.",
     imageSrc: "/hero/current/banner-14-06-2026.jpg",
-    imageAlt: "Festa Junina no Est\u00e2ncia e Parque Ecol\u00f3gico das \u00c1guas",
+    imageAlt:
+      "Festa Junina no Est\u00e2ncia e Parque Ecol\u00f3gico das \u00c1guas",
     href: "/agenda?mes=6&ano=2026&date=2026-06-14",
     buttonLabel: "Compre seu ingresso!",
   },
@@ -65,21 +66,74 @@ const events = [
 function moveIndex(current: number, direction: -1 | 1, length: number) {
   return (current + direction + length) % length;
 }
+function resolveNearestIndex(element: HTMLDivElement | null) {
+  if (!element) {
+    return 0;
+  }
 
-function scrollCarousel(element: HTMLDivElement | null, direction: -1 | 1) {
+  const center = element.scrollLeft + element.clientWidth / 2;
+  const children = Array.from(element.children) as HTMLElement[];
+  let bestIndex = 0;
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  children.forEach((child, index) => {
+    const childCenter = child.offsetLeft + child.clientWidth / 2;
+    const distance = Math.abs(childCenter - center);
+
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestIndex = index;
+    }
+  });
+
+  return bestIndex;
+}
+
+function scrollCarouselToIndex(element: HTMLDivElement | null, index: number) {
   if (!element) {
     return;
   }
 
-  element.scrollBy({
-    left: direction * Math.max(320, element.clientWidth * 0.86),
+  const child = element.children.item(index) as HTMLElement | null;
+
+  if (!child) {
+    return;
+  }
+
+  child.scrollIntoView({
     behavior: "smooth",
+    inline: "center",
+    block: "nearest",
   });
 }
 
+function ChevronIcon({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-6 w-6"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={3}
+    >
+      {direction === "left" ? (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15 19l-7-7 7-7"
+        />
+      ) : (
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+      )}
+    </svg>
+  );
+}
 export default function Home() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroDragStart, setHeroDragStart] = useState<number | null>(null);
+  const [attractionIndex, setAttractionIndex] = useState(0);
+  const [eventIndex, setEventIndex] = useState(0);
   const attractionsRef = useRef<HTMLDivElement>(null);
   const eventsRef = useRef<HTMLDivElement>(null);
   const carouselDragRef = useRef<{
@@ -128,6 +182,24 @@ export default function Home() {
     carouselDragRef.current = null;
   }
 
+  function moveAttraction(direction: -1 | 1) {
+    const nextIndex = Math.min(
+      Math.max(attractionIndex + direction, 0),
+      attractions.length - 1,
+    );
+    setAttractionIndex(nextIndex);
+    scrollCarouselToIndex(attractionsRef.current, nextIndex);
+  }
+
+  function moveEvent(direction: -1 | 1) {
+    const nextIndex = Math.min(
+      Math.max(eventIndex + direction, 0),
+      events.length - 1,
+    );
+    setEventIndex(nextIndex);
+    scrollCarouselToIndex(eventsRef.current, nextIndex);
+  }
+
   return (
     <div className="min-h-screen bg-[#fbfaf7] text-[#17342d]">
       <section
@@ -154,26 +226,34 @@ export default function Home() {
         </div>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.68)_0%,rgba(0,0,0,0.36)_30%,rgba(16,43,37,0.1)_58%,rgba(0,0,0,0.38)_100%)]" />
 
-        <button
-          type="button"
-          aria-label="Imagem anterior"
-          onClick={() =>
-            setHeroIndex((current) => moveIndex(current, -1, heroImages.length))
-          }
-          className="absolute left-5 top-1/2 z-10 hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-3xl font-black text-white shadow-[0_16px_30px_rgba(0,0,0,0.22)] transition hover:bg-black/55 md:flex"
-        >
-          {"<"}
-        </button>
-        <button
-          type="button"
-          aria-label="Pr\u00f3xima imagem"
-          onClick={() =>
-            setHeroIndex((current) => moveIndex(current, 1, heroImages.length))
-          }
-          className="absolute right-5 top-1/2 z-10 hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-3xl font-black text-white shadow-[0_16px_30px_rgba(0,0,0,0.22)] transition hover:bg-black/55 md:flex"
-        >
-          {">"}
-        </button>
+        {heroImages.length > 1 ? (
+          <>
+            <button
+              type="button"
+              aria-label="Imagem anterior"
+              onClick={() =>
+                setHeroIndex((current) =>
+                  moveIndex(current, -1, heroImages.length),
+                )
+              }
+              className="absolute left-5 top-1/2 z-10 hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white shadow-[0_16px_30px_rgba(0,0,0,0.22)] transition hover:bg-black/55 md:flex"
+            >
+              <ChevronIcon direction="left" />
+            </button>
+            <button
+              type="button"
+              aria-label="Pr\u00f3xima imagem"
+              onClick={() =>
+                setHeroIndex((current) =>
+                  moveIndex(current, 1, heroImages.length),
+                )
+              }
+              className="absolute right-5 top-1/2 z-10 hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white shadow-[0_16px_30px_rgba(0,0,0,0.22)] transition hover:bg-black/55 md:flex"
+            >
+              <ChevronIcon direction="right" />
+            </button>
+          </>
+        ) : null}
 
         <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-2">
           {heroImages.map((image, index) => (
@@ -203,24 +283,30 @@ export default function Home() {
             </div>
 
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 right-0 z-10 hidden items-center justify-between md:flex">
-                <button
-                  type="button"
-                  aria-label="Atra\u00e7\u00e3o anterior"
-                  onClick={() => scrollCarousel(attractionsRef.current, -1)}
-                  className="pointer-events-auto -ml-5 flex h-12 w-12 items-center justify-center rounded-full bg-white text-3xl font-black text-[#17342d] shadow-[0_14px_30px_rgba(19,48,41,0.16)]"
-                >
-                  {"<"}
-                </button>
-                <button
-                  type="button"
-                  aria-label="Pr\u00f3xima atra\u00e7\u00e3o"
-                  onClick={() => scrollCarousel(attractionsRef.current, 1)}
-                  className="pointer-events-auto -mr-5 flex h-12 w-12 items-center justify-center rounded-full bg-white text-3xl font-black text-[#17342d] shadow-[0_14px_30px_rgba(19,48,41,0.16)]"
-                >
-                  {">"}
-                </button>
-              </div>
+              {attractions.length > 1 ? (
+                <>
+                  {attractionIndex > 0 ? (
+                    <button
+                      type="button"
+                      aria-label="Atra\u00e7\u00e3o anterior"
+                      onClick={() => moveAttraction(-1)}
+                      className="absolute left-0 top-1/2 z-10 hidden h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#17342d] shadow-[0_14px_30px_rgba(19,48,41,0.16)] transition hover:bg-[#17342d] hover:text-white md:flex"
+                    >
+                      <ChevronIcon direction="left" />
+                    </button>
+                  ) : null}
+                  {attractionIndex < attractions.length - 1 ? (
+                    <button
+                      type="button"
+                      aria-label="Pr\u00f3xima atra\u00e7\u00e3o"
+                      onClick={() => moveAttraction(1)}
+                      className="absolute right-0 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full bg-white text-[#17342d] shadow-[0_14px_30px_rgba(19,48,41,0.16)] transition hover:bg-[#17342d] hover:text-white md:flex"
+                    >
+                      <ChevronIcon direction="right" />
+                    </button>
+                  ) : null}
+                </>
+              ) : null}
 
               <div
                 ref={attractionsRef}
@@ -228,7 +314,10 @@ export default function Home() {
                 onPointerMove={handleCarouselPointerMove}
                 onPointerUp={handleCarouselPointerEnd}
                 onPointerCancel={handleCarouselPointerEnd}
-                className="-mx-5 flex cursor-grab snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-5 [scrollbar-width:none] active:cursor-grabbing md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden"
+                onScroll={(event) =>
+                  setAttractionIndex(resolveNearestIndex(event.currentTarget))
+                }
+                className="-mx-5 flex cursor-grab select-none snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-5 [scrollbar-width:none] active:cursor-grabbing md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden"
               >
                 {attractions.map((attraction) => (
                   <article
@@ -268,24 +357,30 @@ export default function Home() {
             </h2>
 
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 right-0 z-10 hidden items-center justify-between md:flex">
-                <button
-                  type="button"
-                  aria-label="Evento anterior"
-                  onClick={() => scrollCarousel(eventsRef.current, -1)}
-                  className="pointer-events-auto -ml-5 flex h-12 w-12 items-center justify-center rounded-full bg-white text-3xl font-black text-[#17342d] shadow-[0_14px_30px_rgba(19,48,41,0.16)]"
-                >
-                  {"<"}
-                </button>
-                <button
-                  type="button"
-                  aria-label="Pr\u00f3ximo evento"
-                  onClick={() => scrollCarousel(eventsRef.current, 1)}
-                  className="pointer-events-auto -mr-5 flex h-12 w-12 items-center justify-center rounded-full bg-white text-3xl font-black text-[#17342d] shadow-[0_14px_30px_rgba(19,48,41,0.16)]"
-                >
-                  {">"}
-                </button>
-              </div>
+              {events.length > 1 ? (
+                <>
+                  {eventIndex > 0 ? (
+                    <button
+                      type="button"
+                      aria-label="Evento anterior"
+                      onClick={() => moveEvent(-1)}
+                      className="absolute left-0 top-1/2 z-10 hidden h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#17342d] shadow-[0_14px_30px_rgba(19,48,41,0.16)] transition hover:bg-[#17342d] hover:text-white md:flex"
+                    >
+                      <ChevronIcon direction="left" />
+                    </button>
+                  ) : null}
+                  {eventIndex < events.length - 1 ? (
+                    <button
+                      type="button"
+                      aria-label="Pr\u00f3ximo evento"
+                      onClick={() => moveEvent(1)}
+                      className="absolute right-0 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full bg-white text-[#17342d] shadow-[0_14px_30px_rgba(19,48,41,0.16)] transition hover:bg-[#17342d] hover:text-white md:flex"
+                    >
+                      <ChevronIcon direction="right" />
+                    </button>
+                  ) : null}
+                </>
+              ) : null}
 
               <div
                 ref={eventsRef}
@@ -293,7 +388,10 @@ export default function Home() {
                 onPointerMove={handleCarouselPointerMove}
                 onPointerUp={handleCarouselPointerEnd}
                 onPointerCancel={handleCarouselPointerEnd}
-                className="-mx-5 flex cursor-grab snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-5 [scrollbar-width:none] active:cursor-grabbing md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden"
+                onScroll={(event) =>
+                  setEventIndex(resolveNearestIndex(event.currentTarget))
+                }
+                className="-mx-5 flex cursor-grab select-none snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-5 [scrollbar-width:none] active:cursor-grabbing md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden"
               >
                 {events.map((event) => (
                   <article

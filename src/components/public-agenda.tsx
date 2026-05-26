@@ -60,7 +60,6 @@ function getMonthLabel(month: number, year: number) {
 
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
-
 function getMonthKey(month: number, year: number) {
   return `${year}-${String(month).padStart(2, "0")}`;
 }
@@ -104,14 +103,16 @@ function buildCalendarDays(month: number, year: number) {
 }
 
 function formatDateLabel(event: PublicAgendaEvent) {
-  const label = fullDateFormatter.format(
-    new Date(`${event.date}T12:00:00`),
-  );
+  const label = fullDateFormatter.format(new Date(`${event.date}T12:00:00`));
 
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-function updateUrl(month: number, year: number, selectedAgendaId?: number | null) {
+function updateUrl(
+  month: number,
+  year: number,
+  selectedAgendaId?: number | null,
+) {
   const url = new URL(window.location.href);
   url.searchParams.set("mes", String(month));
   url.searchParams.set("ano", String(year));
@@ -245,7 +246,10 @@ export function PublicAgenda({
       : null;
 
   function changeMonth(next: PublicAgendaMonth) {
-    if (getMonthKey(next.month, next.year) === getMonthKey(period.month, period.year)) {
+    if (
+      getMonthKey(next.month, next.year) ===
+      getMonthKey(period.month, period.year)
+    ) {
       return;
     }
 
@@ -260,18 +264,18 @@ export function PublicAgenda({
 
   return (
     <div className="min-h-[calc(100vh-108px)] text-[#17312d]">
-      <div className="mx-auto w-[min(1180px,calc(100%-32px))] py-10 md:py-14">
-        <div className="grid gap-6 text-left md:grid-cols-[1fr_auto] md:items-end">
+      <div className="mx-auto w-[min(980px,calc(100%-24px))] py-7 md:py-8">
+        <div className="grid gap-5 text-left md:grid-cols-[1fr_auto] md:items-end">
           <div>
             <p className="mb-4 text-[12px] font-bold uppercase tracking-[0.2em] text-[#1e5564]">
               Agendamento
             </p>
-            <h1 className="m-0 max-w-[540px] text-[clamp(2rem,4vw,3.1rem)] font-semibold leading-tight text-[#17342d]">
+            <h1 className="m-0 max-w-[390px] text-[clamp(1.55rem,2.7vw,2.3rem)] font-semibold leading-tight text-[#17342d]">
               Escolha a data da visita
             </h1>
           </div>
 
-          <div className="grid grid-cols-4 overflow-hidden rounded-full border border-[rgba(35,73,63,0.12)] bg-white/86 p-1 text-center text-[10px] font-bold text-[#5e746e] shadow-[0_16px_36px_rgba(25,54,48,0.07)] md:min-w-[460px] md:text-[12px]">
+          <div className="grid grid-cols-4 overflow-hidden rounded-full border border-[rgba(35,73,63,0.12)] bg-white/86 p-1 text-center text-[9px] font-bold text-[#5e746e] shadow-[0_16px_36px_rgba(25,54,48,0.07)] md:min-w-[390px] md:text-[10px]">
             <span className="rounded-full bg-[#17342d] px-2 py-2.5 text-white">
               Data
             </span>
@@ -287,19 +291,19 @@ export function PublicAgenda({
           </div>
         ) : null}
 
-        <div className="mt-8 grid gap-7 lg:grid-cols-[minmax(0,820px)_320px]">
-          <section className="rounded-[8px] border border-[rgba(35,73,63,0.08)] bg-white/92 p-4 shadow-[0_18px_42px_rgba(19,48,41,0.08)] md:p-6">
-            <div className="grid grid-cols-[42px_1fr_42px] items-center gap-3">
+        <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,620px)_240px] lg:items-start">
+          <section className="rounded-[8px] border border-[rgba(35,73,63,0.08)] bg-white/92 p-3 shadow-[0_18px_42px_rgba(19,48,41,0.08)]">
+            <div className="grid grid-cols-[36px_1fr_36px] items-center gap-2">
               <button
                 type="button"
                 aria-label="Mes anterior"
                 disabled={!previousPeriod}
                 onClick={() => previousPeriod && changeMonth(previousPeriod)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(35,73,63,0.12)] text-[20px] font-black text-[#23493f] hover:border-[#23493f] disabled:cursor-not-allowed disabled:opacity-35"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(35,73,63,0.12)] text-[18px] font-black text-[#23493f] hover:border-[#23493f] disabled:cursor-not-allowed disabled:opacity-35"
               >
-                ‹
+                {"<"}
               </button>
-              <h2 className="text-center text-[23px] font-semibold text-[#17342d] md:text-[28px]">
+              <h2 className="text-center text-[19px] font-semibold text-[#17342d] md:text-[21px]">
                 {getMonthLabel(period.month, period.year)}
               </h2>
               <button
@@ -307,24 +311,24 @@ export function PublicAgenda({
                 aria-label="Proximo mes"
                 disabled={!nextPeriod}
                 onClick={() => nextPeriod && changeMonth(nextPeriod)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(35,73,63,0.12)] text-[20px] font-black text-[#23493f] hover:border-[#23493f] disabled:cursor-not-allowed disabled:opacity-35"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(35,73,63,0.12)] text-[18px] font-black text-[#23493f] hover:border-[#23493f] disabled:cursor-not-allowed disabled:opacity-35"
               >
-                ›
+                {">"}
               </button>
             </div>
 
-            <div className="mt-5 grid grid-cols-7 gap-2 text-center">
+            <div className="mt-4 grid grid-cols-7 gap-1.5 text-center">
               {weekdayLabels.map((weekday) => (
                 <div
                   key={weekday.key}
-                  className="rounded-[6px] bg-[#f0f3ea] py-2 text-[12px] font-bold text-[#23493f] md:text-[14px]"
+                  className="rounded-[6px] bg-[#f0f3ea] py-1.5 text-[11px] font-bold text-[#23493f] md:text-[12px]"
                 >
                   {weekday.label}
                 </div>
               ))}
             </div>
 
-            <div className="mt-2 grid grid-cols-7 gap-2 text-center">
+            <div className="mt-2 grid grid-cols-7 gap-1.5 text-center">
               {days.map((day, index) => {
                 const event = day.inMonth ? eventsByDay.get(day.day) : null;
                 const isSelected = event?.id === selectedEventId;
@@ -337,7 +341,7 @@ export function PublicAgenda({
                   return (
                     <span
                       key={`${period.year}-${period.month}-${index}-${day.key}`}
-                      className={`flex aspect-square min-h-[40px] items-center justify-center rounded-[8px] border text-[14px] font-bold md:min-h-[58px] md:text-[18px] ${
+                      className={`flex aspect-square min-h-[34px] items-center justify-center rounded-[8px] border text-[12px] font-bold md:min-h-[42px] md:text-[14px] ${
                         day.inMonth
                           ? "border-[#e4e9df] bg-[#f3f4ef] text-[#9aa39a]"
                           : "border-[#f2f4f0] bg-white text-[#c4cac2]"
@@ -357,7 +361,7 @@ export function PublicAgenda({
                       event.id,
                     )}
                     onClick={() => setSelectedEventId(event.id)}
-                    className={`flex aspect-square min-h-[40px] items-center justify-center rounded-[8px] text-[14px] font-black transition md:min-h-[58px] md:text-[18px] ${
+                    className={`flex aspect-square min-h-[34px] items-center justify-center rounded-[8px] text-[12px] font-black transition md:min-h-[42px] md:text-[14px] ${
                       isSelected
                         ? "bg-[#17342d] text-white shadow-[0_10px_24px_rgba(19,52,45,0.22)]"
                         : "bg-[#e8f0df] text-[#23493f] hover:bg-[#17342d] hover:text-white"
@@ -369,14 +373,14 @@ export function PublicAgenda({
               })}
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-3 text-[13px] font-bold text-[#5e746e]">
+            <div className="mt-4 flex flex-wrap gap-3 text-[12px] font-bold text-[#5e746e]">
               <span className="inline-flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-[#17342d]" />
-                Disponível
+                {"Dispon\u00edvel"}
               </span>
               <span className="inline-flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-[#f1f3ef]" />
-                Indisponível
+                {"Indispon\u00edvel"}
               </span>
               <span className="inline-flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-[#7fcf72]" />
@@ -385,13 +389,13 @@ export function PublicAgenda({
             </div>
           </section>
 
-          <aside className="h-fit rounded-[8px] border border-[rgba(35,73,63,0.08)] bg-white/92 p-5 text-left shadow-[0_18px_42px_rgba(19,48,41,0.08)] md:p-6">
+          <aside className="h-fit rounded-[8px] border border-[rgba(35,73,63,0.08)] bg-white/92 p-4 text-left shadow-[0_18px_42px_rgba(19,48,41,0.08)]">
             {state.status === "loading" ? (
               <div>
                 <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#1e5564]">
                   Consultando
                 </p>
-                <h2 className="mt-3 text-[23px] font-semibold leading-tight text-[#17342d]">
+                <h2 className="mt-3 text-[20px] font-semibold leading-tight text-[#17342d]">
                   Carregando agenda
                 </h2>
               </div>
@@ -402,7 +406,7 @@ export function PublicAgenda({
                 <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#1e5564]">
                   Dia da visita
                 </p>
-                <h2 className="mt-3 text-[23px] font-semibold leading-tight text-[#17342d]">
+                <h2 className="mt-3 text-[20px] font-semibold leading-tight text-[#17342d]">
                   {"Escolha uma data dispon\u00edvel"}
                 </h2>
               </div>

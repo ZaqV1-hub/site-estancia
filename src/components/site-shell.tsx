@@ -78,7 +78,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             : "bg-transparent"
         }`}
       >
-        <div className="mx-auto grid min-h-[108px] w-[min(1240px,calc(100%-40px))] grid-cols-[auto_1fr] items-center gap-5 py-2 lg:grid-cols-[auto_1fr]">
+        <div className="mx-auto grid min-h-[108px] w-[min(1240px,calc(100%-40px))] grid-cols-[auto_1fr] items-center gap-5 py-2 lg:grid-cols-[260px_1fr_260px]">
           <EstanciaLogo
             href="/"
             compact
@@ -104,7 +104,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
               menuOpen ? "block" : "hidden"
             } absolute left-5 right-5 top-[calc(100%+12px)] rounded-[8px] border border-[rgba(35,73,63,0.08)] bg-white p-4 text-left shadow-[0_24px_48px_rgba(19,48,41,0.14)] lg:static lg:col-start-2 lg:row-start-1 lg:block lg:justify-self-center lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none`}
           >
-            <ul className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-[34px]">
+            <ul className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-center lg:gap-[34px]">
               {[
                 ["In\u00edcio", "/"],
                 ["Atra\u00e7\u00f5es", "/#atracoes"],
@@ -125,6 +125,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
               ))}
             </ul>
           </nav>
+          <div aria-hidden className="hidden lg:block" />
         </div>
       </header>
 
@@ -137,7 +138,9 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
               {"Est\u00e2ncia e Parque Ecol\u00f3gico das \u00c1guas"}
             </strong>
             <p className="mt-2 max-w-[520px] text-[0.95rem] leading-7 text-[#5e746e]">
-              {"Turismo, lazer, natureza e eventos em uma experi\u00eancia completa."}
+              {
+                "Turismo, lazer, natureza e eventos em uma experi\u00eancia completa."
+              }
             </p>
           </div>
 

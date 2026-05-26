@@ -40,7 +40,6 @@ function formatCurrency(value: number | string) {
     currency: "BRL",
   }).format(Number(value));
 }
-
 function formatLongDate(date: string) {
   const parsed = new Date(`${date}T12:00:00`);
 
@@ -89,7 +88,6 @@ function StepNav({
     </div>
   );
 }
-
 function ProductCard({
   product,
   price,
@@ -303,12 +301,12 @@ export function PurchasePage({ agenda, user }: PurchasePageProps) {
             </div>
           ) : null}
 
-          <div className="mt-7 grid gap-5 lg:grid-cols-[1fr_300px]">
+          <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px]">
             <section>
               {step === "passports" ? renderProducts(passports) : null}
               {step === "addons" ? renderProducts(addons) : null}
               {step === "review" ? (
-                <div className="grid gap-5 md:grid-cols-2">
+                <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                   <div className="rounded-[8px] border border-[#dce8d8] bg-white p-6 text-left shadow-[0_14px_32px_rgba(24,67,34,0.08)]">
                     <h2 className="text-[27px] font-black text-[#17351f]">
                       Carrinho
@@ -347,9 +345,11 @@ export function PurchasePage({ agenda, user }: PurchasePageProps) {
                       <p className="rounded-[18px] border border-[#d7e3d2] px-4 py-3">
                         {user.name}
                       </p>
-                      <p className="rounded-[18px] border border-[#d7e3d2] px-4 py-3">
-                        {user.email}
-                      </p>
+                      {user.email ? (
+                        <p className="rounded-[18px] border border-[#d7e3d2] px-4 py-3">
+                          {user.email}
+                        </p>
+                      ) : null}
                       <p className="rounded-[18px] border border-[#d7e3d2] px-4 py-3">
                         CPF {user.cpfMasked}
                       </p>
@@ -360,7 +360,9 @@ export function PurchasePage({ agenda, user }: PurchasePageProps) {
             </section>
 
             <aside className="h-fit rounded-[8px] border border-[#dce8d8] bg-white p-5 text-left shadow-[0_14px_32px_rgba(24,67,34,0.08)]">
-              <h2 className="text-[25px] font-black text-[#17351f]">Carrinho</h2>
+              <h2 className="text-[25px] font-black text-[#17351f]">
+                Carrinho
+              </h2>
               <div className="mt-3 space-y-3">
                 {cart?.lines.length ? (
                   cart.lines.map((line) => (
@@ -392,7 +394,7 @@ export function PurchasePage({ agenda, user }: PurchasePageProps) {
                   onClick={() => goTo("addons")}
                   className="mt-5 min-h-12 w-full rounded-full bg-[#27a51d] px-5 text-[15px] font-black uppercase text-white hover:bg-[#1f8818]"
                 >
-                  Avançar para adicionais
+                  {"Avan\u00e7ar para adicionais"}
                 </button>
               ) : null}
               {step === "addons" ? (
@@ -401,7 +403,7 @@ export function PurchasePage({ agenda, user }: PurchasePageProps) {
                   onClick={() => goTo("review")}
                   className="mt-5 min-h-12 w-full rounded-full bg-[#27a51d] px-5 text-[15px] font-black uppercase text-white hover:bg-[#1f8818]"
                 >
-                  Avançar para pagamento
+                  {"Avan\u00e7ar para pagamento"}
                 </button>
               ) : null}
               {step === "review" ? (

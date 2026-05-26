@@ -11,7 +11,10 @@ import {
   type LegacyPanelRoleName,
 } from "@/lib/painel-access";
 import { isPainelShellNavItemActive } from "@/lib/painel-shell-nav";
-import type { OperationsPermission, OperationsRole } from "@/lib/ops-permissions";
+import type {
+  OperationsPermission,
+  OperationsRole,
+} from "@/lib/ops-permissions";
 
 type PainelShellProps = {
   actorName: string | null;
@@ -24,56 +27,73 @@ type PainelShellProps = {
   children: React.ReactNode;
 };
 
-const navItems = [
-  { href: "/painel", label: "Visão geral" },
+type PainelNavItem = {
+  href: string;
+  label: string;
+  icon: string;
+  resources?: LegacyPanelResource[];
+};
+
+const navItems: PainelNavItem[] = [
+  { href: "/painel", label: "Vis\u00e3o geral", icon: "overview" },
+  {
+    href: "/painel/eventos",
+    label: "Eventos",
+    icon: "events",
+    resources: ["vis_info", "vis_agenda"],
+  },
+  {
+    href: "/painel/site",
+    label: "Site",
+    icon: "site",
+    resources: ["vis_info", "vis_param"],
+  },
   {
     href: "/painel/agenda",
     label: "Agenda",
-    resources: ["vis_agenda"] as LegacyPanelResource[],
+    icon: "calendar",
+    resources: ["vis_agenda"],
   },
   {
     href: "/painel/bilheteria",
     label: "Bilheteria",
-    resources: ["vis_bilhet", "vis_compra"] as LegacyPanelResource[],
+    icon: "ticket",
+    resources: ["vis_bilhet", "vis_compra"],
   },
   {
     href: "/painel/compras",
     label: "Compras",
-    resources: ["vis_compra"] as LegacyPanelResource[],
+    icon: "cart",
+    resources: ["vis_compra"],
   },
   {
     href: "/painel/clientes",
     label: "Clientes",
-    resources: ["vis_clientes", "vis_escola"] as LegacyPanelResource[],
-  },
-  {
-    href: "/painel/convenios",
-    label: "Convênios",
-    resources: ["vis_conve"] as LegacyPanelResource[],
+    icon: "users",
+    resources: ["vis_clientes", "vis_escola"],
   },
   {
     href: "/painel/descontos",
     label: "Descontos",
-    resources: ["vis_desc"] as LegacyPanelResource[],
+    icon: "discount",
+    resources: ["vis_desc"],
   },
   {
     href: "/painel/cortesias",
     label: "Cortesias",
-    resources: ["vis_cort"] as LegacyPanelResource[],
+    icon: "gift",
+    resources: ["vis_cort"],
   },
   {
     href: "/painel/cod-indica",
-    label: "Cod Indica",
-    resources: ["vis_indica"] as LegacyPanelResource[],
-  },
-  {
-    href: "/painel/compra-convenio",
-    label: "Compra convênio",
-    resources: ["vis_compra", "vis_conve"] as LegacyPanelResource[],
+    label: "C\u00f3digos de indica\u00e7\u00e3o",
+    icon: "share",
+    resources: ["vis_indica"],
   },
   {
     href: "/painel/administrativo",
     label: "Administrativo",
+    icon: "admin",
     resources: [
       "vis_usu",
       "vis_situsu",
@@ -81,9 +101,117 @@ const navItems = [
       "vis_catsoc",
       "vis_socio",
       "vis_param",
-    ] as LegacyPanelResource[],
+    ],
   },
 ];
+
+function PanelIcon({ name }: { name: string }) {
+  const paths: Record<string, React.ReactNode> = {
+    overview: (
+      <>
+        <path d="M4 13h6v7H4z" />
+        <path d="M14 4h6v16h-6z" />
+        <path d="M4 4h6v5H4z" />
+      </>
+    ),
+    events: (
+      <>
+        <path d="M5 5h14v15H5z" />
+        <path d="M8 3v4M16 3v4M5 10h14" />
+        <path d="M9 14h2M13 14h2M9 17h2" />
+      </>
+    ),
+    site: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+      </>
+    ),
+    calendar: (
+      <>
+        <path d="M5 5h14v15H5z" />
+        <path d="M8 3v4M16 3v4M5 10h14" />
+      </>
+    ),
+    ticket: (
+      <>
+        <path d="M4 8a2 2 0 0 0 0 4v4h16v-4a2 2 0 0 0 0-4V4H4z" />
+        <path d="M9 8h6M9 12h6" />
+      </>
+    ),
+    cart: (
+      <>
+        <path d="M4 5h2l2 10h9l2-7H7" />
+        <circle cx="10" cy="19" r="1.5" />
+        <circle cx="17" cy="19" r="1.5" />
+      </>
+    ),
+    users: (
+      <>
+        <path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a6 6 0 0 1 12 0" />
+        <path d="M17 11a3 3 0 1 0 0-6M15 16a5 5 0 0 1 5 5" />
+      </>
+    ),
+    discount: (
+      <>
+        <path d="M20 12 12 20 4 12V4h8z" />
+        <path d="M9 9h.01M15 15h.01M15 9l-6 6" />
+      </>
+    ),
+    gift: (
+      <>
+        <path d="M4 10h16v10H4zM3 7h18v3H3zM12 7v13" />
+        <path d="M12 7c-2.5 0-4-1-4-2.5A2 2 0 0 1 12 7ZM12 7c2.5 0 4-1 4-2.5A2 2 0 0 0 12 7Z" />
+      </>
+    ),
+    share: (
+      <>
+        <circle cx="18" cy="5" r="3" />
+        <circle cx="6" cy="12" r="3" />
+        <circle cx="18" cy="19" r="3" />
+        <path d="m8.6 10.7 6.8-4.4M8.6 13.3l6.8 4.4" />
+      </>
+    ),
+    admin: (
+      <>
+        <path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6z" />
+        <path d="M9 12l2 2 4-5" />
+      </>
+    ),
+  };
+
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-5 w-5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.9}
+      viewBox="0 0 24 24"
+    >
+      {paths[name] ?? paths.overview}
+    </svg>
+  );
+}
+
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2.4}
+      viewBox="0 0 24 24"
+    >
+      <path d={open ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"} />
+    </svg>
+  );
+}
 
 export function PainelShell({
   actorName,
@@ -128,7 +256,7 @@ export function PainelShell({
       <div
         className={`grid min-h-screen transition-[grid-template-columns] duration-200 ${
           sidebarCollapsed
-            ? "lg:grid-cols-[112px_minmax(0,1fr)]"
+            ? "lg:grid-cols-[96px_minmax(0,1fr)]"
             : "lg:grid-cols-[284px_minmax(0,1fr)]"
         }`}
       >
@@ -144,7 +272,7 @@ export function PainelShell({
           >
             <div
               className={`min-w-0 overflow-hidden transition-all ${
-                sidebarCollapsed ? "w-20" : "w-[230px]"
+                sidebarCollapsed ? "w-16" : "w-[230px]"
               }`}
             >
               <EstanciaLogo
@@ -152,7 +280,11 @@ export function PainelShell({
                 compact
                 light
                 stacked={sidebarCollapsed}
-                className={sidebarCollapsed ? "h-20 w-20 max-w-none" : "h-[74px] max-w-[230px]"}
+                className={
+                  sidebarCollapsed
+                    ? "h-16 w-16 max-w-none"
+                    : "h-[74px] max-w-[230px]"
+                }
               />
             </div>
 
@@ -180,9 +312,11 @@ export function PainelShell({
                   sidebarCollapsed ? "hidden" : ""
                 }`}
               >
-                {actorName || actorCpf || "Sessão operacional"}
+                {actorName || actorCpf || "Sess\u00e3o operacional"}
               </p>
-              <p className={`mt-1 text-xs text-white/65 ${sidebarCollapsed ? "hidden" : ""}`}>
+              <p
+                className={`mt-1 text-xs text-white/65 ${sidebarCollapsed ? "hidden" : ""}`}
+              >
                 {legacyRoleName || role}
               </p>
               <p
@@ -201,7 +335,9 @@ export function PainelShell({
               </span>
             </div>
 
-            <nav className={`${menuOpen ? "mt-4 grid" : "mt-4 hidden"} gap-1.5 lg:grid`}>
+            <nav
+              className={`${menuOpen ? "mt-4 grid" : "mt-4 hidden"} gap-1.5 lg:grid`}
+            >
               {visibleItems.map((item) => {
                 const active = isPainelShellNavItemActive(pathname, item);
 
@@ -218,12 +354,12 @@ export function PainelShell({
                     } ${
                       sidebarCollapsed
                         ? "flex items-center justify-center px-0 py-2 text-center"
-                        : "flex items-center px-4 py-2.5"
+                        : "flex items-center gap-3 px-4 py-2.5"
                     }`}
                   >
-                    <span className={sidebarCollapsed ? "hidden" : ""}>{item.label}</span>
-                    <span className={sidebarCollapsed ? "block text-[13px] font-black" : "hidden"}>
-                      {item.label.slice(0, 2)}
+                    <PanelIcon name={item.icon} />
+                    <span className={sidebarCollapsed ? "hidden" : ""}>
+                      {item.label}
                     </span>
                   </Link>
                 );
@@ -238,7 +374,11 @@ export function PainelShell({
               disabled={pendingLogout}
               className="inline-flex min-h-[42px] w-full items-center justify-center rounded-[8px] border border-white/14 bg-white/8 px-4 text-sm font-bold text-white transition hover:bg-white/14 disabled:opacity-60"
             >
-              {pendingLogout ? "Saindo..." : sidebarCollapsed ? "Sair" : "Encerrar sessão"}
+              {pendingLogout
+                ? "Saindo..."
+                : sidebarCollapsed
+                  ? "Sair"
+                  : "Encerrar sess\u00e3o"}
             </button>
           </div>
         </aside>
@@ -248,7 +388,11 @@ export function PainelShell({
             <div className="mx-auto flex max-w-[1500px] items-center gap-4">
               <button
                 type="button"
-                aria-label={sidebarCollapsed ? "Abrir menu lateral" : "Fechar menu lateral"}
+                aria-label={
+                  sidebarCollapsed
+                    ? "Abrir menu lateral"
+                    : "Fechar menu lateral"
+                }
                 onClick={() => {
                   if (window.matchMedia("(min-width: 1024px)").matches) {
                     setSidebarCollapsed((current) => !current);
@@ -256,14 +400,14 @@ export function PainelShell({
                     setMenuOpen((current) => !current);
                   }
                 }}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] border border-[rgba(35,73,63,0.12)] bg-white text-[18px] font-black text-[#17342d] shadow-[0_12px_28px_rgba(22,47,41,0.08)] hover:bg-[#17342d] hover:text-white"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] border border-[rgba(35,73,63,0.12)] bg-white text-[#17342d] shadow-[0_12px_28px_rgba(22,47,41,0.08)] hover:bg-[#17342d] hover:text-white"
               >
-                {sidebarCollapsed ? ">" : "<"}
+                <ChevronIcon open={!sidebarCollapsed} />
               </button>
 
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#1e5564]">
-                  Estância
+                  Est\u00e2ncia
                 </p>
                 <h1 className="text-[24px] font-bold leading-tight text-[#17342d]">
                   Painel operacional

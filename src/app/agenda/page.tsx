@@ -104,8 +104,8 @@ async function resolveInitialMonthYear(params?: {
         error,
       };
     }
-  } catch (error) {
-    console.error("agenda-page-next-month-failed", error);
+  } catch (nextMonthError) {
+    console.error("agenda-page-next-month-failed", nextMonthError);
   }
 
   return {
@@ -125,10 +125,11 @@ export default async function AgendaPage({ searchParams }: AgendaPageProps) {
 
   try {
     initialEvents = await getPublicAgendaEvents(initial.month, initial.year);
-  } catch (error) {
-    console.error("agenda-page-events-failed", error);
+  } catch (eventsError) {
+    console.error("agenda-page-events-failed", eventsError);
     initialError = "Não foi possível consultar a agenda pública agora.";
   }
+
   const initialSelectedAgendaId = resolveSelectedAgendaId(
     initialEvents,
     resolvedSearchParams?.agendaId,

@@ -22,36 +22,42 @@ export function FlowStepper({ current }: { current: OrderFlowStep }) {
   const activeIndex = stepIndex[current];
 
   return (
-    <nav aria-label="Etapas da compra" className="mx-auto w-full max-w-[760px]">
+    <nav
+      aria-label="Etapas da compra"
+      className="mx-auto w-full max-w-[500px] px-2 sm:max-w-[620px]"
+    >
       <ol className="relative grid grid-cols-4 gap-0">
-        <span className="absolute left-[12.5%] right-[12.5%] top-[22px] h-px bg-[#d5d8d3]" />
+        <span className="absolute left-[12.5%] right-[12.5%] top-[14px] h-px bg-[#d5d8d3] sm:top-[16px]" />
         <span
-          className="absolute left-[12.5%] top-[22px] h-px bg-[#25a524] transition-all"
+          className="absolute left-[12.5%] top-[14px] h-px bg-[#25a524] transition-all sm:top-[16px]"
           style={{ width: `${Math.max(activeIndex, 0) * 25}%` }}
         />
         {steps.map((step, index) => {
           const isActive = step.key === current;
-          const isDone = index < activeIndex;
 
           return (
-            <li key={step.key} className="relative flex flex-col items-center gap-2 text-center">
+            <li
+              key={step.key}
+              className="relative flex flex-col items-center gap-1.5 text-center"
+            >
               <span
-                className={`grid h-11 w-11 place-items-center rounded-full border text-[18px] font-black shadow-[0_10px_22px_rgba(18,52,45,0.06)] ${
+                className={`grid h-7 w-7 place-items-center rounded-full border text-[14px] font-black shadow-[0_8px_18px_rgba(18,52,45,0.06)] sm:h-9 sm:w-9 sm:text-[16px] ${
                   isActive
                     ? "border-[#063f35] bg-[#063f35] text-white"
-                    : isDone
-                      ? "border-[#25a524] bg-white text-[#063f35]"
-                      : "border-[#cfd4cf] bg-white text-[#6b6f72]"
+                    : "border-[#cfd4cf] bg-white text-[#6b6f72]"
                 }`}
               >
                 {index + 1}
               </span>
               <span
-                className={`text-[13px] font-bold sm:text-[15px] ${
+                className={`text-[10px] font-bold sm:text-[12px] ${
                   isActive ? "text-[#073f35]" : "text-[#6e7175]"
                 }`}
               >
-                {index + 1}. {step.label}
+                <span className="sm:hidden">{step.label}</span>
+                <span className="hidden sm:inline">
+                  {index + 1}. {step.label}
+                </span>
               </span>
             </li>
           );
@@ -70,8 +76,8 @@ export function FlowIcon({
 }) {
   const common = {
     className,
-    width: 28,
-    height: 28,
+    width: 24,
+    height: 24,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
@@ -155,7 +161,7 @@ export function IconBubble({
 }) {
   return (
     <span
-      className={`grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#eaf3e5] text-[#073f35] ${className}`}
+      className={`grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eaf3e5] text-[#073f35] [&>svg]:h-5 [&>svg]:w-5 sm:h-10 sm:w-10 ${className}`}
     >
       <FlowIcon name={name} />
     </span>
@@ -180,10 +186,10 @@ export function PrimaryFlowButton({
   const content = (
     <>
       <span>{children}</span>
-      <span className="text-[34px] leading-none">›</span>
+      <span className="text-[20px] leading-none sm:text-[24px]">›</span>
     </>
   );
-  const classes = `inline-flex min-h-[58px] w-full items-center justify-center gap-4 rounded-[18px] bg-[#20aa1f] px-6 text-center text-[18px] font-black text-white shadow-[0_18px_34px_rgba(32,170,31,0.18)] transition hover:bg-[#178b17] disabled:cursor-not-allowed disabled:bg-[#8bcf89] sm:text-[22px] ${className}`;
+  const classes = `inline-flex min-h-[40px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-[12px] bg-[#20aa1f] px-3 text-center text-[13px] font-black text-white shadow-[0_12px_24px_rgba(32,170,31,0.16)] transition hover:bg-[#178b17] disabled:cursor-not-allowed disabled:bg-[#8bcf89] sm:min-h-[46px] sm:px-4 sm:text-[15px] ${className}`;
 
   if (href) {
     return (
@@ -194,9 +200,13 @@ export function PrimaryFlowButton({
   }
 
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={classes}>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={classes}
+    >
       {content}
     </button>
   );
 }
-

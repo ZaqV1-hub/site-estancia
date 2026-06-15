@@ -1,10 +1,10 @@
 "use client";
 
 import { EstanciaLogo } from "@/components/estancia-logo";
+import type { AuthUser } from "@/lib/auth-contracts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { AuthUser } from "@/lib/auth-contracts";
 
 type IngressoShellProps = {
   children: React.ReactNode;
@@ -64,42 +64,42 @@ export function IngressoShell({
     return (
       <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(235,244,229,0.75),transparent_34%),linear-gradient(180deg,#fffdf8_0%,#ffffff_58%)] text-[#073f35]">
         <header className="border-b border-[#edf0ec] bg-white/88 shadow-[0_8px_26px_rgba(18,52,45,0.06)] backdrop-blur-md">
-          <div className="relative mx-auto flex min-h-[78px] w-[min(1450px,calc(100%-32px))] items-center justify-center py-3 lg:justify-between">
+          <div className="relative mx-auto flex min-h-[58px] w-[min(960px,calc(100%-20px))] items-center justify-center py-2 sm:w-[min(960px,calc(100%-28px))] lg:min-h-[72px] lg:justify-between">
             <button
               type="button"
               aria-label="Voltar"
               onClick={() => router.back()}
-              className="absolute left-0 grid h-12 w-12 place-items-center rounded-[16px] border border-[#d8dfd7] bg-white text-[34px] font-black leading-none text-[#073f35] shadow-[0_10px_24px_rgba(18,52,45,0.07)] lg:hidden"
+              className="absolute left-0 grid h-9 w-9 place-items-center rounded-[10px] border border-[#d8dfd7] bg-white text-[24px] font-black leading-none text-[#073f35] shadow-[0_8px_18px_rgba(18,52,45,0.06)] lg:hidden"
             >
               ‹
             </button>
 
-            <div className="lg:w-[280px]">
+            <div className="lg:w-[240px]">
               <EstanciaLogo
                 href="/"
                 compact
-                className="h-[44px] max-w-[230px] lg:h-[62px] lg:max-w-[270px]"
+                className="h-[30px] max-w-[155px] sm:h-[36px] sm:max-w-[185px] lg:h-[46px] lg:max-w-[220px]"
               />
             </div>
 
-            <div className="hidden min-w-[280px] items-center justify-end gap-4 text-right lg:flex">
+            <div className="hidden min-w-[240px] items-center justify-end gap-4 text-right lg:flex">
               {user ? (
                 <>
-                  <div className="text-[14px] font-bold text-[#073f35]">
+                  <div className="text-[13px] font-bold text-[#073f35]">
                     <p>{user.name}</p>
                     <button
                       type="button"
                       onClick={handleLogout}
                       disabled={logoutPending}
-                      className="mt-1 text-[14px] font-normal text-[#2d6d43] underline underline-offset-2 disabled:opacity-60"
+                      className="mt-1 text-[13px] font-normal text-[#2d6d43] underline underline-offset-2 disabled:opacity-60"
                     >
                       {logoutPending ? "saindo..." : "deslogar"}
                     </button>
                   </div>
-                  <span className="grid h-12 w-12 place-items-center rounded-full border border-[#d8dfd7] bg-white text-[#073f35]">
+                  <span className="grid h-11 w-11 place-items-center rounded-full border border-[#d8dfd7] bg-white text-[#073f35]">
                     <svg
-                      width="23"
-                      height="23"
+                      width="21"
+                      height="21"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -128,7 +128,11 @@ export function IngressoShell({
       <header className="sticky top-0 z-40 border-b border-[rgba(35,73,63,0.08)] bg-white/95 shadow-[0_10px_30px_rgba(21,48,42,0.06)] backdrop-blur-md">
         <div className="mx-auto grid min-h-[74px] w-[min(1240px,calc(100%-24px))] grid-cols-1 gap-2 py-2 sm:w-[min(1240px,calc(100%-40px))] lg:min-h-[96px] lg:grid-cols-[220px_1fr_220px] lg:items-center lg:gap-3 lg:py-3">
           <div className="flex justify-center lg:justify-start">
-            <EstanciaLogo href="/" compact className="h-[34px] max-w-[150px] sm:h-[42px] sm:max-w-[180px] lg:h-[62px] lg:max-w-[260px]" />
+            <EstanciaLogo
+              href="/"
+              compact
+              className="h-[34px] max-w-[150px] sm:h-[42px] sm:max-w-[180px] lg:h-[62px] lg:max-w-[260px]"
+            />
           </div>
 
           <div className="flex flex-col items-center gap-2 text-center lg:order-3 lg:items-end lg:text-right">
@@ -148,10 +152,16 @@ export function IngressoShell({
               </div>
             ) : (
               <div className="flex flex-wrap justify-center gap-3 text-[13px] lg:text-[14px]">
-                <Link href="/login" className="text-[#426048] underline underline-offset-2">
+                <Link
+                  href="/login"
+                  className="text-[#426048] underline underline-offset-2"
+                >
                   entrar
                 </Link>
-                <Link href="/cadastro" className="text-[#426048] underline underline-offset-2">
+                <Link
+                  href="/cadastro"
+                  className="text-[#426048] underline underline-offset-2"
+                >
                   criar conta
                 </Link>
               </div>

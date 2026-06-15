@@ -217,9 +217,9 @@ export function PainelTabelaPrecoPage({
                             R$ {item.childValue}
                           </td>
                           <td className="border border-[#d7d7d7] px-4 py-3 align-top">
-                            Adulto R$ {item.gateNormalValue}
+                            Passaporte R$ {item.gateNormalValue}
                             <br />
-                            Infantil R$ {item.gateChildValue}
+                            Passaporte infantil R$ {item.gateChildValue}
                           </td>
                           <td className="border border-[#d7d7d7] px-4 py-3 align-top">
                             {item.statusLabel} [

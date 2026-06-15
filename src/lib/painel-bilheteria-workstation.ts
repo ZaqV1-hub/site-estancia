@@ -26,8 +26,10 @@ type CustomerVoucherRow = {
   idvoucher: number;
   numvoucher: string | null;
   tpvoucher: string | null;
+  descricao: string | null;
   stusado: string | null;
   agenda_data: string | null;
+  vlunicompra: string | null;
 };
 
 type TripVoucherRow = {
@@ -41,6 +43,7 @@ type TripVoucherRow = {
   idvoucher: number;
   numvoucher: string | null;
   tpvoucher: string | null;
+  descricao: string | null;
   stusado: string | null;
   nomealuno: string | null;
   turma: string | null;
@@ -63,6 +66,7 @@ export type PainelBilheteriaLookupVoucher = {
   voucherTypeLabel: string;
   statusLabel: string;
   visitDate: string | null;
+  unitValue: string;
 };
 
 export type PainelBilheteriaTicketLookupResult = {
@@ -161,8 +165,8 @@ const paymentMethodLabels: Record<string, string> = {
 };
 
 const voucherTypeLabels: Record<string, string> = {
-  norma: "Adulto",
-  infan: "Criança",
+  norma: "Passaporte",
+  infan: "Passaporte Infantil",
   isent: "Isento",
   corte: "Cortesia",
   escol: "Escola",
@@ -202,6 +206,14 @@ function formatPaymentLabel(value: string | null | undefined) {
 function formatVoucherTypeLabel(value: string | null | undefined) {
   const key = String(value ?? "").trim().toLowerCase();
   return voucherTypeLabels[key] ?? (key || "-");
+}
+
+function resolveVoucherDisplayLabel(
+  description: string | null | undefined,
+  voucherType: string | null | undefined,
+) {
+  const normalizedDescription = String(description ?? "").trim();
+  return normalizedDescription || formatVoucherTypeLabel(voucherType);
 }
 
 function formatVoucherStatusLabel(value: string | null | undefined) {
@@ -351,8 +363,10 @@ export async function lookupPainelBilheteriaCustomerDocument(
           v.idvoucher,
           v.numvoucher,
           v.tpvoucher,
+          v.descricao,
           v.stusado,
-          a.dtagenda::text AS agenda_data
+          a.dtagenda::text AS agenda_data,
+          v.vlunicompra::text AS vlunicompra
         FROM voucher v
         LEFT JOIN agenda a ON a.idagenda = v.idagenda
         WHERE v.idcompra = ANY($1::int[])
@@ -368,9 +382,10 @@ export async function lookupPainelBilheteriaCustomerDocument(
         voucherNumber: row.numvoucher,
         voucherTypeCode: row.tpvoucher,
         statusCode: row.stusado,
-        voucherTypeLabel: formatVoucherTypeLabel(row.tpvoucher),
+        voucherTypeLabel: resolveVoucherDisplayLabel(row.descricao, row.tpvoucher),
         statusLabel: formatVoucherStatusLabel(row.stusado),
         visitDate: row.agenda_data ? row.agenda_data.slice(0, 10) : null,
+        unitValue: formatPainelBilheteriaMoney(row.vlunicompra),
       });
       vouchersByPurchaseId.set(row.idcompra, current);
     }
@@ -434,6 +449,7 @@ export async function lookupPainelBilheteriaTrip(
         v.idvoucher,
         v.numvoucher,
         v.tpvoucher,
+        v.descricao,
         v.stusado,
         v.nomealuno,
         v.turma,
@@ -466,7 +482,7 @@ export async function lookupPainelBilheteriaTrip(
       voucherNumber: row.numvoucher,
       voucherTypeCode: row.tpvoucher,
       statusCode: row.stusado,
-      voucherTypeLabel: formatVoucherTypeLabel(row.tpvoucher),
+      voucherTypeLabel: resolveVoucherDisplayLabel(row.descricao, row.tpvoucher),
       statusLabel: formatVoucherStatusLabel(row.stusado),
       studentName: row.nomealuno,
       className: row.turma,

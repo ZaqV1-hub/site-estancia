@@ -101,8 +101,8 @@ describe("renderPainelCompraConvenioExportTable", () => {
     const html = renderPainelCompraConvenioExportTable([
       {
         Convenios: "Convenio Alfa",
-        Adulto: "5",
-        ValorAdulto: "250,00",
+        Passaporte: "5",
+        ValorPassaporte: "250,00",
         Infantil: "2",
         ValorInfantil: "60,00",
         Escolar: "3",

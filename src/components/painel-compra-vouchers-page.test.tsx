@@ -15,7 +15,7 @@ describe("PainelCompraVouchersPage", () => {
               voucherNumber: "ABC-123",
               purchaseDate: "06/05/2026",
               visitDate: "08/05/2026",
-              ticketTypeLabel: "Adulto",
+              ticketTypeLabel: "Passaporte",
               name: "Cliente Teste",
               location: "ponli",
               locationLabel: "SITE",
@@ -70,11 +70,11 @@ describe("PainelCompraVouchersPage", () => {
       }),
     );
 
-    expect(html).toContain("Adulto SITE");
+    expect(html).toContain("Passaporte SITE");
     expect(html).toContain("&gt;</span><span>Vouchers</span>");
-    expect(html).toContain("Tipo do Ingresso");
-    expect(html).toContain("Cliente Teste");
-    expect(html).toContain("SITE");
+    expect(html).toContain("Passaporte</th>");
+    expect(html).toContain("ABC-123");
+    expect(html).toContain("Passaporte</option>");
     expect(html).toContain("Remover Filtros");
     expect(html).toContain("Exportar (.xls)");
   });

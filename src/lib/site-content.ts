@@ -534,7 +534,7 @@ export const infoPages: Record<string, InfoPage> = {
     summary:
       "A pagina de Day-Use Familia traz o principal produto do publico familiar, com faixa de horario, atividades, alimentacao complementar e orientacoes frequentes.",
     highlights: [
-      "Valores publicos atuais: R$ 80,00 a partir de 10 anos e R$ 60,00 de 4 a 9 anos.",
+      "Valores publicos atuais: R$ 80,00 no passaporte e R$ 60,00 no passaporte infantil.",
       "Horario de atendimento das 10h as 17h.",
       "Compra online com desconto aberta pela agenda publica do site.",
     ],
@@ -542,8 +542,8 @@ export const infoPages: Record<string, InfoPage> = {
     secondaryCta: { label: "Falar com a equipe", href: contact.whatsapp },
     facts: [
       { label: "Horario", value: "10h as 17h" },
-      { label: "Valor adulto", value: "R$ 80,00" },
-      { label: "Criancas", value: "R$ 60,00 de 4 a 9 anos" },
+      { label: "Passaporte", value: "R$ 80,00" },
+      { label: "Passaporte infantil", value: "R$ 60,00 de 4 a 9 anos" },
     ],
     heroImage: {
       src: "/photos/day-use.jpg",

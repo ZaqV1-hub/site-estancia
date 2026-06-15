@@ -93,6 +93,36 @@ export function PainelAgendaEditor({
   });
   const passports = products.filter((product) => product.type === "passport");
   const addons = products.filter((product) => product.type === "addon");
+  const [selectedPassportIds, setSelectedPassportIds] = useState<string[]>(() =>
+    data.selectedDay?.selectedPassportIds?.length
+      ? data.selectedDay.selectedPassportIds
+      : passports.map((item) => item.id),
+  );
+  const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>(() =>
+    data.selectedDay?.selectedAddonIds?.length
+      ? data.selectedDay.selectedAddonIds
+      : addons.map((item) => item.id),
+  );
+  const allPassportsSelected =
+    passports.length > 0 && selectedPassportIds.length === passports.length;
+  const allAddonsSelected =
+    addons.length > 0 && selectedAddonIds.length === addons.length;
+
+  function togglePassportSelection(passportId: string) {
+    setSelectedPassportIds((current) =>
+      current.includes(passportId)
+        ? current.filter((item) => item !== passportId)
+        : [...current, passportId],
+    );
+  }
+
+  function toggleAddonSelection(addonId: string) {
+    setSelectedAddonIds((current) =>
+      current.includes(addonId)
+        ? current.filter((item) => item !== addonId)
+        : [...current, addonId],
+    );
+  }
 
   useEffect(() => {
     if (!form.startDate || !form.endDate) {
@@ -187,6 +217,8 @@ export function PainelAgendaEditor({
         body: JSON.stringify({
           agendaId: selectedAgenda?.id ?? null,
           ...form,
+          passportIds: selectedPassportIds,
+          addonIds: selectedAddonIds,
           confirmOverwrite,
           actor,
         }),
@@ -260,26 +292,26 @@ export function PainelAgendaEditor({
   }
 
   return (
-    <section className="panel-section p-5">
+    <section className="panel-section p-4">
       <div>
         <p className="panel-eyebrow">
           {mode === "create" ? "Adicionar" : "Editar"}
         </p>
-        <h2 className="mt-2 text-[34px] font-black leading-tight text-[#17351f]">
+        <h2 className="mt-1 text-[28px] font-black leading-tight text-[#17351f]">
           {data.selectedDate
             ? formatPainelAgendaDateLabel(data.selectedDate)
             : "Nova agenda"}
         </h2>
-        <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
+        <p className="mt-2 text-sm text-[#5f7564]">
           {mode === "create"
             ? "Configure a data, os passaportes e os itens disponíveis."
             : "Atualize a data, os passaportes e os itens disponíveis."}
         </p>
       </div>
 
-      <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
-        <div className="grid gap-4 lg:grid-cols-[0.7fr_0.5fr]">
-          <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+      <form className="mt-5 grid gap-3" onSubmit={handleSubmit}>
+        <div className="grid gap-3 lg:grid-cols-[0.7fr_0.5fr]">
+          <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
             Data
             <input
               type="date"
@@ -291,11 +323,11 @@ export function PainelAgendaEditor({
                   endDate: event.target.value,
                 }))
               }
-              className="rounded-[8px] border border-[#dbe7d7] px-4 py-3 text-sm font-normal text-[#17351f]"
+              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5 text-sm font-normal text-[#17351f]"
             />
           </label>
 
-          <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+          <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
             Tipo da agenda
             <select
               value={form.type}
@@ -305,7 +337,7 @@ export function PainelAgendaEditor({
                   type: event.target.value as PainelAgendaType,
                 }))
               }
-              className="rounded-[8px] border border-[#dbe7d7] px-4 py-3 text-sm font-normal text-[#17351f]"
+              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5 text-sm font-normal text-[#17351f]"
             >
               {typeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -317,8 +349,8 @@ export function PainelAgendaEditor({
         </div>
 
         {form.type === "promo" ? (
-          <div className="grid gap-4 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
-            <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+          <div className="grid gap-3 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-3">
+            <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
               Nome da promoção
               <input
                 type="text"
@@ -329,10 +361,10 @@ export function PainelAgendaEditor({
                     promotionName: event.target.value,
                   }))
                 }
-                className="rounded-[8px] border border-[#dbe7d7] px-4 py-3 text-sm font-normal text-[#17351f]"
+                className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5 text-sm font-normal text-[#17351f]"
               />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+            <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
               Descrição da promoção
               <textarea
                 value={form.promotionDescription}
@@ -343,47 +375,69 @@ export function PainelAgendaEditor({
                   }))
                 }
                 rows={3}
-                className="rounded-[8px] border border-[#dbe7d7] px-4 py-3 text-sm font-normal text-[#17351f]"
+                className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5 text-sm font-normal text-[#17351f]"
               />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+            <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
               Imagem do evento
               <input
                 type="file"
                 accept="image/*"
-                className="rounded-[8px] border border-dashed border-[#b9d3b1] bg-white px-4 py-3 text-sm font-normal text-[#17351f]"
+                className="rounded-[8px] border border-dashed border-[#b9d3b1] bg-white px-3 py-2.5 text-sm font-normal text-[#17351f]"
               />
             </label>
           </div>
         ) : null}
 
-        <section className="grid gap-4 rounded-[8px] border border-[#dbe7d7] bg-white p-4">
+        <section className="grid gap-3 rounded-[8px] border border-[#dbe7d7] bg-white p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="panel-eyebrow">Passaportes</p>
-              <h3 className="mt-1 text-xl font-black text-[#17351f]">
+              <h3 className="mt-1 text-lg font-black text-[#17351f]">
                 Seleção de passaportes
               </h3>
             </div>
             <button
               type="button"
               onClick={() => router.push("/painel/passaportes-itens")}
-              className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]"
+              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-xs font-semibold text-[#17351f]"
             >
               Adicionar passaporte
             </button>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2">
+          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+            {passports.length > 0 ? (
+              <label className="rounded-[8px] border border-[#dbe7d7] bg-[#f3f8ee] px-3 py-2.5 text-sm font-semibold text-[#17351f]">
+                <span className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={allPassportsSelected}
+                    onChange={(event) =>
+                      setSelectedPassportIds(
+                        event.target.checked ? passports.map((item) => item.id) : [],
+                      )
+                    }
+                    className="h-4 w-4"
+                  />
+                  Selecionar todos
+                </span>
+              </label>
+            ) : null}
             {passports.map((item) => (
               <label
                 key={item.id}
-                className="min-w-[230px] rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-3 text-sm font-black text-[#17351f]"
+                className="rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] px-3 py-2.5 text-sm font-semibold text-[#17351f]"
               >
                 <span className="flex items-center gap-3">
-                  <input type="checkbox" defaultChecked className="h-4 w-4" />
+                  <input
+                    type="checkbox"
+                    checked={selectedPassportIds.includes(item.id)}
+                    onChange={() => togglePassportSelection(item.id)}
+                    className="h-4 w-4"
+                  />
                   {item.title}
                 </span>
-                <span className="mt-2 block text-xs font-semibold text-[#5f7564]">
+                <span className="mt-1.5 block text-xs text-[#5f7564]">
                   R$ {item.fixedPrice.replace(".", ",")}
                 </span>
               </label>
@@ -391,32 +445,46 @@ export function PainelAgendaEditor({
           </div>
         </section>
 
-        <section className="grid gap-4 rounded-[8px] border border-[#dbe7d7] bg-white p-4">
+        <section className="grid gap-3 rounded-[8px] border border-[#dbe7d7] bg-white p-3">
           <div>
             <p className="panel-eyebrow">Itens adicionais</p>
-            <h3 className="mt-1 text-xl font-black text-[#17351f]">
+            <h3 className="mt-1 text-lg font-black text-[#17351f]">
               Itens disponíveis na data
             </h3>
           </div>
-          <details className="rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
-            <summary className="cursor-pointer text-sm font-black text-[#17351f]">
+          <details className="rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-3">
+            <summary className="cursor-pointer text-sm font-semibold text-[#17351f]">
               Selecionar itens adicionais
             </summary>
-            <div className="mt-4 grid max-h-[260px] gap-2 overflow-y-auto pr-2">
-              <label className="flex items-center gap-3 rounded-[8px] bg-white p-3 text-sm font-black text-[#17351f]">
-                <input type="checkbox" defaultChecked className="h-4 w-4" />
+            <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+              <label className="flex items-center gap-3 rounded-[8px] bg-white px-3 py-2.5 text-sm font-semibold text-[#17351f]">
+                <input
+                  type="checkbox"
+                  checked={allAddonsSelected}
+                  onChange={(event) =>
+                    setSelectedAddonIds(
+                      event.target.checked ? addons.map((item) => item.id) : [],
+                    )
+                  }
+                  className="h-4 w-4"
+                />
                 Selecionar todos
               </label>
               {addons.map((item) => (
                 <label
                   key={item.id}
-                  className="flex items-center justify-between gap-3 rounded-[8px] bg-white p-3 text-sm font-black text-[#17351f]"
+                  className="flex items-center justify-between gap-3 rounded-[8px] bg-white px-3 py-2.5 text-sm font-semibold text-[#17351f]"
                 >
                   <span className="flex items-center gap-3">
-                    <input type="checkbox" defaultChecked className="h-4 w-4" />
+                    <input
+                      type="checkbox"
+                      checked={selectedAddonIds.includes(item.id)}
+                      onChange={() => toggleAddonSelection(item.id)}
+                      className="h-4 w-4"
+                    />
                     {item.title}
                   </span>
-                  <span className="text-xs font-semibold text-[#5f7564]">
+                  <span className="text-xs text-[#5f7564]">
                     R$ {item.fixedPrice.replace(".", ",")}
                   </span>
                 </label>
@@ -466,7 +534,7 @@ export function PainelAgendaEditor({
           </div>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="submit"
             disabled={
@@ -474,7 +542,7 @@ export function PainelAgendaEditor({
               (overwriteRequired && !confirmOverwrite) ||
               (rangePreview.hasSchoolDates && form.type !== "escol")
             }
-            className="rounded-full bg-[#2b8c46] px-5 py-3 text-sm font-black text-white disabled:opacity-60"
+            className="rounded-[8px] bg-[#2b8c46] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
           >
             {mutationState.status === "submitting" ? "Salvando..." : "Salvar agenda"}
           </button>
@@ -482,7 +550,7 @@ export function PainelAgendaEditor({
           <button
             type="button"
             onClick={() => router.replace(returnHref)}
-            className="rounded-full border border-[#dbe7d7] px-5 py-3 text-sm font-black text-[#17351f]"
+            className="rounded-[8px] border border-[#dbe7d7] px-4 py-2.5 text-sm font-semibold text-[#17351f]"
           >
             Voltar
           </button>
@@ -492,7 +560,7 @@ export function PainelAgendaEditor({
               type="button"
               onClick={() => void handleDelete()}
               disabled={mutationState.status === "submitting"}
-              className="rounded-full border border-[#d05f56] px-5 py-3 text-sm font-black text-[#b24239] disabled:opacity-60"
+              className="rounded-[8px] border border-[#d05f56] px-4 py-2.5 text-sm font-semibold text-[#b24239] disabled:opacity-60"
             >
               Remover dia
             </button>

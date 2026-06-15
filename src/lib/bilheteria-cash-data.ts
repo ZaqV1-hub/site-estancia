@@ -17,6 +17,7 @@ import {
 type DiscountRow = {
   tipo: string | null;
   nome: string | null;
+  descricao: string | null;
   tpvoucher: string | null;
   formapag: string | null;
   quantidade: string | number | null;
@@ -25,6 +26,7 @@ type DiscountRow = {
 
 type AggregateRow = {
   tpvoucher: string | null;
+  descricao: string | null;
   quantidade: string | number | null;
   valor_total: string | number | null;
 };
@@ -59,7 +61,8 @@ function normalizeNumber(value: string | number | null | undefined) {
 
 function toAggregateRows(rows: AggregateRow[]): BilheteriaCashAggregateRow[] {
   return rows.map((row) => ({
-    voucherType: String(row.tpvoucher ?? "").trim(),
+    voucherType:
+      String(row.descricao ?? "").trim() || String(row.tpvoucher ?? "").trim(),
     quantity: normalizeNumber(row.quantidade),
     totalValue: normalizeNumber(row.valor_total),
   }));
@@ -89,16 +92,17 @@ async function querySiteRows(client: import("pg").PoolClient, openedAt: string, 
     `
       SELECT
         v.tpvoucher,
+        COALESCE(NULLIF(BTRIM(v.descricao), ''), v.tpvoucher) AS descricao,
         COUNT(*)::text AS quantidade,
         COALESCE(SUM(v.vlunicompra), 0)::text AS valor_total
       FROM voucher v
       JOIN compra c ON c.idcompra = v.idcompra
       WHERE c.tpcompra = 'ponli'
         AND v.stusado = 's'
-        AND (v.dtuso::timestamp + COALESCE(v.hruso, '00:00'::time)) >= $1::timestamptz
-        AND (v.dtuso::timestamp + COALESCE(v.hruso, '00:00'::time)) <= $2::timestamptz
-      GROUP BY v.tpvoucher
-      ORDER BY v.tpvoucher
+        AND (v.dtuso::timestamp + COALESCE(v.hruso, '00:00'::time)) >= ($1::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+        AND (v.dtuso::timestamp + COALESCE(v.hruso, '00:00'::time)) <= ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+      GROUP BY v.tpvoucher, COALESCE(NULLIF(BTRIM(v.descricao), ''), v.tpvoucher)
+      ORDER BY COALESCE(NULLIF(BTRIM(v.descricao), ''), v.tpvoucher)
     `,
     [openedAt, closedAt],
   );
@@ -115,6 +119,7 @@ async function queryBoxOfficeRows(
     `
       SELECT
         v.tpvoucher,
+        COALESCE(NULLIF(BTRIM(v.descricao), ''), v.tpvoucher) AS descricao,
         COUNT(*)::text AS quantidade,
         COALESCE(SUM(v.vlunicompra), 0)::text AS valor_total
       FROM voucher v
@@ -129,8 +134,8 @@ async function queryBoxOfficeRows(
         AND v.tpvoucher <> 'espec'
         AND v.stusado <> 'inv'
         AND v.desconto_id IS NULL
-      GROUP BY v.tpvoucher
-      ORDER BY v.tpvoucher
+      GROUP BY v.tpvoucher, COALESCE(NULLIF(BTRIM(v.descricao), ''), v.tpvoucher)
+      ORDER BY COALESCE(NULLIF(BTRIM(v.descricao), ''), v.tpvoucher)
     `,
     [openedAt, closedAt],
   );
@@ -149,6 +154,7 @@ async function queryDiscountRows(
         dt.descricao AS tipo,
         d.nome AS nome,
         v.tpvoucher,
+        COALESCE(NULLIF(BTRIM(v.descricao), ''), v.tpvoucher) AS descricao,
         c.formapag,
         COUNT(*)::text AS quantidade,
         COALESCE(SUM(v.vlunicompra), 0)::text AS valor_total
@@ -165,8 +171,8 @@ async function queryDiscountRows(
         AND v.tpvoucher <> 'corte'
         AND v.tpvoucher <> 'espec'
         AND v.stusado <> 'inv'
-      GROUP BY dt.descricao, d.nome, v.tpvoucher, c.formapag
-      ORDER BY dt.descricao, d.nome, v.tpvoucher, c.formapag
+      GROUP BY dt.descricao, d.nome, v.tpvoucher, COALESCE(NULLIF(BTRIM(v.descricao), ''), v.tpvoucher), c.formapag
+      ORDER BY dt.descricao, d.nome, COALESCE(NULLIF(BTRIM(v.descricao), ''), v.tpvoucher), c.formapag
     `,
     [openedAt, closedAt],
   );
@@ -187,7 +193,8 @@ async function queryDiscountRows(
     const label = `Descontos - ${type} - ${name}`.replace(/\s+-\s+-\s+/g, " - ");
     const rows = grouped.get(label) ?? [];
     rows.push({
-      voucherType: String(row.tpvoucher ?? "").trim(),
+      voucherType:
+        String(row.descricao ?? "").trim() || String(row.tpvoucher ?? "").trim(),
       quantity: normalizeNumber(row.quantidade),
       totalValue: normalizeNumber(row.valor_total),
       paymentMethod: String(row.formapag ?? "").trim() || null,
@@ -303,17 +310,14 @@ async function buildClosureRawRangeData(
   openedAt: string,
   closedAt: string,
 ) {
-  const [siteRows, boxOfficeRows, discountGroups, courtesyRows, forms, formsDesc, funds, sangrias] =
-    await Promise.all([
-      querySiteRows(client, openedAt, closedAt),
-      queryBoxOfficeRows(client, openedAt, closedAt),
-      queryDiscountRows(client, openedAt, closedAt),
-      queryCourtesyRows(client, openedAt, closedAt),
-      queryPaymentTotals(client, openedAt, closedAt, false),
-      queryPaymentTotals(client, openedAt, closedAt, true),
-      listCashMovementsByType(client, "fundo", openedAt, closedAt),
-      listCashMovementsByType(client, "sangria", openedAt, closedAt),
-    ]);
+  const siteRows = await querySiteRows(client, openedAt, closedAt);
+  const boxOfficeRows = await queryBoxOfficeRows(client, openedAt, closedAt);
+  const discountGroups = await queryDiscountRows(client, openedAt, closedAt);
+  const courtesyRows = await queryCourtesyRows(client, openedAt, closedAt);
+  const forms = await queryPaymentTotals(client, openedAt, closedAt, false);
+  const formsDesc = await queryPaymentTotals(client, openedAt, closedAt, true);
+  const funds = await listCashMovementsByType(client, "fundo", openedAt, closedAt);
+  const sangrias = await listCashMovementsByType(client, "sangria", openedAt, closedAt);
 
   const totalFund = roundMoney(
     funds.reduce((sum, item) => sum + normalizeNumber(item.value), 0),

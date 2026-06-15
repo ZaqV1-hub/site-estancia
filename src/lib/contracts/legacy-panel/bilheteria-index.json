@@ -7,8 +7,7 @@
       { "key": "cash-closure", "label": "Fechamento de Caixa", "href": "/painel/bilheteria/fechamento-caixa" },
       { "key": "cash-fund", "label": "Fundo de Caixa", "href": "/painel/bilheteria/fundo-caixa" },
       { "key": "history", "label": "Histórico de Vendas", "href": "/painel/bilheteria/historico", "managerOnly": true },
-      { "key": "ticket-lookup", "label": "Consultar Ingresso", "href": "/painel/bilheteria?consult=1" },
-      { "key": "back-to-panel", "label": "Voltar ao Painel", "href": "/painel" }
+      { "key": "ticket-lookup", "label": "Consultar Ingresso", "href": "/painel/bilheteria?consult=1" }
     ]
   },
   "forms": [

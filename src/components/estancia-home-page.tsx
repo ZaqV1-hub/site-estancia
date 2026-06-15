@@ -312,7 +312,20 @@ export function EstanciaHomePage({
               Eventos
             </h2>
 
-            <div className="relative">
+            {events.length === 0 ? (
+              <div className="rounded-[8px] border border-[#dbe7d7] bg-white px-6 py-10 text-center shadow-[0_14px_32px_rgba(24,67,34,0.08)]">
+                <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#1f6b36]">
+                  Agenda do parque
+                </p>
+                <h3 className="mt-3 text-[28px] font-black text-[#17342d]">
+                  Nao ha eventos atuais
+                </h3>
+                <p className="mx-auto mt-3 max-w-[560px] text-[15px] leading-7 text-[#4b6570]">
+                  Assim que uma nova programacao for publicada, ela vai aparecer aqui para o cliente.
+                </p>
+              </div>
+            ) : (
+              <div className="relative">
               {events.length > 1 ? (
                 <>
                   {eventIndex > 0 ? (
@@ -385,7 +398,8 @@ export function EstanciaHomePage({
                   </article>
                 ))}
               </div>
-            </div>
+              </div>
+            )}
           </div>
         </section>
       </main>

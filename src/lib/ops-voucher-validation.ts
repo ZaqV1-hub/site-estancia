@@ -379,7 +379,7 @@ async function getVoucherByNumber(client: PoolClient, voucherNumber: string) {
       LEFT JOIN agenda ON agenda.idagenda = voucher.idagenda
       WHERE voucher.numvoucher = $1
       LIMIT 1
-      FOR UPDATE
+      FOR UPDATE OF voucher, compra
     `,
     [voucherNumber],
   );
@@ -410,7 +410,7 @@ async function getVouchersByPurchaseId(client: PoolClient, purchaseId: number) {
       LEFT JOIN agenda ON agenda.idagenda = voucher.idagenda
       WHERE voucher.idcompra = $1
       ORDER BY voucher.idvoucher ASC
-      FOR UPDATE
+      FOR UPDATE OF voucher, compra
     `,
     [purchaseId],
   );
@@ -441,7 +441,7 @@ async function getVouchersByIds(client: PoolClient, voucherIds: number[]) {
       LEFT JOIN agenda ON agenda.idagenda = voucher.idagenda
       WHERE voucher.idvoucher = ANY($1::int[])
       ORDER BY voucher.idvoucher ASC
-      FOR UPDATE
+      FOR UPDATE OF voucher, compra
     `,
     [voucherIds],
   );

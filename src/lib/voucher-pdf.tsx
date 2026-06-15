@@ -216,7 +216,7 @@ function VoucherDocument({
 
             <View style={styles.body}>
               <View>
-                <Text style={styles.sectionTitle}>Ingresso</Text>
+                <Text style={styles.sectionTitle}>Passaporte</Text>
                 <Text style={styles.primaryValue}>{voucher.typeLabel}</Text>
                 <Text>Valido para a visita de {formatDate(voucher.visitDate)}.</Text>
                 <Text>Valor unitario: {formatCurrency(voucher.unitValue)}.</Text>

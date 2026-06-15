@@ -64,7 +64,9 @@ function purchaseStatusCopy(status: UserVoucherPurchase["status"]) {
 }
 
 function paymentMethodLabel(type: MockPaymentType) {
-  return mockPaymentOptions.find((option) => option.value === type)?.label ?? "Pix";
+  return (
+    mockPaymentOptions.find((option) => option.value === type)?.label ?? "Pix"
+  );
 }
 
 function PaymentIcon({ type }: { type: MockPaymentType }) {
@@ -84,7 +86,13 @@ function PaymentIcon({ type }: { type: MockPaymentType }) {
   );
 }
 
-function PixPreview({ purchaseId, totalLabel }: { purchaseId: number; totalLabel: string }) {
+function PixPreview({
+  purchaseId,
+  totalLabel,
+}: {
+  purchaseId: number;
+  totalLabel: string;
+}) {
   return (
     <div className="mt-8 grid gap-6 rounded-[24px] border border-[#dbe8d4] bg-[#f8fcf5] p-5 lg:grid-cols-[240px_minmax(0,1fr)]">
       <div className="mx-auto grid h-[220px] w-[220px] grid-cols-5 gap-1 rounded-[18px] border border-[#dbe8d4] bg-white p-5 shadow-[0_18px_38px_rgba(24,67,34,0.08)]">
@@ -188,7 +196,8 @@ export function CustomerCheckoutPage({
   const [jqueryReady, setJqueryReady] = useState(false);
   const [checkoutScriptReady, setCheckoutScriptReady] = useState(false);
   const [widgetError, setWidgetError] = useState<string | null>(null);
-  const [mockPaymentType, setMockPaymentType] = useState<MockPaymentType>("CreditCard");
+  const [mockPaymentType, setMockPaymentType] =
+    useState<MockPaymentType>("CreditCard");
   const [mockSubmitting, setMockSubmitting] = useState(false);
   const [mockError, setMockError] = useState<string | null>(null);
   const openedRef = useRef(false);
@@ -200,7 +209,12 @@ export function CustomerCheckoutPage({
   const selectedPaymentLabel = paymentMethodLabel(mockPaymentType);
 
   useEffect(() => {
-    if (mode !== "widget" || !jqueryReady || !checkoutScriptReady || openedRef.current) {
+    if (
+      mode !== "widget" ||
+      !jqueryReady ||
+      !checkoutScriptReady ||
+      openedRef.current
+    ) {
       return;
     }
 
@@ -221,23 +235,32 @@ export function CustomerCheckoutPage({
       return;
     }
 
-    const checkout = checkoutFactory({
+    const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(
+      window.location.hostname,
+    );
+    const widgetThreeDsEnabled = threeDsEnabled && !isLocalhost;
+    const checkoutConfig: Record<string, unknown> = {
       checkoutUrl: "/api/checkout/checkout-link",
       statusUrl: "/api/checkout/status",
       retornoUrl: returnUrl,
       container: "#cieloCheckoutInline",
       continueShoppingUrl: "/meus-ingressos",
       logoUrl: "/brand/estancia-logo-dark.png",
-      paymentMethods: threeDsEnabled
+      paymentMethods: widgetThreeDsEnabled
         ? ["CreditCard", "DebitCard", "Pix"]
         : ["CreditCard", "Pix"],
       maxInstallments: 12,
       minInstallmentValue: 1,
-      threeDs: {
-        enabled: threeDsEnabled,
+    };
+
+    if (widgetThreeDsEnabled) {
+      checkoutConfig.threeDs = {
+        enabled: true,
         tokenUrl: "/api/checkout/cielo3ds-token",
-      },
-    });
+      };
+    }
+
+    const checkout = checkoutFactory(checkoutConfig);
 
     openedRef.current = true;
     checkout.open({
@@ -292,8 +315,7 @@ export function CustomerCheckoutPage({
 
       if (!response.ok || !body?.ok) {
         throw new Error(
-          body?.error?.message ??
-            "Não foi possível confirmar o pagamento.",
+          body?.error?.message ?? "Não foi possível confirmar o pagamento.",
         );
       }
 
@@ -344,142 +366,147 @@ export function CustomerCheckoutPage({
             </div>
           </section>
         ) : (
-        <section className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <section className="rounded-[28px] border border-[#e4e8e2] bg-white p-6 shadow-[0_22px_55px_rgba(15,23,42,0.08)] md:p-8">
-            <div className="flex flex-col gap-5 border-b border-[#d9dfd4] pb-7 md:flex-row md:items-center">
-              <div className="w-[120px] shrink-0">
-                <EstanciaLogo href={null} className="h-auto w-full" />
-              </div>
-              <div>
-                <h1 className="text-[26px] font-semibold text-[#111827]">
-                  Checkout de Pagamento - Estância
-                </h1>
-                <p className="mt-1 text-[16px] text-[#546274]">
-                  ID da compra: <strong className="text-[#2d3748]">{purchase.id}</strong>
-                </p>
-              </div>
-            </div>
-
-            {mode === "mock" ? (
-              <>
-                <div className="mt-8 text-center">
-                  <p className="text-[18px] font-semibold text-[#111827]">
-                    Escolha a forma de pagamento:
+          <section className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_340px]">
+            <section className="rounded-[28px] border border-[#e4e8e2] bg-white p-6 shadow-[0_22px_55px_rgba(15,23,42,0.08)] md:p-8">
+              <div className="flex flex-col gap-5 border-b border-[#d9dfd4] pb-7 md:flex-row md:items-center">
+                <div className="w-[120px] shrink-0">
+                  <EstanciaLogo href={null} className="h-auto w-full" />
+                </div>
+                <div>
+                  <h1 className="text-[26px] font-semibold text-[#111827]">
+                    Checkout de Pagamento - Estância
+                  </h1>
+                  <p className="mt-1 text-[16px] text-[#546274]">
+                    ID da compra:{" "}
+                    <strong className="text-[#2d3748]">{purchase.id}</strong>
                   </p>
                 </div>
+              </div>
 
-                <div className="mt-4 grid gap-4 md:grid-cols-3">
-                  {mockPaymentOptions.map((option) => {
-                    const active = mockPaymentType === option.value;
-
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setMockPaymentType(option.value)}
-                        className={`flex min-h-[90px] items-center gap-4 rounded-full border px-6 text-left transition ${
-                          active
-                            ? "border-[#6f7dff] bg-[#eef1ff] shadow-[0_18px_36px_rgba(109,125,255,0.2)]"
-                            : "border-[#d7d9e5] bg-[#f7f7fb] hover:border-[#9ca3c9]"
-                        }`}
-                      >
-                        <PaymentIcon type={option.value} />
-                        <span className="text-[16px] font-black uppercase text-[#111827]">
-                          {option.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <p className="mt-3 text-center text-[13px] text-[#8791a5]">
-                  *Campo obrigatório
-                </p>
-
-                {mockPaymentType === "Pix" ? (
-                  <PixPreview purchaseId={purchase.id} totalLabel={totalLabel} />
-                ) : (
-                  <CardForm title={selectedPaymentLabel} />
-                )}
-
-                {mockError ? (
-                  <div className="mt-5 rounded-[18px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-sm text-[#9f3f36]">
-                    {mockError}
+              {mode === "mock" ? (
+                <>
+                  <div className="mt-8 text-center">
+                    <p className="text-[18px] font-semibold text-[#111827]">
+                      Escolha a forma de pagamento:
+                    </p>
                   </div>
-                ) : null}
-              </>
-            ) : (
-              <>
-                <div className="mt-8 border-b border-[#ead5d1] pb-5">
-                  <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-[#b46d5f]">
-                    Indisponível
+
+                  <div className="mt-4 grid gap-4 md:grid-cols-3">
+                    {mockPaymentOptions.map((option) => {
+                      const active = mockPaymentType === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setMockPaymentType(option.value)}
+                          className={`flex min-h-[90px] items-center gap-4 rounded-full border px-6 text-left transition ${
+                            active
+                              ? "border-[#6f7dff] bg-[#eef1ff] shadow-[0_18px_36px_rgba(109,125,255,0.2)]"
+                              : "border-[#d7d9e5] bg-[#f7f7fb] hover:border-[#9ca3c9]"
+                          }`}
+                        >
+                          <PaymentIcon type={option.value} />
+                          <span className="text-[16px] font-black uppercase text-[#111827]">
+                            {option.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <p className="mt-3 text-center text-[13px] text-[#8791a5]">
+                    *Campo obrigatório
                   </p>
-                  <h2 className="mt-2 text-[28px] font-black text-[#4b231f]">
-                    Checkout indisponível
-                  </h2>
-                  <p className="mt-2 text-[15px] leading-7 text-[#7e4b42]">
-                    O pagamento não está disponível neste ambiente.
-                  </p>
+
+                  {mockPaymentType === "Pix" ? (
+                    <PixPreview purchaseId={purchase.id} totalLabel={totalLabel} />
+                  ) : (
+                    <CardForm title={selectedPaymentLabel} />
+                  )}
+
+                  {mockError ? (
+                    <div className="mt-5 rounded-[18px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-sm text-[#9f3f36]">
+                      {mockError}
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <div className="mt-8 border-b border-[#ead5d1] pb-5">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-[#b46d5f]">
+                      Indisponível
+                    </p>
+                    <h2 className="mt-2 text-[28px] font-black text-[#4b231f]">
+                      Checkout indisponível
+                    </h2>
+                    <p className="mt-2 text-[15px] leading-7 text-[#7e4b42]">
+                      O pagamento não está disponível neste ambiente.
+                    </p>
+                  </div>
+
+                  <div className="mt-5 rounded-[24px] border border-[#efc3c3] bg-[#fff3f1] p-5 text-[15px] leading-8 text-[#9f3f36]">
+                    O pagamento não está disponível para esta compra no momento.
+                  </div>
+                </>
+              )}
+            </section>
+
+            <aside className="h-fit rounded-[28px] bg-[#f1f1f6] p-6 shadow-[0_22px_55px_rgba(15,23,42,0.08)]">
+              <h2 className="text-[20px] font-bold text-[#111827]">
+                Resumo do pedido
+              </h2>
+              <dl className="mt-5 divide-y divide-[#d9d9e5] text-[16px] text-[#596579]">
+                <div className="flex items-center justify-between gap-5 py-3">
+                  <dt>Valor</dt>
+                  <dd className="font-black text-[#111827]">{totalLabel}</dd>
                 </div>
-
-                <div className="mt-5 rounded-[24px] border border-[#efc3c3] bg-[#fff3f1] p-5 text-[15px] leading-8 text-[#9f3f36]">
-                  O pagamento não está disponível para esta compra no momento.
+                <div className="flex items-center justify-between gap-5 py-3">
+                  <dt>Método de pagamento</dt>
+                  <dd className="max-w-[145px] text-right font-black text-[#111827]">
+                    {mode === "mock" ? selectedPaymentLabel : "-"}
+                  </dd>
                 </div>
-              </>
-            )}
-          </section>
+                <div className="flex items-center justify-between gap-5 py-3">
+                  <dt>Pedido</dt>
+                  <dd className="font-black text-[#111827]">#{purchase.id}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-5 py-3">
+                  <dt>Itens</dt>
+                  <dd className="font-black text-[#111827]">
+                    {purchase.voucherCount}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-5 py-3">
+                  <dt>Status</dt>
+                  <dd className="max-w-[150px] text-right font-black text-[#111827]">
+                    {purchaseStatusCopy(purchase.status)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-5 py-3">
+                  <dt>Valor total</dt>
+                  <dd className="font-black text-[#111827]">{totalLabel}</dd>
+                </div>
+              </dl>
 
-          <aside className="h-fit rounded-[28px] bg-[#f1f1f6] p-6 shadow-[0_22px_55px_rgba(15,23,42,0.08)]">
-            <h2 className="text-[20px] font-bold text-[#111827]">Resumo do pedido</h2>
-            <dl className="mt-5 divide-y divide-[#d9d9e5] text-[16px] text-[#596579]">
-              <div className="flex items-center justify-between gap-5 py-3">
-                <dt>Valor</dt>
-                <dd className="font-black text-[#111827]">{totalLabel}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-5 py-3">
-                <dt>Método de pagamento</dt>
-                <dd className="max-w-[145px] text-right font-black text-[#111827]">
-                  {mode === "mock" ? selectedPaymentLabel : "-"}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-5 py-3">
-                <dt>Pedido</dt>
-                <dd className="font-black text-[#111827]">#{purchase.id}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-5 py-3">
-                <dt>Itens</dt>
-                <dd className="font-black text-[#111827]">{purchase.voucherCount}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-5 py-3">
-                <dt>Status</dt>
-                <dd className="max-w-[150px] text-right font-black text-[#111827]">
-                  {purchaseStatusCopy(purchase.status)}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-5 py-3">
-                <dt>Valor total</dt>
-                <dd className="font-black text-[#111827]">{totalLabel}</dd>
-              </div>
-            </dl>
-
-            {mode === "mock" ? (
-              <button
-                type="button"
-                onClick={() => void handleMockPayment()}
-                disabled={mockSubmitting}
-                className="mt-7 flex min-h-[58px] w-full items-center justify-center rounded-full bg-[#5464ff] px-6 text-[16px] font-black text-white shadow-[0_18px_34px_rgba(84,100,255,0.28)] transition hover:bg-[#4150df] disabled:cursor-wait disabled:bg-[#9aa2f2]"
+              {mode === "mock" ? (
+                <button
+                  type="button"
+                  onClick={() => void handleMockPayment()}
+                  disabled={mockSubmitting}
+                  className="mt-7 flex min-h-[58px] w-full items-center justify-center rounded-full bg-[#5464ff] px-6 text-[16px] font-black text-white shadow-[0_18px_34px_rgba(84,100,255,0.28)] transition hover:bg-[#4150df] disabled:cursor-wait disabled:bg-[#9aa2f2]"
+                >
+                  {mockSubmitting ? "Processando..." : "Continuar pagamento"}
+                </button>
+              ) : null}
+              <a
+                href="/meus-ingressos"
+                className="mt-4 flex min-h-[54px] w-full items-center justify-center rounded-full bg-[#d7d7df] px-6 text-[16px] font-bold text-[#33384a] transition hover:bg-[#c9c9d4]"
               >
-                {mockSubmitting ? "Processando..." : "Continuar pagamento"}
-              </button>
-            ) : null}
-            <a
-              href="/meus-ingressos"
-              className="mt-4 flex min-h-[54px] w-full items-center justify-center rounded-full bg-[#d7d7df] px-6 text-[16px] font-bold text-[#33384a] transition hover:bg-[#c9c9d4]"
-            >
-              Continuar comprando
-            </a>
-          </aside>
-        </section>
+                Continuar comprando
+              </a>
+            </aside>
+          </section>
         )}
       </div>
     </IngressoShell>

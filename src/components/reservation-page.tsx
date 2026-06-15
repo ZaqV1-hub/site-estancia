@@ -166,13 +166,13 @@ export function ReservationPage({ agenda, user }: ReservationPageProps) {
 
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <article className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur">
-              <h2 className="legacy-rounded text-[16px] text-white">Adulto</h2>
+              <h2 className="legacy-rounded text-[16px] text-white">Passaporte</h2>
               <p className="mt-2 text-sm leading-6 text-white/82">
                 {formatCurrency(normalPrice)} por pessoa a partir de 10 anos.
               </p>
             </article>
             <article className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur">
-              <h2 className="legacy-rounded text-[16px] text-white">Infantil</h2>
+              <h2 className="legacy-rounded text-[16px] text-white">Passaporte Infantil</h2>
               <p className="mt-2 text-sm leading-6 text-white/82">
                 {formatCurrency(childPrice)} por pessoa de 4 a 9 anos.
               </p>
@@ -218,12 +218,12 @@ export function ReservationPage({ agenda, user }: ReservationPageProps) {
             {[
               {
                 key: "normal" as const,
-                label: "A partir de 10 anos",
+                label: "Passaporte",
                 price: formatPrice(agenda.priceTable.gateNormal),
               },
               {
                 key: "child" as const,
-                label: "De 4 a 9 anos",
+                label: "Passaporte Infantil",
                 price: formatPrice(agenda.priceTable.gateChild),
               },
               {

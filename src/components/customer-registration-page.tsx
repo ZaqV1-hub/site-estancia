@@ -8,7 +8,10 @@ import type {
   AuthErrorResponse,
   AuthRegistrationResponse,
 } from "@/lib/auth-contracts";
-import type { CustomerRegistrationLocationsResponse } from "@/lib/customer-registration-contracts";
+import type {
+  CustomerRegistrationCepResponse,
+  CustomerRegistrationLocationsResponse,
+} from "@/lib/customer-registration-contracts";
 import { formatCpf } from "@/lib/cpf";
 
 type CustomerRegistrationPageProps = {
@@ -92,6 +95,7 @@ export function CustomerRegistrationPage({
   const [cities, setCities] = useState<Array<{ id: number; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [cityLoading, setCityLoading] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -174,6 +178,78 @@ export function CustomerRegistrationPage({
       setError("Nao foi possivel carregar as cidades agora.");
     } finally {
       setCityLoading(false);
+    }
+  }
+
+  async function handleCepLookup(rawCep: string) {
+    const normalizedCep = rawCep.replace(/\D/g, "");
+
+    if (normalizedCep.length !== 8) {
+      return;
+    }
+
+    setCepLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `/api/auth/cep?cep=${encodeURIComponent(normalizedCep)}`,
+        {
+          cache: "no-store",
+        },
+      );
+      const payload = await readResponseBody<CustomerRegistrationCepResponse>(response);
+
+      if (!response.ok || !payload?.ok) {
+        setError(
+          await readApiError(
+            response,
+            "Nao foi possivel consultar o CEP agora.",
+          ),
+        );
+        return;
+      }
+
+      setForm((current) => ({
+        ...current,
+        cep: formatCep(payload.data.cep),
+        address: payload.data.address,
+        district: payload.data.district,
+        uf: payload.data.uf.id,
+        cityId: String(payload.data.city.id),
+        complement: current.complement || payload.data.complement || "",
+      }));
+      setUfs((current) => {
+        const alreadyIncluded = current.some(
+          (option) => option.id === payload.data.uf.id,
+        );
+
+        if (alreadyIncluded) {
+          return current;
+        }
+
+        return [payload.data.uf, ...current].sort((first, second) =>
+          first.name.localeCompare(second.name),
+        );
+      });
+      setCities((current) => {
+        const alreadyIncluded = current.some(
+          (option) => option.id === payload.data.city.id,
+        );
+
+        if (alreadyIncluded) {
+          return current;
+        }
+
+        return [payload.data.city, ...current].sort((first, second) =>
+          first.name.localeCompare(second.name),
+        );
+      });
+    } catch (requestError) {
+      console.error("customer-registration-cep-lookup-failed", requestError);
+      setError("Nao foi possivel consultar o CEP agora.");
+    } finally {
+      setCepLoading(false);
     }
   }
 
@@ -402,7 +478,16 @@ export function CustomerRegistrationPage({
                 type="text"
                 inputMode="numeric"
                 value={form.cep}
-                onChange={(event) => updateField("cep", formatCep(event.target.value))}
+                onChange={(event) => {
+                  const nextCep = formatCep(event.target.value);
+                  updateField("cep", nextCep);
+
+                  if (nextCep.replace(/\D/g, "").length !== 8) {
+                    return;
+                  }
+
+                  void handleCepLookup(nextCep);
+                }}
                 className="mt-2 w-full rounded-[22px] border border-[#c9d7e3] bg-[#f7fbfe] px-4 py-3 text-[15px] text-[#214d6b] outline-none transition focus:border-[#3498db] focus:bg-white focus:ring-2 focus:ring-[#d2ecfb]"
               />
             </label>
@@ -437,7 +522,7 @@ export function CustomerRegistrationPage({
               </span>
               <select
                 value={form.uf}
-                disabled={loading}
+                disabled={loading || cepLoading}
                 onChange={(event) => {
                   const nextUf = event.target.value;
                   updateField("uf", nextUf);
@@ -461,12 +546,12 @@ export function CustomerRegistrationPage({
               </span>
               <select
                 value={form.cityId}
-                disabled={!form.uf || cityLoading}
+                disabled={!form.uf || cityLoading || cepLoading}
                 onChange={(event) => updateField("cityId", event.target.value)}
                 className="mt-2 w-full rounded-[22px] border border-[#c9d7e3] bg-[#f7fbfe] px-4 py-3 text-[15px] text-[#214d6b] outline-none transition focus:border-[#3498db] focus:bg-white focus:ring-2 focus:ring-[#d2ecfb] disabled:opacity-60"
               >
                 <option value="">
-                  {cityLoading ? "Carregando..." : "Selecione"}
+                  {cityLoading || cepLoading ? "Carregando..." : "Selecione"}
                 </option>
                 {cities.map((option) => (
                   <option key={option.id} value={String(option.id)}>

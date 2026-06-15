@@ -105,13 +105,13 @@ describe("bilheteria-cash-view-model", () => {
         quantity: 1,
         totalValue: 20,
         voucherType: "infan",
-        voucherTypeLabel: "Crianca",
+        voucherTypeLabel: "infan",
       },
       {
         quantity: 2,
         totalValue: 50,
         voucherType: "norma",
-        voucherTypeLabel: "Adulto",
+        voucherTypeLabel: "norma",
       },
     ]);
     expect(model.discountPanels).toEqual([
@@ -126,7 +126,7 @@ describe("bilheteria-cash-view-model", () => {
             quantity: 1,
             totalValue: 20,
             voucherType: "infan",
-            voucherTypeLabel: "Crianca",
+            voucherTypeLabel: "infan",
           },
         ],
       },

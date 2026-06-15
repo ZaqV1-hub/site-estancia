@@ -86,8 +86,8 @@ type TicketValidationSyncResult = {
 };
 
 const voucherTypeLabels: Record<string, string> = {
-  norma: "a partir de 10 anos",
-  infan: "de 4 a 9 anos",
+  norma: "Passaporte",
+  infan: "Passaporte Infantil",
   isent: "de 0 a 3 anos",
   escol: "Escola",
   corte: "Cortesia",
@@ -182,6 +182,13 @@ function isRetryableTicketServiceError(error: unknown) {
   return /(fetch failed|ENOTFOUND|ECONNREFUSED|EAI_AGAIN|ECONNRESET)/i.test(
     errorText,
   );
+}
+
+function shouldSkipTicketServiceError(
+  config: TicketServiceConfig,
+  error: unknown,
+) {
+  return config.testing && isRetryableTicketServiceError(error);
 }
 
 function digitsOnly(value: string | null | undefined) {
@@ -558,7 +565,22 @@ export async function processConfirmedPurchaseTickets(
     };
   }
 
-  const token = await authenticate(config);
+  let token: string | null;
+
+  try {
+    token = await authenticate(config);
+  } catch (error) {
+    if (shouldSkipTicketServiceError(config, error)) {
+      return {
+        status: "skipped",
+        purchaseId,
+        sentVoucherIds: [],
+        skippedReason: "ticket_service_unreachable",
+      };
+    }
+
+    throw error;
+  }
 
   if (!token) {
     return {
@@ -574,29 +596,55 @@ export async function processConfirmedPurchaseTickets(
   const sentVoucherIds: number[] = [];
 
   if (regularVouchers.length > 0) {
-    await ticketRequest(
-      config,
-      "/generate-and-send-tickets",
-      {
-        vouchers: buildTicketPayload(purchase, regularVouchers),
-        email: purchase.email,
-        nmusuario: purchase.nmusuario,
-      },
-      token,
-    );
+    try {
+      await ticketRequest(
+        config,
+        "/generate-and-send-tickets",
+        {
+          vouchers: buildTicketPayload(purchase, regularVouchers),
+          email: purchase.email,
+          nmusuario: purchase.nmusuario,
+        },
+        token,
+      );
+    } catch (error) {
+      if (shouldSkipTicketServiceError(config, error)) {
+        return {
+          status: "skipped",
+          purchaseId,
+          sentVoucherIds: [],
+          skippedReason: "ticket_service_unreachable",
+        };
+      }
+
+      throw error;
+    }
     sentVoucherIds.push(...regularVouchers.map((voucher) => voucher.idvoucher));
   }
 
   for (const voucher of schoolVouchers) {
-    await ticketRequest(
-      config,
-      "/send-school-ticket-message",
-      {
-        email: purchase.email,
-        cellphone: purchase.celular,
-      },
-      token,
-    );
+    try {
+      await ticketRequest(
+        config,
+        "/send-school-ticket-message",
+        {
+          email: purchase.email,
+          cellphone: purchase.celular,
+        },
+        token,
+      );
+    } catch (error) {
+      if (shouldSkipTicketServiceError(config, error)) {
+        return {
+          status: "skipped",
+          purchaseId,
+          sentVoucherIds: [],
+          skippedReason: "ticket_service_unreachable",
+        };
+      }
+
+      throw error;
+    }
     sentVoucherIds.push(voucher.idvoucher);
   }
 
@@ -722,7 +770,24 @@ export async function syncTicketValidation(
     };
   }
 
-  const token = await authenticate(config);
+  let token: string | null;
+
+  try {
+    token = await authenticate(config);
+  } catch (error) {
+    if (shouldSkipTicketServiceError(config, error)) {
+      return {
+        status: "skipped",
+        action,
+        pairs: normalizedPairs.map(
+          (pair) => `${pair.purchaseId}-${pair.voucherId}`,
+        ),
+        skippedReason: "ticket_service_unreachable",
+      };
+    }
+
+    throw error;
+  }
 
   if (!token) {
     return {
@@ -765,7 +830,22 @@ export async function syncTicketValidation(
       payload.ticket = buildValidationTicketPayload(voucher);
     }
 
-    await ticketRequest(config, "/tickets/validate", payload, token);
+    try {
+      await ticketRequest(config, "/tickets/validate", payload, token);
+    } catch (error) {
+      if (shouldSkipTicketServiceError(config, error)) {
+        return {
+          status: "skipped",
+          action,
+          pairs: normalizedPairs.map(
+            (currentPair) => `${currentPair.purchaseId}-${currentPair.voucherId}`,
+          ),
+          skippedReason: "ticket_service_unreachable",
+        };
+      }
+
+      throw error;
+    }
   }
 
   return {

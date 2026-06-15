@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { PublicAgendaEvent } from "@/lib/agenda-contracts";
+import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
 import type { OpsCourtesyAuthor, OpsDiscount } from "@/lib/ops-reference-data";
 import {
   PAINEL_BILHETERIA_SALE_DRAFT_KEY,
@@ -22,14 +23,28 @@ type ReferenceDataResponse = {
   };
 };
 
-type PublicAgendaResponse = {
-  ok: boolean;
-  data?: {
-    events: PublicAgendaEvent[];
-  };
-  error?: {
-    message?: string;
-  };
+type SaleLineDraft = {
+  id: string;
+  selection: string;
+  quantity: number;
+  authorId: string;
+  identification: string;
+  note: string;
+};
+
+type PainelBilheteriaSalesBuilderProps = {
+  today: string;
+  agendas: PublicAgendaEvent[];
+  products: B2cProduct[];
+};
+
+const emptySaleLineDraft: SaleLineDraft = {
+  id: "",
+  selection: "",
+  quantity: 1,
+  authorId: "",
+  identification: "",
+  note: "",
 };
 
 function formatMoney(value: number) {
@@ -56,62 +71,96 @@ function money(value: number) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-function buildPeriod() {
-  const now = new Date();
-
-  return {
-    month: String(now.getMonth() + 1),
-    year: String(now.getFullYear()),
-  };
+function formatDateLabel(date: string) {
+  const [year, month, day] = date.split("-");
+  return `${day}/${month}/${year}`;
 }
 
-function discountUnitPrice(
-  basePrice: number,
+function SalesIcon({ kind }: { kind: "ticket" | "discount" | "summary" | "plus" }) {
+  const className = "h-7 w-7";
+
+  switch (kind) {
+    case "discount":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <path d="M19 5 5 19M8 7h.01M16 17h.01" />
+          <circle cx="7.5" cy="7.5" r="2.5" />
+          <circle cx="16.5" cy="16.5" r="2.5" />
+        </svg>
+      );
+    case "summary":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 8v5M12 16h.01" />
+        </svg>
+      );
+    case "plus":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <path d="M7 7.5h10a2 2 0 0 1 2 2v1.5a2 2 0 0 0-2 2 2 2 0 0 0 2 2V16.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V15a2 2 0 0 0 0-4V9.5a2 2 0 0 1 2-2Z" />
+          <path d="M9.5 10h5M9.5 14h5" />
+        </svg>
+      );
+  }
+}
+
+function calculatePurchaseDiscount(
+  subtotal: number,
   discountId: string,
   discounts: OpsDiscount[],
 ) {
   const discount = discounts.find((item) => String(item.id) === discountId.trim());
 
   if (!discount) {
-    return basePrice;
+    return 0;
   }
 
   const value = parseMoney(discount.value);
 
   if (discount.applicationType === "percentual") {
-    return Math.max(0, money(basePrice - basePrice * (value / 100)));
+    return money(subtotal * (value / 100));
   }
 
   if (discount.applicationType === "valor_fixo") {
-    return Math.max(0, money(basePrice - Math.min(basePrice, value)));
+    return Math.min(subtotal, money(value));
   }
 
-  return basePrice;
+  return 0;
 }
 
-export function PainelBilheteriaSalesBuilder() {
+function readAgendaPrice(product: B2cProduct, agenda: PublicAgendaEvent | null) {
+  if (!agenda) {
+    return parseMoney(product.fixedPrice);
+  }
+
+  if (product.voucherType === "infan") {
+    return parseMoney(agenda.priceTable.gateChild ?? product.fixedPrice);
+  }
+
+  return parseMoney(agenda.priceTable.gateNormal ?? product.fixedPrice);
+}
+
+export function PainelBilheteriaSalesBuilder({
+  today,
+  agendas,
+  products,
+}: PainelBilheteriaSalesBuilderProps) {
   const router = useRouter();
-  const initialPeriod = buildPeriod();
-  const [month, setMonth] = useState(initialPeriod.month);
-  const [year, setYear] = useState(initialPeriod.year);
-  const [agendas, setAgendas] = useState<PublicAgendaEvent[]>([]);
-  const [agendaId, setAgendaId] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [adultQuantity, setAdultQuantity] = useState("1");
-  const [adultDiscountId, setAdultDiscountId] = useState("");
-  const [childQuantity, setChildQuantity] = useState("0");
-  const [childDiscountId, setChildDiscountId] = useState("");
-  const [exemptQuantity, setExemptQuantity] = useState("0");
-  const [courtesyAuthorId, setCourtesyAuthorId] = useState("");
-  const [courtesyQuantity, setCourtesyQuantity] = useState("0");
-  const [courtesyIdentification, setCourtesyIdentification] = useState("");
-  const [courtesyNote, setCourtesyNote] = useState("");
-  const [reason, setReason] = useState("Venda presencial na bilheteria");
+  const agendaId = agendas[0] ? String(agendas[0].id) : "";
+  const [saleLines, setSaleLines] = useState<SaleLineDraft[]>([]);
+  const [purchaseDiscountId, setPurchaseDiscountId] = useState("");
   const [discounts, setDiscounts] = useState<OpsDiscount[]>([]);
   const [courtesyAuthors, setCourtesyAuthors] = useState<OpsCourtesyAuthor[]>([]);
   const [loadingReference, setLoadingReference] = useState(true);
-  const [loadingAgenda, setLoadingAgenda] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const todayLabel = useMemo(() => formatDateLabel(today), [today]);
 
   useEffect(() => {
     let active = true;
@@ -131,14 +180,13 @@ export function PainelBilheteriaSalesBuilder() {
         if (!response.ok || !payload?.ok || !payload.data) {
           setErrorMessage(
             payload?.error?.message ||
-              "Nao foi possivel carregar os descontos e autorizadores.",
+              "Nao foi possivel carregar descontos e autorizadores.",
           );
           return;
         }
 
-        const data = payload.data;
-        setDiscounts(data.discounts);
-        setCourtesyAuthors(data.courtesyAuthors);
+        setDiscounts(payload.data.discounts);
+        setCourtesyAuthors(payload.data.courtesyAuthors);
       } finally {
         if (active) {
           setLoadingReference(false);
@@ -153,120 +201,144 @@ export function PainelBilheteriaSalesBuilder() {
     };
   }, []);
 
-  async function handleLoadAgendas() {
-    setLoadingAgenda(true);
-    setErrorMessage(null);
-
-    try {
-      const response = await fetch(
-        `/api/agenda/publica?mes=${encodeURIComponent(month)}&ano=${encodeURIComponent(year)}`,
-      );
-      const payload =
-        (await response.json().catch(() => null)) as PublicAgendaResponse | null;
-
-      if (!response.ok || !payload?.ok || !payload.data) {
-        setErrorMessage(
-          payload?.error?.message || "Nao foi possivel carregar a agenda da bilheteria.",
-        );
-        return;
-      }
-
-      const data = payload.data;
-      setAgendas(data.events);
-      setAgendaId((current) => current || String(data.events[0]?.id ?? ""));
-    } finally {
-      setLoadingAgenda(false);
-    }
-  }
-
   const selectedAgenda = useMemo(
     () => agendas.find((agenda) => String(agenda.id) === agendaId.trim()) ?? null,
     [agendaId, agendas],
   );
-  const adultBasePrice = parseMoney(selectedAgenda?.priceTable.gateNormal);
-  const childBasePrice = parseMoney(selectedAgenda?.priceTable.gateChild);
-  const adultQuantityNumber = Math.max(0, Math.trunc(Number(adultQuantity) || 0));
-  const childQuantityNumber = Math.max(0, Math.trunc(Number(childQuantity) || 0));
-  const exemptQuantityNumber = Math.max(0, Math.trunc(Number(exemptQuantity) || 0));
-  const courtesyQuantityNumber = Math.max(
-    0,
-    Math.trunc(Number(courtesyQuantity) || 0),
-  );
-  const adultUnitPrice = discountUnitPrice(adultBasePrice, adultDiscountId, discounts);
-  const childUnitPrice = discountUnitPrice(childBasePrice, childDiscountId, discounts);
-  const saleItems: PainelBilheteriaSaleDraftItem[] = (() => {
-    const items: PainelBilheteriaSaleDraftItem[] = [];
 
-    if (adultQuantityNumber > 0) {
-      items.push({
-        type: "norma",
-        quantity: adultQuantityNumber,
-        discountId: adultDiscountId ? Number(adultDiscountId) : null,
-        label: "Adulto",
-        unitValue: adultUnitPrice.toFixed(2),
-        totalValue: money(adultUnitPrice * adultQuantityNumber).toFixed(2),
-      });
-    }
+  const saleItems: PainelBilheteriaSaleDraftItem[] = useMemo(
+    () =>
+      saleLines.flatMap((line) => {
+        const product = products.find((item) => item.id === line.selection);
 
-    if (childQuantityNumber > 0) {
-      items.push({
-        type: "infan",
-        quantity: childQuantityNumber,
-        discountId: childDiscountId ? Number(childDiscountId) : null,
-        label: "Crianca",
-        unitValue: childUnitPrice.toFixed(2),
-        totalValue: money(childUnitPrice * childQuantityNumber).toFixed(2),
-      });
-    }
+        if (!product || line.quantity <= 0) {
+          return [];
+        }
 
-    if (exemptQuantityNumber > 0) {
-      items.push({
-        type: "isent",
-        quantity: exemptQuantityNumber,
-        discountId: null,
-        label: "Isento",
-        unitValue: "0.00",
-        totalValue: "0.00",
-      });
-    }
+        const basePrice = readAgendaPrice(product, selectedAgenda);
+        const totalValue = money(basePrice * line.quantity);
 
-    return items;
-  })();
-  const courtesyDrafts: PainelBilheteriaSaleDraftCourtesy[] =
-    courtesyQuantityNumber > 0 && Number(courtesyAuthorId) > 0
-      ? [
+        return [
           {
-            authorId: Number(courtesyAuthorId),
-            authorName:
-              courtesyAuthors.find((item) => item.id === Number(courtesyAuthorId))
-                ?.name ?? "Autorizador",
-            quantity: courtesyQuantityNumber,
-            identification: courtesyIdentification.trim(),
-            note: courtesyNote.trim(),
+            type: product.voucherType === "infan" ? "infan" : "norma",
+            quantity: line.quantity,
+            label: product.title,
+            baseUnitValue: basePrice.toFixed(2),
+            unitValue: basePrice.toFixed(2),
+            totalValue: totalValue.toFixed(2),
           },
-        ]
-      : [];
-  const saleTotal = saleItems.reduce(
-    (total, item) => total + parseMoney(item.totalValue),
-    0,
+        ];
+      }),
+    [products, saleLines, selectedAgenda],
   );
+
+  const courtesyDrafts: PainelBilheteriaSaleDraftCourtesy[] = useMemo(
+    () =>
+      saleLines.flatMap((line) => {
+        if (line.selection !== "courtesy") {
+          return [];
+        }
+
+        const author = courtesyAuthors.find(
+          (item) => String(item.id) === line.authorId.trim(),
+        );
+
+        if (!author || line.quantity <= 0) {
+          return [];
+        }
+
+        return [
+          {
+            authorId: author.id,
+            authorName: author.name,
+            quantity: line.quantity,
+            identification: line.identification.trim(),
+            note: line.note.trim(),
+          },
+        ];
+      }),
+    [courtesyAuthors, saleLines],
+  );
+
+  const subtotalValue = useMemo(
+    () => money(saleItems.reduce((total, item) => total + parseMoney(item.totalValue), 0)),
+    [saleItems],
+  );
+  const selectedDiscount = useMemo(
+    () => discounts.find((item) => String(item.id) === purchaseDiscountId.trim()) ?? null,
+    [discounts, purchaseDiscountId],
+  );
+  const discountValue = useMemo(
+    () => calculatePurchaseDiscount(subtotalValue, purchaseDiscountId, discounts),
+    [discounts, purchaseDiscountId, subtotalValue],
+  );
+  const saleTotal = money(Math.max(0, subtotalValue - discountValue));
   const canProceed =
     selectedAgenda != null && (saleItems.length > 0 || courtesyDrafts.length > 0);
 
+  function addLine() {
+    setSaleLines((current) => [
+      {
+        ...emptySaleLineDraft,
+        id: `${Date.now()}-${current.length}`,
+      },
+      ...current,
+    ]);
+    setErrorMessage(null);
+  }
+
+  function updateLine(lineId: string, nextLine: Partial<SaleLineDraft>) {
+    setSaleLines((current) =>
+      current.map((line) =>
+        line.id === lineId
+          ? {
+              ...line,
+              ...nextLine,
+            }
+          : line,
+      ),
+    );
+    setErrorMessage(null);
+  }
+
+  function updateQuantity(lineId: string, quantity: number) {
+    updateLine(lineId, {
+      quantity: Math.max(1, Math.trunc(quantity) || 1),
+    });
+  }
+
+  function removeLine(lineId: string) {
+    setSaleLines((current) => current.filter((line) => line.id !== lineId));
+    setErrorMessage(null);
+  }
+
   function handleProceed() {
-    if (!selectedAgenda || !canProceed) {
-      setErrorMessage("Selecione a agenda e monte ao menos um ingresso ou cortesia.");
+    if (!selectedAgenda) {
+      setErrorMessage("A agenda nao esta aberta para hoje.");
+      return;
+    }
+
+    if (!canProceed) {
+      setErrorMessage("Adicione ao menos um passaporte ou uma cortesia.");
       return;
     }
 
     const draft: PainelBilheteriaSaleDraft = {
       agendaId: selectedAgenda.id,
-      agendaLabel: `${selectedAgenda.date} · #${selectedAgenda.id}`,
-      cpf: cpf.trim(),
+      agendaLabel: `${selectedAgenda.date} - #${selectedAgenda.id}`,
+      cpf: "",
       items: saleItems,
       courtesies: courtesyDrafts,
+      purchaseDiscountId: selectedDiscount?.id ?? null,
+      purchaseDiscountLabel: selectedDiscount
+        ? selectedDiscount.typeDescription
+          ? `${selectedDiscount.typeDescription} - ${selectedDiscount.name}`
+          : selectedDiscount.name
+        : null,
+      discountValue: discountValue.toFixed(2),
+      subtotalValue: subtotalValue.toFixed(2),
       totalValue: saleTotal.toFixed(2),
-      reason: reason.trim() || "Venda presencial na bilheteria",
+      reason: "Venda presencial na bilheteria",
       createdAt: new Date().toISOString(),
     };
 
@@ -274,256 +346,428 @@ export function PainelBilheteriaSalesBuilder() {
     router.push("/painel/bilheteria/finalizar");
   }
 
+  if (agendas.length === 0) {
+    return (
+      <section className="panel-section p-4">
+        <p className="panel-eyebrow">Bilheteria</p>
+        <h2 className="mt-2 text-[28px] font-black leading-tight text-[#17351f]">
+          {todayLabel}
+        </h2>
+        <div className="mt-4 rounded-[12px] border border-[#f0d3a8] bg-[#fff6e3] px-4 py-3 text-sm text-[#8a6100]">
+          A agenda nao esta aberta para hoje.
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start">
-      <div className="grid gap-5">
-        <article className="rounded-[6px] border border-[#d3dde6] bg-white p-5 shadow-[0_8px_22px_rgba(18,73,127,0.08)]">
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              Mês
-              <input
-                value={month}
-                onChange={(event) => setMonth(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              Ano
-              <input
-                value={year}
-                onChange={(event) => setYear(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              />
-            </label>
+    <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
+      <div className="grid gap-6">
+        <article className="panel-section p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-[8px] bg-[#f1f7f0] text-[#214f2d]">
+                <SalesIcon kind="ticket" />
+              </div>
+              <div>
+                <h3 className="text-[22px] font-black text-[#17351f]">
+                  Passaportes e cortesias
+                </h3>
+              </div>
+            </div>
             <button
               type="button"
-              onClick={() => void handleLoadAgendas()}
-              className="rounded-[4px] bg-[linear-gradient(180deg,#3e9ce1_0%,#245f88_100%)] px-5 py-3 text-sm font-bold text-white shadow-[0_3px_0_rgba(0,0,0,0.18)]"
+              onClick={addLine}
+              className="inline-flex min-h-[52px] items-center gap-3 rounded-[6px] bg-[#23823f] px-5 py-3 text-sm font-bold text-white shadow-[0_10px_26px_rgba(24,67,34,0.14)]"
             >
-              {loadingAgenda ? "Carregando..." : "Carregar agenda"}
+              <SalesIcon kind="plus" />
+              <span>Nova linha</span>
             </button>
           </div>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              Data da agenda
-              <select
-                value={agendaId}
-                onChange={(event) => setAgendaId(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              >
-                <option value="">Selecione</option>
-                {agendas.map((agenda) => (
-                  <option key={agenda.id} value={agenda.id}>
-                    {agenda.date} - #{agenda.id} -{" "}
-                    {agenda.type === "promo" ? "Promocional" : "Padrao"}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              CPF opcional
-              <input
-                value={cpf}
-                onChange={(event) => setCpf(event.target.value)}
-                placeholder="52998224725"
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              />
-            </label>
-          </div>
+          {saleLines.length > 0 ? (
+            <div className="mt-6 grid gap-4">
+              {saleLines.map((line) => {
+                const lineProduct =
+                  line.selection && line.selection !== "courtesy"
+                    ? products.find((product) => product.id === line.selection) ?? null
+                    : null;
+                const lineBaseValue = lineProduct
+                  ? readAgendaPrice(lineProduct, selectedAgenda)
+                  : 0;
+                const lineSubtotal = lineProduct
+                  ? money(lineBaseValue * line.quantity)
+                  : 0;
+                const isCourtesy = line.selection === "courtesy";
+                const hasSelection = line.selection !== "";
+
+                return (
+                  <div
+                    key={line.id}
+                    className="rounded-[8px] border border-[#dbe7d7] bg-[#fcfefd] px-6 py-5"
+                  >
+                    <div
+                      className={
+                        isCourtesy
+                          ? "grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)]"
+                          : hasSelection
+                            ? "grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]"
+                            : "grid gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]"
+                      }
+                    >
+                      <label className="grid gap-2 text-sm font-semibold text-[#3d5844]">
+                        Passaporte
+                        <select
+                          value={line.selection}
+                          onChange={(event) =>
+                            updateLine(line.id, {
+                              selection: event.target.value,
+                              authorId: "",
+                              identification: "",
+                              note: "",
+                              quantity: 1,
+                            })
+                          }
+                          className="min-h-[54px] rounded-[6px] border border-[#dbe7d7] bg-white px-4 text-sm font-normal text-[#17351f]"
+                        >
+                          <option value="">Selecione</option>
+                          <option value="courtesy">Cortesia</option>
+                          {products.map((product) => (
+                            <option key={product.id} value={product.id}>
+                              {product.title}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      {isCourtesy ? (
+                        <>
+                          <label className="grid gap-2 text-sm font-semibold text-[#3d5844]">
+                            Nome
+                            <input
+                              value={line.identification}
+                              onChange={(event) =>
+                                updateLine(line.id, {
+                                  identification: event.target.value,
+                                })
+                              }
+                              placeholder="Nome da pessoa ou identificação"
+                              className="min-h-[54px] rounded-[6px] border border-[#dbe7d7] bg-white px-4 text-sm font-normal text-[#17351f]"
+                            />
+                          </label>
+                          <label className="grid gap-2 text-sm font-semibold text-[#3d5844]">
+                            Observações
+                            <input
+                              value={line.note}
+                              onChange={(event) =>
+                                updateLine(line.id, { note: event.target.value })
+                              }
+                              placeholder="Observações da cortesia"
+                              className="min-h-[54px] rounded-[6px] border border-[#dbe7d7] bg-white px-4 text-sm font-normal text-[#17351f]"
+                            />
+                          </label>
+                        </>
+                      ) : null}
+
+                      {lineProduct ? (
+                        <div className="grid gap-2 text-sm font-semibold text-[#3d5844]">
+                          Quantidade
+                          <div className="flex items-center gap-4">
+                            <button
+                              type="button"
+                              onClick={() => updateQuantity(line.id, line.quantity - 1)}
+                              className="inline-flex h-[54px] w-[54px] items-center justify-center rounded-[6px] bg-[#d93636] text-2xl font-normal text-white shadow-[0_8px_18px_rgba(217,54,54,0.16)]"
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              value={line.quantity}
+                              onChange={(event) =>
+                                updateQuantity(line.id, Number(event.target.value))
+                              }
+                              className="h-[54px] w-[76px] rounded-[6px] border border-[#dbe7d7] bg-white text-center text-base font-semibold text-[#17351f]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => updateQuantity(line.id, line.quantity + 1)}
+                              className="inline-flex h-[54px] w-[54px] items-center justify-center rounded-[6px] bg-[#13823a] text-2xl font-normal text-white shadow-[0_8px_18px_rgba(19,130,58,0.16)]"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {isCourtesy ? (
+                      <>
+                        <label className="mt-4 grid gap-2 text-sm font-semibold text-[#3d5844]">
+                          Autorizado por
+                          <select
+                            value={line.authorId}
+                            onChange={(event) =>
+                              updateLine(line.id, { authorId: event.target.value })
+                            }
+                            className="min-h-[48px] rounded-[6px] border border-[#dbe7d7] bg-white px-4 text-sm font-normal text-[#17351f]"
+                            disabled={loadingReference}
+                          >
+                            <option value="">Selecione o responsável pela cortesia</option>
+                            {courtesyAuthors.map((author) => (
+                              <option key={author.id} value={author.id}>
+                                {author.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+
+                        <div className="mt-4 grid gap-2 text-sm font-semibold text-[#3d5844]">
+                          Quantidade
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => updateQuantity(line.id, line.quantity - 1)}
+                              className="inline-flex h-[42px] w-[42px] items-center justify-center rounded-[6px] bg-[#d93636] text-xl font-normal text-white shadow-[0_8px_18px_rgba(217,54,54,0.16)]"
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              value={line.quantity}
+                              onChange={(event) =>
+                                updateQuantity(line.id, Number(event.target.value))
+                              }
+                              className="h-[42px] w-[70px] rounded-[6px] border border-[#dbe7d7] bg-white text-center text-base font-semibold text-[#17351f]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => updateQuantity(line.id, line.quantity + 1)}
+                              className="inline-flex h-[42px] w-[42px] items-center justify-center rounded-[6px] bg-[#13823a] text-xl font-normal text-white shadow-[0_8px_18px_rgba(19,130,58,0.16)]"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    ) : null}
+
+                    {hasSelection ? (
+                      <div className="mt-5 grid gap-4 border-t border-[#dbe7d7] pt-5 lg:grid-cols-[140px_150px_150px_minmax(0,1fr)] lg:items-end">
+                        <div>
+                          <div className="text-sm font-semibold text-[#5f7564]">
+                            Valor base
+                          </div>
+                          <div className="mt-1 text-[22px] font-black text-[#102f1d]">
+                            {formatMoney(lineBaseValue)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-[#5f7564]">
+                            {isCourtesy ? "Valor da cortesia" : "Valor unitário"}
+                          </div>
+                          <div className="mt-1 text-[22px] font-black text-[#102f1d]">
+                            {formatMoney(lineBaseValue)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-[#5f7564]">
+                            Subtotal
+                          </div>
+                          <div className="mt-1 text-[22px] font-black text-[#102f1d]">
+                            {formatMoney(lineSubtotal)}
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => removeLine(line.id)}
+                            className="inline-flex min-h-[52px] items-center gap-3 rounded-[6px] border border-[#dbe7d7] bg-white px-5 text-sm font-bold text-[#17351f]"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              className="h-5 w-5"
+                              aria-hidden="true"
+                            >
+                              <path d="M6 7h12M10 7V5h4v2M8 7l1 12h6l1-12" />
+                            </svg>
+                            Remover linha
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-5 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => removeLine(line.id)}
+                          className="inline-flex min-h-[52px] items-center gap-3 rounded-[6px] border border-[#dbe7d7] bg-white px-5 text-sm font-bold text-[#17351f]"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          >
+                            <path d="M6 7h12M10 7V5h4v2M8 7l1 12h6l1-12" />
+                          </svg>
+                          Remover linha
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="mt-6 flex min-h-[230px] flex-col items-center justify-center rounded-[8px] border border-dashed border-[#dbe4d7] bg-[#fcfefd] px-6 py-10 text-center text-sm text-[#5f7564]">
+              <div className="text-[#6c8b71]">
+                <SalesIcon kind="ticket" />
+              </div>
+              <div className="mt-5">Nenhum passaporte ou cortesia adicionado ainda.</div>
+            </div>
+          )}
         </article>
 
-        <article className="rounded-[6px] border border-[#d3dde6] bg-white p-5 shadow-[0_8px_22px_rgba(18,73,127,0.08)]">
-          <h2 className="legacy-condensed text-3xl text-[#2d4f73]">Ingressos</h2>
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              Adultos
-              <input
-                value={adultQuantity}
-                onChange={(event) => setAdultQuantity(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              Desconto adulto
-              <select
-                value={adultDiscountId}
-                onChange={(event) => setAdultDiscountId(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              >
-                <option value="">Sem desconto</option>
-                {discounts.map((discount) => (
-                  <option key={discount.id} value={discount.id}>
-                    {discount.name} - {discount.value}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="border border-[#d9e6f2] bg-[#f8fbfe] px-4 py-3 text-sm text-[#46627f]">
-              Base adulto
-              <div className="mt-1 text-lg font-semibold text-[#184b78]">
-                {formatMoney(adultBasePrice)}
+        <article className="panel-section p-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-center">
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-[8px] bg-[#f1f7f0] text-[#214f2d]">
+                <SalesIcon kind="discount" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[22px] font-black text-[#17351f]">
+                  Desconto da compra
+                </h3>
+                <label className="mt-4 grid gap-2 text-sm font-semibold text-[#17351f]">
+                  Modalidade
+                  <select
+                    value={purchaseDiscountId}
+                    onChange={(event) => setPurchaseDiscountId(event.target.value)}
+                    className="min-h-[54px] rounded-[6px] border border-[#dbe7d7] px-4 text-sm text-[#17351f]"
+                    disabled={loadingReference}
+                  >
+                    <option value="">Sem desconto</option>
+                    {discounts.map((discount) => (
+                      <option key={discount.id} value={discount.id}>
+                        {discount.typeDescription
+                          ? `${discount.typeDescription} - ${discount.name}`
+                          : discount.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
             </div>
 
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              Crianças
-              <input
-                value={childQuantity}
-                onChange={(event) => setChildQuantity(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              Desconto criança
-              <select
-                value={childDiscountId}
-                onChange={(event) => setChildDiscountId(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              >
-                <option value="">Sem desconto</option>
-                {discounts.map((discount) => (
-                  <option key={discount.id} value={discount.id}>
-                    {discount.name} - {discount.value}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="border border-[#d9e6f2] bg-[#f8fbfe] px-4 py-3 text-sm text-[#46627f]">
-              Base criança
-              <div className="mt-1 text-lg font-semibold text-[#184b78]">
-                {formatMoney(childBasePrice)}
+            <div className="flex min-h-[104px] items-center gap-6 rounded-[8px] border border-dashed border-[#dbe4d7] bg-[#fcfefd] px-6 py-4 text-sm leading-7 text-[#5f7564]">
+              <div className="text-[#6c8b71]">
+                <SalesIcon kind="ticket" />
               </div>
+              {selectedDiscount ? (
+                <div>
+                  <div className="font-semibold text-[#17351f]">
+                    {selectedDiscount.typeDescription
+                      ? `${selectedDiscount.typeDescription} - ${selectedDiscount.name}`
+                      : selectedDiscount.name}
+                  </div>
+                  <div>Valor aplicado na compra: {selectedDiscount.value}</div>
+                </div>
+              ) : (
+                <div>Nenhum desconto selecionado para a compra.</div>
+              )}
             </div>
-
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f] lg:col-span-2">
-              Isentos
-              <input
-                value={exemptQuantity}
-                onChange={(event) => setExemptQuantity(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              />
-            </label>
-          </div>
-        </article>
-
-        <article className="rounded-[6px] border border-[#d3dde6] bg-white p-5 shadow-[0_8px_22px_rgba(18,73,127,0.08)]">
-          <h2 className="legacy-condensed text-3xl text-[#2d4f73]">Cortesias</h2>
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              Autorizador
-              <select
-                value={courtesyAuthorId}
-                onChange={(event) => setCourtesyAuthorId(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-                disabled={loadingReference}
-              >
-                <option value="">Sem cortesia</option>
-                {courtesyAuthors.map((author) => (
-                  <option key={author.id} value={author.id}>
-                    {author.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              Quantidade
-              <input
-                value={courtesyQuantity}
-                onChange={(event) => setCourtesyQuantity(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              Identificação
-              <input
-                value={courtesyIdentification}
-                onChange={(event) => setCourtesyIdentification(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-semibold text-[#46627f]">
-              Observação
-              <input
-                value={courtesyNote}
-                onChange={(event) => setCourtesyNote(event.target.value)}
-                className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
-              />
-            </label>
           </div>
         </article>
       </div>
 
-      <aside className="xl:sticky xl:top-6">
-        <article className="rounded-[6px] border border-[#4f88b0] bg-[linear-gradient(180deg,#3e9ce1_0%,#245f88_100%)] p-6 text-white shadow-[0_12px_24px_rgba(20,63,102,0.22)]">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
-                Resumo da venda
+      <aside className="xl:sticky xl:top-5">
+        <article className="panel-section p-6">
+          <p className="panel-eyebrow">Resumo</p>
+          <h3 className="mt-3 text-[28px] font-black text-[#17351f]">{todayLabel}</h3>
+
+          <div className="mt-6">
+            <p className="panel-eyebrow">Passaportes e cortesias</p>
+          </div>
+
+          <div className="mt-4 space-y-2 rounded-[8px] border border-dashed border-[#dbe4d7] bg-[#fcfefd] px-5 py-5">
+            {saleItems.length > 0 || courtesyDrafts.length > 0 ? (
+              <>
+                {saleItems.map((item) => (
+                  <div
+                    key={`${item.label}-${item.quantity}`}
+                    className="text-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="font-semibold text-[#17351f]">{item.label}</div>
+                        <div className="mt-1 text-xs text-[#5f7564]">
+                          x{item.quantity} | {formatMoney(parseMoney(item.baseUnitValue))}
+                        </div>
+                      </div>
+                      <div className="font-black text-[#17351f]">
+                        {formatMoney(parseMoney(item.totalValue))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {courtesyDrafts.map((courtesy) => (
+                  <div
+                    key={`${courtesy.authorId}-${courtesy.identification}-${courtesy.note}`}
+                    className="text-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="font-semibold text-[#17351f]">Cortesia</div>
+                        <div className="mt-1 text-xs text-[#5f7564]">
+                          x{courtesy.quantity} | {courtesy.authorName}
+                        </div>
+                      </div>
+                      <div className="font-black text-[#17351f]">
+                        {formatMoney(0)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="flex items-center gap-5 text-sm leading-7 text-[#5f7564]">
+                <div className="text-[#9fb0a3]">
+                  <SalesIcon kind="ticket" />
+                </div>
+                <div>
+                  Nenhum passaporte ou cortesia adicionado ainda.
+                </div>
               </div>
-              <h2 className="mt-2 text-2xl font-semibold">Bilheteria</h2>
-            </div>
-              <div className="rounded-[4px] bg-white/12 px-3 py-2 text-xs uppercase tracking-[0.18em] text-white/80">
-              {selectedAgenda ? "Agenda pronta" : "Selecione a agenda"}
-            </div>
+            )}
           </div>
 
-          <div className="mt-5 space-y-3 text-sm text-white/85">
-            <div>
-              <div className="font-semibold text-white">Agenda</div>
-              <div>{selectedAgenda ? `${selectedAgenda.date} · #${selectedAgenda.id}` : "-"}</div>
+          <div className="mt-6 space-y-3 border-t border-[#dbe7d7] pt-5 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[#5f7564]">Subtotal</span>
+              <strong className="text-[#17351f]">{formatMoney(subtotalValue)}</strong>
             </div>
-            <div>
-              <div className="font-semibold text-white">Itens</div>
-              {saleItems.length > 0 ? (
-                <ul className="mt-2 space-y-2">
-                  {saleItems.map((item) => (
-                    <li key={`${item.type}-${item.discountId ?? "none"}`}>
-                      {item.label} x{item.quantity} · {formatMoney(parseMoney(item.totalValue))}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="mt-2 text-white/70">Nenhum ingresso configurado.</div>
-              )}
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[#5f7564]">Desconto</span>
+              <strong className="text-[#17351f]">- {formatMoney(discountValue)}</strong>
             </div>
-            <div>
-              <div className="font-semibold text-white">Cortesias</div>
-              {courtesyDrafts.length > 0 ? (
-                <ul className="mt-2 space-y-2">
-                  {courtesyDrafts.map((courtesy) => (
-                    <li key={`${courtesy.authorId}-${courtesy.identification || courtesy.note}`}>
-                      {courtesy.authorName} · {courtesy.quantity} cortesia(s)
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="mt-2 text-white/70">Sem cortesia nesta venda.</div>
-              )}
-            </div>
-          </div>
-
-          <label className="mt-5 grid gap-2 text-sm font-semibold text-white">
-            Motivo/observação
-            <textarea
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              rows={3}
-              className="border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/60"
-            />
-          </label>
-
-          <div className="mt-5 border border-white/15 bg-white/10 px-4 py-4">
-            <div className="text-xs uppercase tracking-[0.16em] text-white/75">
-              Total calculado
-            </div>
-            <div className="mt-2 text-4xl font-light text-white">
-              {formatMoney(saleTotal)}
+            <div className="flex items-center justify-between gap-3 border-t border-[#dbe7d7] pt-5">
+              <span className="text-[13px] font-bold uppercase tracking-[0.22em] text-[#2d7b3b]">
+                Total
+              </span>
+              <strong className="text-[34px] font-black text-[#17351f]">
+                {formatMoney(saleTotal)}
+              </strong>
             </div>
           </div>
 
           {errorMessage ? (
-            <div className="mt-4 border border-[#f2d6d6] bg-[#fff1f1] px-4 py-3 text-sm text-[#8b2d2d]">
+            <div className="mt-4 rounded-[12px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
               {errorMessage}
             </div>
           ) : null}
@@ -532,12 +776,24 @@ export function PainelBilheteriaSalesBuilder() {
             type="button"
             onClick={handleProceed}
             disabled={!canProceed || loadingReference}
-            className="mt-5 inline-flex w-full items-center justify-center rounded-[4px] bg-white px-5 py-4 text-base font-bold text-[#1f507d] shadow-[0_3px_0_rgba(0,0,0,0.16)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-5 inline-flex min-h-[56px] w-full items-center justify-center rounded-[14px] bg-[#23823f] px-4 py-3 text-base font-bold text-white shadow-[0_10px_26px_rgba(24,67,34,0.14)] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Finalizar Compra
+            Finalizar compra
           </button>
         </article>
+
+        <article className="panel-section p-5">
+          <div className="flex items-start gap-4 text-sm text-[#667c6a]">
+            <div className="text-[#6c8b71]">
+              <SalesIcon kind="summary" />
+            </div>
+            <p className="leading-7">
+              Confira o resumo ao lado e finalize quando a venda estiver certa.
+            </p>
+          </div>
+        </article>
       </aside>
+
     </section>
   );
 }

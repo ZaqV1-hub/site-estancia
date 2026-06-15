@@ -455,9 +455,9 @@ function isVoucherDiscountEditable(voucherType: string | null) {
 function getVoucherBaseTypeLabel(voucherType: string | null) {
   switch (String(voucherType ?? "")) {
     case "norma":
-      return "Adulto";
+      return "Passaporte";
     case "infan":
-      return "Crianca";
+      return "Passaporte Infantil";
     case "isent":
       return "Isento";
     case "corte":

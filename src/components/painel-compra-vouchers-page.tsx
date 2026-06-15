@@ -10,8 +10,8 @@ type PainelCompraVouchersPageProps = {
 };
 
 const voucherTypeOptions = [
-  { value: "norma", label: "Adulto" },
-  { value: "infan", label: "Crianca" },
+  { value: "norma", label: "Passaporte" },
+  { value: "infan", label: "Passaporte Infantil" },
   { value: "isent", label: "Isento" },
   { value: "escol", label: "Escola" },
   { value: "corte", label: "Cortesia" },
@@ -85,30 +85,30 @@ function hasActiveFilters(filters: PainelPurchaseVoucherListFilters) {
 
 function indicatorCards(indicators: PainelPurchaseVoucherIndicators) {
   return [
-    { label: "Adulto SITE", count: indicators.qtdnormal_site, value: indicators.vlnormal_site },
+    { label: "Passaporte SITE", count: indicators.qtdnormal_site, value: indicators.vlnormal_site },
     {
-      label: "Infantil SITE",
+      label: "Passaporte Infantil SITE",
       count: indicators.qtdinfantil_site,
       value: indicators.vlinfantil_site,
     },
     {
-      label: "Adulto NO PARQUE",
+      label: "Passaporte NO PARQUE",
       count: indicators.qtdnormal_parque,
       value: indicators.vlnormal_parque,
     },
     {
-      label: "Infantil NO PARQUE",
+      label: "Passaporte Infantil NO PARQUE",
       count: indicators.qtdinfantil_parque,
       value: indicators.vlinfantil_parque,
     },
     { label: "Escolar", count: indicators.qtdescola, value: indicators.vlescola },
     {
-      label: "ADULTO RESERVA",
+      label: "PASSAPORTE RESERVA",
       count: indicators.qtdadulto_reserva,
       value: indicators.vladulto_reserva,
     },
     {
-      label: "INFANTIL RESERVA",
+      label: "PASSAPORTE INFANTIL RESERVA",
       count: indicators.qtdinfantil_reserva,
       value: indicators.vlinfantil_reserva,
     },
@@ -176,20 +176,11 @@ export function PainelCompraVouchersPage({
               <table className="min-w-full border-collapse text-[15px]">
                 <thead className="bg-[#5f84a3] text-left text-white">
                   <tr>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">ID Compra</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">ID Voucher</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Data Compra</th>
+                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">ID</th>
+                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Voucher</th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Data Visita</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">
-                      Tipo do Ingresso
-                    </th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Nome</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Onde</th>
+                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Passaporte</th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Status</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Usado?</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Data de Uso</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Hora</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -198,27 +189,13 @@ export function PainelCompraVouchersPage({
                       className={index % 2 === 1 ? "bg-[#fafafa]" : "bg-white"}
                       key={`${item.purchaseId}-${item.voucherId}`}
                     >
-                      <td className="border border-[#d7d7d7] px-4 py-3">
-                        <Link
-                          className="text-[#1868d6] underline"
-                          href={`/painel/compras/${item.purchaseId}`}
-                        >
-                          {item.purchaseId}
-                        </Link>
-                      </td>
                       <td className="border border-[#d7d7d7] px-4 py-3">{item.voucherId}</td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.purchaseDate ?? "-"}</td>
+                      <td className="border border-[#d7d7d7] px-4 py-3">
+                        {item.voucherNumber ?? "-"}
+                      </td>
                       <td className="border border-[#d7d7d7] px-4 py-3">{item.visitDate ?? "-"}</td>
                       <td className="border border-[#d7d7d7] px-4 py-3">{item.ticketTypeLabel}</td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.name ?? "-"}</td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.locationLabel}</td>
                       <td className="border border-[#d7d7d7] px-4 py-3">{item.unitValue}</td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">
-                        {item.purchaseStatusLabel}
-                      </td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.usedLabel}</td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.usedDate ?? "-"}</td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.usedTime ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -323,7 +300,7 @@ export function PainelCompraVouchersPage({
             </div>
 
             <label className="grid gap-2 text-sm text-[#555]">
-              <span>Tipo do ingresso</span>
+              <span>Passaporte</span>
               {renderSelect("tpvoucher", result.filters.voucherType, voucherTypeOptions)}
             </label>
             <label className="grid gap-2 text-sm text-[#555]">

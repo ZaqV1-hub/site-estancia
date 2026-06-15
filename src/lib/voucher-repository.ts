@@ -92,8 +92,8 @@ const purchaseStatusLabels: Record<string, string> = {
 };
 
 const voucherTypeLabels: Record<string, string> = {
-  norma: "a partir de 10 anos",
-  infan: "de 4 a 9 anos",
+  norma: "Passaporte",
+  infan: "Passaporte Infantil",
   isent: "de 0 a 3 anos",
   corte: "Cortesia",
   espec: "Especial",
@@ -118,6 +118,11 @@ function encodeLegacyId(id: number) {
 
 function labelFromMap(map: Record<string, string>, key: string | null) {
   return key ? map[key] ?? key : "";
+}
+
+function resolveVoucherTypeLabel(row: Pick<VoucherRow, "descricao" | "tpvoucher">) {
+  const description = String(row.descricao ?? "").trim();
+  return description || labelFromMap(voucherTypeLabels, row.tpvoucher);
 }
 
 function normalizeDate(value: string | null) {
@@ -160,7 +165,7 @@ function mapVoucher(row: VoucherRow, purchase: PurchaseRow, today: Date): UserVo
   return {
     id: row.idvoucher,
     type: row.tpvoucher,
-    typeLabel: labelFromMap(voucherTypeLabels, row.tpvoucher),
+    typeLabel: resolveVoucherTypeLabel(row),
     number: row.numvoucher,
     visitDate: normalizeDate(row.dtagenda),
     useDate: normalizeDate(row.dtuso),
@@ -188,7 +193,7 @@ function mapVoucherExport(row: VoucherRow): VoucherExportVoucher {
     id: row.idvoucher,
     number: row.numvoucher,
     type: row.tpvoucher,
-    typeLabel: labelFromMap(voucherTypeLabels, row.tpvoucher),
+    typeLabel: resolveVoucherTypeLabel(row),
     visitDate: normalizeDate(row.dtagenda),
     unitValue: row.vlunicompra,
     agendaType: row.tpagenda,

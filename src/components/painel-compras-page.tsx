@@ -109,7 +109,7 @@ function renderSelect(
 ) {
   return (
     <select
-      className="estancia-field w-full px-3 py-2 text-sm"
+      className="estancia-field w-full rounded-[8px] px-3 py-2 text-sm"
       defaultValue={value ?? "-1"}
       name={name}
     >
@@ -147,276 +147,227 @@ export function PainelComprasPage({
       : null;
   const canRefreshPurchases = actorCpf === "00000000191";
   const filtersActive = hasActiveFilters(result.filters);
+  const exportHref = buildComprasHref(result.filters, 1).replace(
+    "/painel/compras",
+    "/api/painel/compras/export",
+  );
 
   return (
-    <section className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="rounded-[28px] border border-[#dbe7d7] bg-white px-5 py-6 shadow-[0_16px_36px_rgba(24,67,34,0.08)] md:px-8">
-        <div className="border-b border-[#e6eee3] pb-3 text-sm text-[#6f7f73]">
-          <Link className="text-[#2b8c46] underline" href="/painel">
-            Home
-          </Link>{" "}
-          <span className="mx-2 text-[#b8b8b8]">&gt;</span>
-          <span>Lista de compras / reservas</span>
-        </div>
-
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+    <section className="grid gap-3">
+      <div className="panel-section p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-[32px] font-black text-[#17351f]">
-              Lista de compras / reservas
+            <p className="panel-eyebrow">Compras</p>
+            <h1 className="mt-1 text-[24px] font-black text-[#17351f]">
+              Lista de compras e reservas
             </h1>
-            <p className="mt-2 text-sm text-[#5c745f]">
+            <p className="mt-1 text-sm text-[#5f7564]">
               Operador: {actorName || actorCpf || "Sessao operacional"}
             </p>
           </div>
-          <div className="rounded-full border border-[#dbe7d7] bg-[#f7fbf5] px-4 py-2 text-sm font-semibold text-[#4f6953]">
-            Pagina {result.page} de {result.totalPages}
-          </div>
-        </div>
-
-        <div className="mt-6">
-          {result.items.length === 0 ? (
-            <p className="text-[17px] text-[#5c745f]">Nenhuma compra encontrada.</p>
-          ) : (
-            <>
-              <p className="mb-4 text-[17px] text-[#5c745f]">
-                Mostrando <strong>{result.items.length}</strong> de{" "}
-                <strong>{result.total}</strong>
-              </p>
-              <div className="overflow-x-auto rounded-[24px] border border-[#dbe7d7]">
-                <table className="min-w-full border-collapse text-[15px]">
-                  <thead className="bg-[#f7fbf5] text-left text-[#35503b]">
-                    <tr>
-                      <th className="border border-[#dbe7d7] px-4 py-3 font-normal">ID</th>
-                      <th className="border border-[#dbe7d7] px-4 py-3 font-normal">Data compra</th>
-                      <th className="border border-[#dbe7d7] px-4 py-3 font-normal">Tipo</th>
-                      <th className="border border-[#dbe7d7] px-4 py-3 font-normal">Status</th>
-                      <th className="border border-[#dbe7d7] px-4 py-3 font-normal">Forma Pag.</th>
-                      <th className="border border-[#dbe7d7] px-4 py-3 font-normal">Pagamento</th>
-                      <th className="border border-[#dbe7d7] px-4 py-3 font-normal">CPF</th>
-                      <th className="border border-[#dbe7d7] px-4 py-3 font-normal">Usuario</th>
-                      <th className="border border-[#dbe7d7] px-4 py-3 font-normal">Valor</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.items.map((item, index) => (
-                      <tr
-                        className={index % 2 === 1 ? "bg-[#fbfdf9]" : "bg-white"}
-                        key={item.purchaseId}
-                      >
-                        <td className="border border-[#e6eee3] px-4 py-3 align-top">
-                          <Link
-                            className="text-[#2b8c46] underline"
-                            href={`/painel/compras/${item.purchaseId}`}
-                          >
-                            {item.purchaseId}
-                          </Link>
-                        </td>
-                        <td className="border border-[#e6eee3] px-4 py-3 align-top">
-                          {item.purchaseDate ?? "-"}
-                        </td>
-                        <td className="border border-[#e6eee3] px-4 py-3 align-top">
-                          {item.typeLabel}
-                        </td>
-                        <td className="border border-[#e6eee3] px-4 py-3 align-top">
-                          {item.statusLabel}
-                        </td>
-                        <td className="border border-[#e6eee3] px-4 py-3 align-top">
-                          {item.paymentMethodLabel}
-                        </td>
-                        <td className="border border-[#e6eee3] px-4 py-3 align-top">
-                          {item.paymentLabel}
-                        </td>
-                        <td className="border border-[#e6eee3] px-4 py-3 align-top">
-                          {item.cpf ?? "-"}
-                        </td>
-                        <td className="border border-[#e6eee3] px-4 py-3 align-top">
-                          {item.userName && item.cpf ? (
-                            <a
-                              className="text-[#2b8c46] underline"
-                              href={buildLegacyUserHref(item.cpf)}
-                            >
-                              {item.userName}
-                            </a>
-                          ) : (
-                            item.userName ?? "-"
-                          )}
-                        </td>
-                        <td className="border border-[#e6eee3] px-4 py-3 align-top font-semibold text-[#17351f]">
-                          {item.totalValue}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
-
-        {result.totalPages > 1 ? (
-          <div className="mt-5 flex flex-wrap justify-end gap-3">
-                {previousHref ? (
-                  <Link
-                className="rounded-full border border-[#d7e3d2] px-4 py-2 text-sm font-semibold text-[#275330] hover:bg-[#f7fbf5]"
-                href={previousHref}
+          <div className="flex flex-wrap gap-2">
+            <Link
+              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-xs font-semibold text-[#17351f]"
+              href={exportHref}
+            >
+              Exportar
+            </Link>
+            {filtersActive ? (
+              <Link
+                className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-xs font-semibold text-[#17351f]"
+                href="/painel/compras"
               >
-                Pagina anterior
-              </Link>
-            ) : null}
-                {nextHref ? (
-                  <Link
-                className="rounded-full border border-[#d7e3d2] px-4 py-2 text-sm font-semibold text-[#275330] hover:bg-[#f7fbf5]"
-                href={nextHref}
-              >
-                Proxima pagina
+                Limpar filtros
               </Link>
             ) : null}
           </div>
-        ) : null}
+        </div>
       </div>
 
-      <aside className="grid content-start gap-5">
-        <div className="rounded-[28px] border border-[#dbe7d7] bg-white p-5 shadow-[0_16px_36px_rgba(24,67,34,0.08)]">
-          <h2 className="text-lg font-black text-[#17351f]">Acoes</h2>
-          <ul className="mt-4 grid gap-3 text-sm">
-            <li>
-              <a
-                className="text-[#2b8c46] underline"
-                href={buildComprasHref(result.filters, 1).replace(
-                  "/painel/compras",
-                  "/api/painel/compras/export",
-                )}
-              >
-                Exportar (.xls)
-              </a>
-            </li>
-            <li className="text-[#8b98a3]">
-              <span className="font-medium">Lista de vouchers</span>
-              <p className="mt-1 text-xs">
-                Disponivel na proxima fase da migracao.
-              </p>
-            </li>
-            {canRefreshPurchases ? (
-              <li className="text-[#8b98a3]">
-                <span className="font-medium">Atualizar compras</span>
-                <p className="mt-1 text-xs">
-                  Acao liberada junto da fase de sincronizacao.
-                </p>
-              </li>
-            ) : null}
-          </ul>
+      <form action="/painel/compras" className="panel-section p-4" method="get">
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            De
+            <input
+              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
+              defaultValue={result.filters.dateFrom ?? ""}
+              maxLength={10}
+              name="dtcompra[de]"
+              type="text"
+            />
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            Ate
+            <input
+              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
+              defaultValue={result.filters.dateTo ?? ""}
+              maxLength={10}
+              name="dtcompra[ate]"
+              type="text"
+            />
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            ID
+            <input
+              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
+              defaultValue={result.filters.purchaseId ?? ""}
+              min={0}
+              name="idcompra"
+              type="number"
+            />
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            Tipo
+            {renderSelect("tpcompra", result.filters.type, typeOptions)}
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            Status
+            {renderSelect("stcompra", result.filters.purchaseStatus, purchaseStatusOptions)}
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            Pgto. Cielo
+            {renderSelect(
+              "paymentmethodtype",
+              result.filters.gatewayPaymentMethod,
+              gatewayPaymentMethodOptions,
+            )}
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            Pgto. Bilheteria
+            {renderSelect(
+              "formapag",
+              result.filters.ticketPaymentMethod,
+              ticketPaymentMethodOptions,
+            )}
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            Pagamento
+            {renderSelect("status", result.filters.gatewayStatus, gatewayStatusOptions)}
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            CPF
+            <input
+              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
+              defaultValue={result.filters.cpf ?? ""}
+              name="cpf"
+              type="text"
+            />
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            Usuario
+            <input
+              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
+              defaultValue={result.filters.userName ?? ""}
+              name="nmusuario"
+              type="text"
+            />
+          </label>
         </div>
 
-        <div className="rounded-[28px] border border-[#dbe7d7] bg-white p-5 shadow-[0_16px_36px_rgba(24,67,34,0.08)]">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-black text-[#17351f]">Filtrar</h2>
-            {filtersActive ? (
-              <Link className="text-sm text-[#2b8c46] underline" href="/painel/compras">
-                Remover Filtros
-              </Link>
-            ) : null}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm text-[#5f7564]">
+            {result.total} registro(s) no total
           </div>
-          <form action="/painel/compras" className="mt-4 grid gap-4" method="get">
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-              <label className="grid gap-2 text-sm text-[#4f6953]">
-                <span>Compra de</span>
-                <input
-                  className="estancia-field px-3 py-2 text-sm"
-                  defaultValue={result.filters.dateFrom ?? ""}
-                  maxLength={10}
-                  name="dtcompra[de]"
-                  type="text"
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-[#4f6953]">
-                <span>ate</span>
-                <input
-                  className="estancia-field px-3 py-2 text-sm"
-                  defaultValue={result.filters.dateTo ?? ""}
-                  maxLength={10}
-                  name="dtcompra[ate]"
-                  type="text"
-                />
-              </label>
-            </div>
-
-            <label className="grid gap-2 text-sm text-[#4f6953]">
-              <span>ID</span>
-              <input
-                className="estancia-field px-3 py-2 text-sm"
-                defaultValue={result.filters.purchaseId ?? ""}
-                min={0}
-                name="idcompra"
-                type="number"
-              />
-            </label>
-
-            <label className="grid gap-2 text-sm text-[#4f6953]">
-              <span>Tipo</span>
-              {renderSelect("tpcompra", result.filters.type, typeOptions)}
-            </label>
-
-            <label className="grid gap-2 text-sm text-[#4f6953]">
-              <span>Status</span>
-              {renderSelect(
-                "stcompra",
-                result.filters.purchaseStatus,
-                purchaseStatusOptions,
-              )}
-            </label>
-
-            <label className="grid gap-2 text-sm text-[#4f6953]">
-              <span>Forma Pgto. (Cielo)</span>
-              {renderSelect(
-                "paymentmethodtype",
-                result.filters.gatewayPaymentMethod,
-                gatewayPaymentMethodOptions,
-              )}
-            </label>
-
-            <label className="grid gap-2 text-sm text-[#4f6953]">
-              <span>Forma Pgto. Bilheteria</span>
-              {renderSelect(
-                "formapag",
-                result.filters.ticketPaymentMethod,
-                ticketPaymentMethodOptions,
-              )}
-            </label>
-
-            <label className="grid gap-2 text-sm text-[#4f6953]">
-              <span>Pagamento</span>
-              {renderSelect("status", result.filters.gatewayStatus, gatewayStatusOptions)}
-            </label>
-
-            <label className="grid gap-2 text-sm text-[#4f6953]">
-              <span>CPF</span>
-              <input
-                className="estancia-field px-3 py-2 text-sm"
-                defaultValue={result.filters.cpf ?? ""}
-                name="cpf"
-                type="text"
-              />
-            </label>
-
-            <label className="grid gap-2 text-sm text-[#4f6953]">
-              <span>Usuario</span>
-              <input
-                className="estancia-field px-3 py-2 text-sm"
-                defaultValue={result.filters.userName ?? ""}
-                name="nmusuario"
-                type="text"
-              />
-            </label>
-
+          <div className="flex flex-wrap gap-2">
+            {canRefreshPurchases ? (
+              <span className="rounded-[8px] border border-[#dbe7d7] bg-[#f7fbf5] px-3 py-2 text-xs text-[#5f7564]">
+                Atualizacao manual em fase futura
+              </span>
+            ) : null}
             <button
-              className="estancia-button inline-flex items-center justify-center px-4 py-3 text-sm"
+              className="estancia-button inline-flex items-center justify-center rounded-[8px] px-4 py-2 text-sm"
               type="submit"
             >
               Filtrar
             </button>
-          </form>
+          </div>
         </div>
-      </aside>
+      </form>
+
+      <div className="panel-section overflow-hidden p-0">
+        {result.items.length === 0 ? (
+          <div className="px-4 py-6 text-sm text-[#5f7564]">
+            Nenhuma compra encontrada.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-[#f7fbf5] text-left text-[#35503b]">
+                <tr>
+                  <th className="px-3 py-2.5 text-xs font-semibold">ID</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Data</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Tipo</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Status</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Forma</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Pagamento</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">CPF</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Usuario</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold text-right">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.items.map((item, index) => (
+                  <tr
+                    className={index % 2 === 1 ? "bg-[#fbfdf9]" : "bg-white"}
+                    key={item.purchaseId}
+                  >
+                    <td className="px-3 py-3 align-top font-semibold text-[#17351f]">
+                      <Link
+                        className="underline decoration-[#9bc08f] underline-offset-2"
+                        href={`/painel/compras/${item.purchaseId}`}
+                      >
+                        {item.purchaseId}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-3 align-top">{item.purchaseDate ?? "-"}</td>
+                    <td className="px-3 py-3 align-top">{item.typeLabel}</td>
+                    <td className="px-3 py-3 align-top">{item.statusLabel}</td>
+                    <td className="px-3 py-3 align-top">{item.paymentMethodLabel}</td>
+                    <td className="px-3 py-3 align-top">{item.paymentLabel}</td>
+                    <td className="px-3 py-3 align-top">{item.cpf ?? "-"}</td>
+                    <td className="px-3 py-3 align-top">
+                      {item.userName && item.cpf ? (
+                        <a
+                          className="underline decoration-[#9bc08f] underline-offset-2"
+                          href={buildLegacyUserHref(item.cpf)}
+                        >
+                          {item.userName}
+                        </a>
+                      ) : (
+                        item.userName ?? "-"
+                      )}
+                    </td>
+                    <td className="px-3 py-3 align-top text-right font-semibold text-[#17351f]">
+                      {item.totalValue}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {result.totalPages > 1 ? (
+        <div className="flex flex-wrap justify-end gap-2">
+          {previousHref ? (
+            <Link
+              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-sm font-semibold text-[#17351f]"
+              href={previousHref}
+            >
+              Pagina anterior
+            </Link>
+          ) : null}
+          {nextHref ? (
+            <Link
+              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-sm font-semibold text-[#17351f]"
+              href={nextHref}
+            >
+              Proxima pagina
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
     </section>
   );
 }

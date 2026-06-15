@@ -407,8 +407,15 @@ export function PublicAgenda({
                   Dia da visita
                 </p>
                 <h2 className="mt-3 text-[20px] font-semibold leading-tight text-[#17342d]">
-                  {"Escolha uma data dispon\u00edvel"}
+                  {sortedEvents.length > 0
+                    ? "Escolha uma data disponivel"
+                    : "Nao ha eventos atuais"}
                 </h2>
+                {sortedEvents.length === 0 ? (
+                  <p className="mt-3 text-sm leading-6 text-[#5e746e]">
+                    No momento nao existem datas abertas para compra ou agendamento.
+                  </p>
+                ) : null}
               </div>
             ) : null}
 

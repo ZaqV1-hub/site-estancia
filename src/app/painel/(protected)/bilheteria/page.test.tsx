@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requirePainelAccess = vi.fn();
 const lookupPainelBilheteriaTicketByVoucherId = vi.fn();
+const getPublicAgendaEvents = vi.fn();
 const workstationProps = vi.fn();
 
 vi.mock("@/lib/painel-session", () => ({
@@ -12,6 +13,10 @@ vi.mock("@/lib/painel-session", () => ({
 
 vi.mock("@/lib/painel-bilheteria-workstation", () => ({
   lookupPainelBilheteriaTicketByVoucherId,
+}));
+
+vi.mock("@/lib/agenda-repository", () => ({
+  getPublicAgendaEvents,
 }));
 
 vi.mock("@/components/painel-bilheteria-page-header", () => ({
@@ -32,6 +37,14 @@ vi.mock("@/components/painel-bilheteria-workstation", () => ({
 describe("/painel/bilheteria overview route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getPublicAgendaEvents.mockResolvedValue([
+      {
+        date: new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Sao_Paulo",
+        }).format(new Date()),
+        status: "abe",
+      },
+    ]);
     requirePainelAccess.mockResolvedValue({
       actorName: "Operador Teste",
       actorCpf: "52998224725",

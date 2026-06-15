@@ -12,6 +12,7 @@ import {
   normalizeCodindica,
 } from "@/lib/codindica";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
+import { getAgendaProductAvailability } from "@/lib/painel-agenda-product-availability";
 import type {
   CreatePurchaseQuantities,
   CreatePurchaseSelection,
@@ -333,6 +334,23 @@ export async function createOnlinePurchase(
     }
 
     const cart = buildB2cCartSummary(selection.lineItems);
+    const availability = getAgendaProductAvailability(agenda.date);
+
+    for (const line of cart.lines) {
+      const allowedIds =
+        line.type === "passport"
+          ? availability.passportIds
+          : availability.addonIds;
+
+      if (!allowedIds.includes(line.productId)) {
+        throw new PurchaseCreationError(
+          "product_unavailable_for_date",
+          "Um ou mais itens selecionados nao estao disponiveis para esta data.",
+          409,
+        );
+      }
+    }
+
     const validityDate = resolveVoucherValidityDate(agenda);
     const pool = getIngressoDbPool();
     const client = await pool.connect();

@@ -19,6 +19,6 @@ describe("PainelBilheteriaPageHeader", () => {
     expect(html).toContain("Fundo de Caixa");
     expect(html).toContain("Histórico de Vendas");
     expect(html).toContain("Consultar Ingresso");
-    expect(html).toContain("Voltar ao Painel");
+    expect(html).not.toContain("Voltar ao Painel");
   });
 });

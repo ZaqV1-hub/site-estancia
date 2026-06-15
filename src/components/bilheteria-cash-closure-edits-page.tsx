@@ -90,7 +90,6 @@ export function BilheteriaCashClosureEditsPage({
         actorName={actorName}
         primaryActions={[
           { href: closureHref, label: "Fechamento de Caixa" },
-          { href: "/painel", label: "Voltar ao Painel" },
         ]}
       />
 

@@ -423,7 +423,7 @@ export function PainelBilheteriaPurchaseDetail({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#5d7282]">
-                  Vouchers
+                  Passaportes
                 </p>
                 <h3 className="mt-2 text-xl font-semibold text-[#205a7f]">
                   Itens vinculados
@@ -438,22 +438,24 @@ export function PainelBilheteriaPurchaseDetail({
               <table className="min-w-full border-separate border-spacing-0 overflow-hidden rounded-[20px] border border-[#d9e3eb] text-sm">
                 <thead className="bg-[#edf5fa] text-left text-[#345062]">
                   <tr>
+                    <th className="px-4 py-3">ID</th>
                     <th className="px-4 py-3">Voucher</th>
-                    <th className="px-4 py-3">Tipo</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Data</th>
+                    <th className="px-4 py-3">Data da visita</th>
+                    <th className="px-4 py-3">Passaporte</th>
                     <th className="px-4 py-3 text-right">Valor</th>
+                    <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3 text-right">Acao</th>
                   </tr>
                 </thead>
                 <tbody>
                   {detail.vouchers.map((voucher) => (
                     <tr key={voucher.voucherId} className="border-t border-[#e4edf4] bg-white">
+                      <td className="px-4 py-3">{voucher.voucherId}</td>
                       <td className="px-4 py-3">{voucher.voucherNumber || voucher.voucherId}</td>
-                      <td className="px-4 py-3">{voucher.voucherTypeLabel}</td>
-                      <td className="px-4 py-3">{voucher.statusLabel}</td>
                       <td className="px-4 py-3">{formatDate(voucher.visitDate)}</td>
+                      <td className="px-4 py-3">{voucher.voucherTypeLabel}</td>
                       <td className="px-4 py-3 text-right">{formatMoney(voucher.unitValue)}</td>
+                      <td className="px-4 py-3">{voucher.statusLabel}</td>
                       <td className="px-4 py-3 text-right">
                         {voucher.status === "s" ? (
                           <span className="text-xs font-semibold text-[#9f3d2f]">

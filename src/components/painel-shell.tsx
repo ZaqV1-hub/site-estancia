@@ -256,8 +256,8 @@ export function PainelShell({
       <div
         className={`grid min-h-screen transition-[grid-template-columns] duration-200 ${
           sidebarCollapsed
-            ? "lg:grid-cols-[96px_minmax(0,1fr)]"
-            : "lg:grid-cols-[284px_minmax(0,1fr)]"
+            ? "lg:grid-cols-[88px_minmax(0,1fr)]"
+            : "lg:grid-cols-[248px_minmax(0,1fr)]"
         }`}
       >
         <aside
@@ -266,7 +266,7 @@ export function PainelShell({
           }`}
         >
           <div
-            className={`flex min-h-[108px] items-center border-b border-white/10 px-4 py-3 ${
+            className={`flex min-h-[92px] items-center border-b border-white/10 px-3 py-3 ${
               sidebarCollapsed ? "justify-center" : "justify-between"
             }`}
           >
@@ -283,7 +283,7 @@ export function PainelShell({
                 className={
                   sidebarCollapsed
                     ? "h-16 w-16 max-w-none"
-                    : "h-[74px] max-w-[230px]"
+                    : "h-[64px] max-w-[200px]"
                 }
               />
             </div>
@@ -347,7 +347,7 @@ export function PainelShell({
                     title={sidebarCollapsed ? item.label : undefined}
                     href={item.href}
                     onClick={() => setMenuOpen(false)}
-                    className={`min-h-11 border-l-4 text-sm font-semibold transition ${
+                    className={`min-h-10 border-l-4 text-[13px] font-semibold transition ${
                       active
                         ? "border-[#efe7d9] bg-white/10 text-white"
                         : "border-transparent text-white/72 hover:bg-white/6 hover:text-white"
@@ -384,8 +384,8 @@ export function PainelShell({
         </aside>
 
         <main className="min-w-0">
-          <div className="border-b border-[rgba(35,73,63,0.08)] bg-white/95 px-4 py-3 shadow-[0_10px_30px_rgba(21,48,42,0.06)] backdrop-blur-md md:px-6 lg:px-8">
-            <div className="mx-auto flex max-w-[1500px] items-center gap-4">
+          <div className="border-b border-[rgba(35,73,63,0.08)] bg-white/95 px-4 py-2.5 shadow-[0_10px_30px_rgba(21,48,42,0.06)] backdrop-blur-md md:px-5 lg:px-6">
+            <div className="mx-auto flex max-w-[1380px] items-center gap-3">
               <button
                 type="button"
                 aria-label={
@@ -400,23 +400,20 @@ export function PainelShell({
                     setMenuOpen((current) => !current);
                   }
                 }}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] border border-[rgba(35,73,63,0.12)] bg-white text-[#17342d] shadow-[0_12px_28px_rgba(22,47,41,0.08)] hover:bg-[#17342d] hover:text-white"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] border border-[rgba(35,73,63,0.12)] bg-white text-[#17342d] shadow-[0_10px_22px_rgba(22,47,41,0.08)] hover:bg-[#17342d] hover:text-white"
               >
                 <ChevronIcon open={!sidebarCollapsed} />
               </button>
 
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#1e5564]">
-                  Est\u00e2ncia
-                </p>
-                <h1 className="text-[24px] font-bold leading-tight text-[#17342d]">
+                <h1 className="text-[20px] font-bold leading-tight text-[#17342d]">
                   Painel operacional
                 </h1>
               </div>
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-[1500px] px-4 py-5 md:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-[1380px] px-4 py-4 md:px-5 lg:px-6">
             {children}
           </div>
         </main>

@@ -37,6 +37,8 @@ type AgendaMonthRow = {
   nuano: number;
 };
 
+const saoPauloCurrentDateSql = "(now() AT TIME ZONE 'America/Sao_Paulo')::date";
+
 export function isAgendaDateExpired(date: string, now = new Date()) {
   const agendaDate = new Date(`${date}T12:00:00`);
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -128,7 +130,7 @@ export async function getPublicAgendaEvents(month: number, year: number) {
       JOIN tabpreco ON tabpreco.idtabpreco = agenda.idtabpreco
       WHERE agenda.tpagenda IN ('padra', 'promo')
         AND agenda.stagenda IN ('abe', 'lot')
-        AND agenda.dtagenda >= CURRENT_DATE
+        AND agenda.dtagenda >= ${saoPauloCurrentDateSql}
         AND EXTRACT(MONTH FROM agenda.dtagenda) = $1
         AND EXTRACT(YEAR FROM agenda.dtagenda) = $2
       ORDER BY agenda.dtagenda ASC, agenda.idagenda ASC
@@ -201,7 +203,7 @@ export async function getPublicAgendaReservationById(
       WHERE agenda.idagenda = $1
         AND agenda.tpagenda IN ('padra', 'promo')
         AND agenda.stagenda = 'abe'
-        AND agenda.dtagenda >= CURRENT_DATE
+        AND agenda.dtagenda >= ${saoPauloCurrentDateSql}
       LIMIT 1
     `,
     [id],
@@ -254,7 +256,7 @@ export async function getPublicAgendaMonths() {
       JOIN tabpreco ON tabpreco.idtabpreco = agenda.idtabpreco
       WHERE agenda.tpagenda IN ('padra', 'promo')
         AND agenda.stagenda IN ('abe', 'lot')
-        AND agenda.dtagenda >= CURRENT_DATE
+        AND agenda.dtagenda >= ${saoPauloCurrentDateSql}
       GROUP BY numes, nuano
       ORDER BY nuano ASC, numes ASC
     `,
@@ -325,7 +327,7 @@ export async function getRescheduleAgendaOptionById(id: number) {
       WHERE agenda.idagenda = $1
         AND agenda.tpagenda = 'padra'
         AND agenda.stagenda = 'abe'
-        AND agenda.dtagenda >= CURRENT_DATE
+        AND agenda.dtagenda >= ${saoPauloCurrentDateSql}
       LIMIT 1
     `,
     [id],

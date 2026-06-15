@@ -61,6 +61,7 @@ export type BoxOfficeSaleItemInput = {
   type: "norma" | "infan" | "isent" | string;
   quantity: number;
   discountId?: number | null;
+  label?: string | null;
 };
 
 export type BoxOfficeSaleCourtesyInput = {
@@ -80,6 +81,7 @@ export type CreateBoxOfficeSaleInput = {
   agendaId: number;
   cpf?: string | null;
   items?: BoxOfficeSaleItemInput[];
+  purchaseDiscountId?: number | null;
   courtesies?: BoxOfficeSaleCourtesyInput[];
   payments?: BoxOfficeSalePaymentInput[];
   reason?: string | null;
@@ -89,9 +91,9 @@ export type CreateBoxOfficeSaleInput = {
 
 type NormalizedSaleItem = {
   type: "norma" | "infan" | "isent";
-  typeLabel: string;
+  label: string;
   quantity: number;
-  discountId: number | null;
+  legacyDiscountId: number | null;
 };
 
 type NormalizedCourtesy = {
@@ -205,14 +207,20 @@ function resolveVoucherValidityDate(agenda: BoxOfficeAgendaRow, now = new Date()
 function normalizeItemType(value: string) {
   const normalized = normalizeText(value);
 
-  if (normalized === "norma" || normalized === "adulto" || normalized === "normal") {
+  if (
+    normalized === "norma" ||
+    normalized === "adulto" ||
+    normalized === "normal" ||
+    normalized === "passaporte"
+  ) {
     return "norma";
   }
 
   if (
     normalized === "infan" ||
     normalized === "crianca" ||
-    normalized === "infantil"
+    normalized === "infantil" ||
+    normalized === "passaporte infantil"
   ) {
     return "infan";
   }
@@ -226,11 +234,11 @@ function normalizeItemType(value: string) {
 
 function labelForItemType(type: NormalizedSaleItem["type"]) {
   if (type === "norma") {
-    return "Adulto";
+    return "Passaporte";
   }
 
   if (type === "infan") {
-    return "Crianca";
+    return "Passaporte Infantil";
   }
 
   return "Isento";
@@ -252,6 +260,7 @@ function normalizeItems(items: BoxOfficeSaleItemInput[] | undefined) {
   return (items ?? []).flatMap<NormalizedSaleItem>((item) => {
     const type = normalizeItemType(String(item.type ?? ""));
     const quantity = Number(item.quantity);
+    const label = normalizeText(item.label);
 
     if (!type || !Number.isInteger(quantity) || quantity <= 0) {
       return [];
@@ -260,9 +269,9 @@ function normalizeItems(items: BoxOfficeSaleItemInput[] | undefined) {
     return [
       {
         type,
-        typeLabel: labelForItemType(type),
+        label: label || labelForItemType(type),
         quantity,
-        discountId:
+        legacyDiscountId:
           Number.isInteger(Number(item.discountId)) && Number(item.discountId) > 0
             ? Number(item.discountId)
             : null,
@@ -490,22 +499,22 @@ async function loadCourtesyAuthors(client: PoolClient, authorIds: number[]) {
 }
 
 function calculateDiscountedUnitPrice(
-  basePrice: number,
+  totalValue: number,
   discount: BoxOfficeDiscountRow | null,
 ) {
   if (!discount) {
-    return basePrice;
+    return totalValue;
   }
 
   const discountValue = parseMoney(discount.valor) ?? 0;
   const applicationType = normalizeText(discount.tipo_aplicacao);
 
   if (applicationType === "percentual") {
-    return Math.max(0, money(basePrice - basePrice * (discountValue / 100)));
+    return Math.max(0, money(totalValue - totalValue * (discountValue / 100)));
   }
 
   if (applicationType === "valor_fixo") {
-    return Math.max(0, money(basePrice - Math.min(basePrice, discountValue)));
+    return Math.max(0, money(totalValue - Math.min(totalValue, discountValue)));
   }
 
   throw new BoxOfficeSaleError(
@@ -519,6 +528,7 @@ function buildPaidVoucherDrafts(
   agenda: BoxOfficeAgendaRow,
   items: NormalizedSaleItem[],
   discounts: Map<number, BoxOfficeDiscountRow>,
+  applyLegacyItemDiscounts: boolean,
 ) {
   const normalPrice = parseMoney(agenda.vlnormalbil);
   const childPrice = parseMoney(agenda.vlinfantbil);
@@ -536,9 +546,12 @@ function buildPaidVoucherDrafts(
   for (const item of items) {
     const basePrice =
       item.type === "norma" ? normalPrice : item.type === "infan" ? childPrice : 0;
-    const discount = item.discountId ? discounts.get(item.discountId) ?? null : null;
+    const discount =
+      applyLegacyItemDiscounts && item.legacyDiscountId
+        ? discounts.get(item.legacyDiscountId) ?? null
+        : null;
 
-    if (item.discountId && !discount) {
+    if (applyLegacyItemDiscounts && item.legacyDiscountId && !discount) {
       throw new BoxOfficeSaleError(
         "discount_not_found",
         "Desconto informado nao foi encontrado.",
@@ -546,7 +559,7 @@ function buildPaidVoucherDrafts(
       );
     }
 
-    if (item.type === "isent" && item.discountId) {
+    if (item.type === "isent" && discount) {
       throw new BoxOfficeSaleError(
         "invalid_discount_for_exempt",
         "Ingresso isento nao aceita desconto.",
@@ -554,12 +567,13 @@ function buildPaidVoucherDrafts(
       );
     }
 
-    const unitPrice = item.type === "isent" ? 0 : calculateDiscountedUnitPrice(basePrice, discount);
+    const unitPrice =
+      item.type === "isent" ? 0 : calculateDiscountedUnitPrice(basePrice, discount);
     const description = discount?.nome
-      ? `${item.typeLabel} - ${normalizeText(discount.nome)}`
+      ? `${item.label} - ${normalizeText(discount.nome)}`
       : item.type === "isent"
         ? "Isento"
-        : `${item.typeLabel} - Normal`;
+        : item.label;
 
     for (let index = 0; index < item.quantity; index += 1) {
       drafts.push({
@@ -576,6 +590,66 @@ function buildPaidVoucherDrafts(
   }
 
   return drafts;
+}
+
+function applyPurchaseDiscountToDrafts(
+  drafts: VoucherDraft[],
+  discount: BoxOfficeDiscountRow | null,
+) {
+  if (!discount) {
+    return {
+      drafts,
+      totalDiscount: 0,
+    };
+  }
+
+  const subtotal = money(drafts.reduce((total, draft) => total + draft.value, 0));
+
+  if (subtotal <= 0) {
+    return {
+      drafts,
+      totalDiscount: 0,
+    };
+  }
+
+  const discountedTotal = calculateDiscountedUnitPrice(subtotal, discount);
+  const totalDiscount = money(subtotal - discountedTotal);
+
+  if (totalDiscount <= 0) {
+    return {
+      drafts,
+      totalDiscount: 0,
+    };
+  }
+
+  const nextDrafts = drafts.map((draft) => ({ ...draft }));
+  let remainingDiscount = totalDiscount;
+  let remainingBase = subtotal;
+
+  for (let index = 0; index < nextDrafts.length; index += 1) {
+    const draft = nextDrafts[index];
+
+    if (index === nextDrafts.length - 1) {
+      draft.value = money(Math.max(0, draft.value - remainingDiscount));
+      draft.discountFlag = remainingDiscount > 0 ? "s" : "n";
+      break;
+    }
+
+    const proportionalDiscount = money(
+      remainingBase > 0 ? (remainingDiscount * draft.value) / remainingBase : 0,
+    );
+    const appliedDiscount = Math.min(draft.value, proportionalDiscount);
+
+    draft.value = money(Math.max(0, draft.value - appliedDiscount));
+    draft.discountFlag = appliedDiscount > 0 ? "s" : "n";
+    remainingDiscount = money(remainingDiscount - appliedDiscount);
+    remainingBase = money(remainingBase - (draft.value + appliedDiscount));
+  }
+
+  return {
+    drafts: nextDrafts,
+    totalDiscount,
+  };
 }
 
 function buildCourtesyVoucherDrafts(
@@ -823,17 +897,46 @@ export async function createOperationalBoxOfficeSale(
       );
     }
 
-    const discountIds = Array.from(
-      new Set(items.map((item) => item.discountId).filter((id): id is number => id !== null)),
+    const explicitPurchaseDiscountId =
+      Number.isInteger(Number(input.purchaseDiscountId)) && Number(input.purchaseDiscountId) > 0
+        ? Number(input.purchaseDiscountId)
+        : null;
+    const legacyDiscountIds = Array.from(
+      new Set(items.map((item) => item.legacyDiscountId).filter((id): id is number => id !== null)),
     );
+    const discountIds = explicitPurchaseDiscountId
+      ? [explicitPurchaseDiscountId]
+      : legacyDiscountIds;
     const courtesyAuthorIds = Array.from(
       new Set(courtesies.map((courtesy) => courtesy.authorId)),
     );
-    const [discounts, courtesyAuthors] = await Promise.all([
-      loadDiscounts(client, discountIds),
-      loadCourtesyAuthors(client, courtesyAuthorIds),
-    ]);
-    const paidDrafts = buildPaidVoucherDrafts(agenda, items, discounts);
+    const discounts = await loadDiscounts(client, discountIds);
+    const courtesyAuthors = await loadCourtesyAuthors(client, courtesyAuthorIds);
+    const purchaseDiscount =
+      explicitPurchaseDiscountId && discountIds.length > 0
+        ? discounts.get(discountIds[0]) ?? null
+        : null;
+
+    if (explicitPurchaseDiscountId && !purchaseDiscount) {
+      throw new BoxOfficeSaleError(
+        "discount_not_found",
+        "Desconto informado nao foi encontrado.",
+        404,
+      );
+    }
+
+    const basePaidDrafts = buildPaidVoucherDrafts(
+      agenda,
+      items,
+      discounts,
+      explicitPurchaseDiscountId === null,
+    );
+    const { drafts: paidDrafts, totalDiscount } = explicitPurchaseDiscountId
+      ? applyPurchaseDiscountToDrafts(basePaidDrafts, purchaseDiscount)
+      : {
+          drafts: basePaidDrafts,
+          totalDiscount: 0,
+        };
     const courtesyDrafts = buildCourtesyVoucherDrafts(courtesies, courtesyAuthors);
     const voucherDrafts = [...paidDrafts, ...courtesyDrafts];
     const totalValue = money(paidDrafts.reduce((total, draft) => total + draft.value, 0));
@@ -855,26 +958,49 @@ export async function createOperationalBoxOfficeSale(
       );
     }
 
-    const purchase = await client.query<PurchaseInsertRow>(
-      `
-        INSERT INTO compra (
-          cpf,
-          tpcompra,
-          dtcompra,
-          hrcompra,
-          formapag,
-          vltotcompra,
-          stcompra,
-          flenvio
-        ) VALUES ($1, 'bilhe', CURRENT_DATE, CURRENT_TIME, $2, $3, 'conc', '')
-        RETURNING idcompra
-      `,
-      [
-        normalizeCpf(input.cpf),
-        payments[0]?.method ?? "corte",
-        formatMoney(totalValue),
-      ],
-    );
+    const purchase = totalDiscount > 0
+      ? await client.query<PurchaseInsertRow>(
+          `
+            INSERT INTO compra (
+              cpf,
+              tpcompra,
+              dtcompra,
+              hrcompra,
+              formapag,
+              vltotcompra,
+              vltotdesc,
+              stcompra,
+              flenvio
+            ) VALUES ($1, 'bilhe', CURRENT_DATE, CURRENT_TIME, $2, $3, $4, 'conc', '')
+            RETURNING idcompra
+          `,
+          [
+            normalizeCpf(input.cpf),
+            payments[0]?.method ?? "corte",
+            formatMoney(totalValue),
+            formatMoney(totalDiscount),
+          ],
+        )
+      : await client.query<PurchaseInsertRow>(
+          `
+            INSERT INTO compra (
+              cpf,
+              tpcompra,
+              dtcompra,
+              hrcompra,
+              formapag,
+              vltotcompra,
+              stcompra,
+              flenvio
+            ) VALUES ($1, 'bilhe', CURRENT_DATE, CURRENT_TIME, $2, $3, 'conc', '')
+            RETURNING idcompra
+          `,
+          [
+            normalizeCpf(input.cpf),
+            payments[0]?.method ?? "corte",
+            formatMoney(totalValue),
+          ],
+        );
     const purchaseId = purchase.rows[0]?.idcompra;
 
     if (!purchaseId) {
@@ -912,6 +1038,8 @@ export async function createOperationalBoxOfficeSale(
         voucherCount: voucherIds.length,
         voucherIds,
         discountIds,
+        purchaseDiscountName: normalizeText(purchaseDiscount?.nome),
+        totalDiscount: totalDiscount > 0 ? formatMoney(totalDiscount) : "0.00",
         courtesyAuthorIds,
         idempotencyKey,
       },

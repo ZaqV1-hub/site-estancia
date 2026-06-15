@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PainelBilheteriaPageHeader } from "@/components/painel-bilheteria-page-header";
 import { PainelBilheteriaWorkstation } from "@/components/painel-bilheteria-workstation";
+import { getPublicAgendaEvents } from "@/lib/agenda-repository";
 import {
   lookupPainelBilheteriaTicketByVoucherId,
   type PainelBilheteriaTicketLookupResult,
@@ -18,6 +19,12 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+function getSaoPauloToday() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date());
+}
+
 export default async function PainelBilheteriaPage({
   searchParams,
 }: {
@@ -31,6 +38,11 @@ export default async function PainelBilheteriaPage({
     "/painel/bilheteria",
   );
   const params = await searchParams;
+  const today = getSaoPauloToday();
+  const [year, month] = today.split("-").map(Number);
+  const hasOpenAgendaToday = (await getPublicAgendaEvents(month, year)).some(
+    (agenda) => agenda.date === today && agenda.status === "abe",
+  );
   let initialTicketLookupState:
     | {
         isOpen: boolean;
@@ -73,16 +85,28 @@ export default async function PainelBilheteriaPage({
         current="overview"
         isManager={session.legacyRoleId === 1}
         title="Bilheteria"
-        description="Posto operacional da bilheteria, com validação por voucher, consulta por cliente, leitura de passeio e consulta rápida do histórico."
+        description="Posto operacional da bilheteria, com validacao por voucher, consulta por cliente e consulta rapida do historico."
         actorName={session.actorName}
       />
 
-      <PainelBilheteriaWorkstation
-        actorName={session.actorName}
-        actorCpf={session.actorCpf}
-        isManager={session.legacyRoleId === 1}
-        initialTicketLookupState={initialTicketLookupState}
-      />
+      {hasOpenAgendaToday ? (
+        <PainelBilheteriaWorkstation
+          actorName={session.actorName}
+          actorCpf={session.actorCpf}
+          isManager={session.legacyRoleId === 1}
+          initialTicketLookupState={initialTicketLookupState}
+        />
+      ) : (
+        <section className="panel-section p-6">
+          <p className="panel-eyebrow">Bilheteria</p>
+          <h2 className="mt-2 text-[34px] font-black leading-tight text-[#17351f]">
+            Agenda nao aberta
+          </h2>
+          <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
+            A bilheteria so fica ativa quando existe agenda aberta para hoje.
+          </p>
+        </section>
+      )}
     </div>
   );
 }

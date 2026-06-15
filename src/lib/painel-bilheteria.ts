@@ -286,8 +286,8 @@ const purchaseTypeLabels: Record<string, string> = {
 };
 
 const voucherTypeLabels: Record<string, string> = {
-  norma: "Adulto",
-  infan: "Crianca",
+  norma: "Passaporte",
+  infan: "Passaporte Infantil",
   isent: "Isento",
   corte: "Cortesia",
   escol: "Escola",

@@ -20,17 +20,14 @@ function formatCurrency(value: string) {
 
 function ImageInput() {
   return (
-    <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
-      Imagem do produto
+    <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
+      Imagem
       <input
         name="image"
         type="file"
         accept="image/*"
-        className="rounded-[8px] border border-dashed border-[#9bbd91] bg-white px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-[#17342d] file:px-4 file:py-2 file:text-sm file:font-black file:text-white"
+        className="rounded-[8px] border border-dashed border-[#9bbd91] bg-white px-3 py-2 text-sm file:mr-3 file:rounded-[8px] file:border-0 file:bg-[#17342d] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
       />
-      <span className="text-xs font-medium text-[#6a806e]">
-        Clique em escolher arquivo para enviar a foto do produto.
-      </span>
     </label>
   );
 }
@@ -60,13 +57,13 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
       } | null;
 
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error?.message || "Não foi possível salvar.");
+        throw new Error(payload?.error?.message || "Nao foi possivel salvar.");
       }
 
       setEditing(null);
       router.refresh();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Não foi possível salvar.");
+      setError(saveError instanceof Error ? saveError.message : "Nao foi possivel salvar.");
     } finally {
       setPending(false);
     }
@@ -92,13 +89,15 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
       } | null;
 
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error?.message || "Não foi possível excluir.");
+        throw new Error(payload?.error?.message || "Nao foi possivel excluir.");
       }
 
       setDeleteTarget(null);
       router.refresh();
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Não foi possível excluir.");
+      setError(
+        deleteError instanceof Error ? deleteError.message : "Nao foi possivel excluir.",
+      );
     } finally {
       setPending(false);
     }
@@ -116,7 +115,7 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
       />
       <ProductSection
         eyebrow="Itens adicionais"
-        title="Produtos complementares"
+        title="Complementos"
         products={addons}
         onCreate={() => setEditing({ type: "addon", product: null })}
         onEdit={(product) => setEditing({ type: product.type, product })}
@@ -129,48 +128,99 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
         onClose={() => setEditing(null)}
       >
         {editing ? (
-          <form onSubmit={submitForm} className="grid gap-4">
+          <form onSubmit={submitForm} className="grid gap-3">
             <input type="hidden" name="type" value={editing.type} />
             {editing.product ? <input type="hidden" name="id" value={editing.product.id} /> : null}
-            <Field label="Título">
-              <input name="title" defaultValue={editing.product?.title ?? ""} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+            <Field label="Titulo">
+              <input
+                name="title"
+                defaultValue={editing.product?.title ?? ""}
+                className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5"
+              />
             </Field>
-            <Field label="Subtítulo">
-              <input name="subtitle" defaultValue={editing.product?.subtitle ?? ""} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+            <Field label="Subtitulo">
+              <input
+                name="subtitle"
+                defaultValue={editing.product?.subtitle ?? ""}
+                className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5"
+              />
             </Field>
-            <Field label="Descrição">
-              <textarea name="description" defaultValue={editing.product?.description ?? ""} rows={4} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+            <Field label="Descricao">
+              <textarea
+                name="description"
+                defaultValue={editing.product?.description ?? ""}
+                rows={4}
+                className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5"
+              />
             </Field>
             <ImageInput />
-            <Field label="Valor">
-              <input name="fixedPrice" defaultValue={editing.product?.fixedPrice ?? ""} placeholder="100,00" className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
-            </Field>
             <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Valor">
+                <input
+                  name="fixedPrice"
+                  defaultValue={editing.product?.fixedPrice ?? ""}
+                  placeholder="100,00"
+                  className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5"
+                />
+              </Field>
               <Field label="Ordem">
-                <input name="sortOrder" type="number" min="1" defaultValue={editing.product?.sortOrder ?? ""} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
+                <input
+                  name="sortOrder"
+                  type="number"
+                  min="1"
+                  defaultValue={editing.product?.sortOrder ?? ""}
+                  className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5"
+                />
               </Field>
             </div>
-            <label className="flex items-center gap-2 text-sm font-black text-[#17351f]">
-              <input name="active" type="checkbox" defaultChecked={editing.product?.active ?? true} /> Ativo
+            <label className="flex items-center gap-2 text-sm font-semibold text-[#17351f]">
+              <input
+                name="active"
+                type="checkbox"
+                defaultChecked={editing.product?.active ?? true}
+              />
+              Ativo
             </label>
-            {error ? <p className="rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">{error}</p> : null}
-            <button disabled={pending} className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white disabled:opacity-60">
+            {error ? (
+              <p className="rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
+                {error}
+              </p>
+            ) : null}
+            <button
+              disabled={pending}
+              className="rounded-[8px] bg-[#17342d] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            >
               {pending ? "Salvando..." : "Salvar"}
             </button>
           </form>
         ) : null}
       </PainelModal>
 
-      <PainelModal title="Confirmar exclusão" open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
-        <p className="text-sm leading-7 text-[#5f7564]">
-          Tem certeza que deseja excluir <strong>{deleteTarget?.title}</strong>?
+      <PainelModal
+        title="Confirmar exclusao"
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+      >
+        <p className="text-sm leading-6 text-[#5f7564]">
+          Excluir <strong>{deleteTarget?.title}</strong>?
         </p>
-        {error ? <p className="mt-3 rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">{error}</p> : null}
-        <div className="mt-5 flex gap-3">
-          <button onClick={confirmDelete} disabled={pending} className="rounded-full bg-[#b24239] px-5 py-3 text-sm font-black text-white disabled:opacity-60">
+        {error ? (
+          <p className="mt-3 rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
+            {error}
+          </p>
+        ) : null}
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={confirmDelete}
+            disabled={pending}
+            className="rounded-[8px] bg-[#b24239] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+          >
             {pending ? "Excluindo..." : "Excluir"}
           </button>
-          <button onClick={() => setDeleteTarget(null)} className="rounded-full border border-[#dbe7d7] px-5 py-3 text-sm font-black text-[#17351f]">
+          <button
+            onClick={() => setDeleteTarget(null)}
+            className="rounded-[8px] border border-[#dbe7d7] px-4 py-2.5 text-sm font-semibold text-[#17351f]"
+          >
             Cancelar
           </button>
         </div>
@@ -181,7 +231,7 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+    <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
       {label}
       {children}
     </label>
@@ -204,29 +254,59 @@ function ProductSection({
   onDelete: (product: B2cProduct) => void;
 }) {
   return (
-    <section className="panel-section p-5">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <section className="panel-section p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="panel-eyebrow">{eyebrow}</p>
-          <h3 className="mt-2 text-[24px] font-black text-[#17351f]">{title}</h3>
+          <h3 className="mt-1 text-[20px] font-black text-[#17351f]">{title}</h3>
         </div>
-        <button onClick={onCreate} className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white">
+        <button
+          onClick={onCreate}
+          className="rounded-[8px] bg-[#17342d] px-3 py-2 text-xs font-semibold text-white"
+        >
           {eyebrow === "Passaportes" ? "Adicionar passaporte" : "Adicionar item"}
         </button>
       </div>
-      <div className="mt-5 flex gap-4 overflow-x-auto pb-3">
+      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {products.map((product) => (
-          <article key={product.id} className="min-w-[280px] overflow-hidden rounded-[8px] border border-[#dbe7d7] bg-white">
-            <div className="relative h-36 bg-[#eef3e8]">
-              <Image src={product.imageSrc} alt={product.title} fill className="object-cover" sizes="320px" />
+          <article
+            key={product.id}
+            className="overflow-hidden rounded-[10px] border border-[#dbe7d7] bg-white"
+          >
+            <div className="relative h-28 bg-[#eef3e8]">
+              <Image
+                src={product.imageSrc}
+                alt={product.title}
+                fill
+                className="object-cover"
+                sizes="320px"
+              />
             </div>
-            <div className="p-4">
-              <h4 className="text-lg font-black text-[#17351f]">{product.title}</h4>
-              <p className="mt-1 min-h-10 text-sm leading-5 text-[#5f7564]">{product.subtitle}</p>
-              <strong className="mt-3 block text-xl text-[#17351f]">{formatCurrency(product.fixedPrice)}</strong>
-              <div className="mt-4 flex gap-2">
-                <button onClick={() => onEdit(product)} className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]">Editar</button>
-                <button onClick={() => onDelete(product)} className="rounded-full border border-[#f0c3bc] px-4 py-2 text-xs font-black text-[#a33b31]">Excluir</button>
+            <div className="p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h4 className="text-base font-black text-[#17351f]">{product.title}</h4>
+                  <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#5f7564]">
+                    {product.subtitle}
+                  </p>
+                </div>
+                <strong className="text-sm text-[#17351f]">
+                  {formatCurrency(product.fixedPrice)}
+                </strong>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => onEdit(product)}
+                  className="rounded-[8px] border border-[#dbe7d7] px-2.5 py-1.5 text-xs font-semibold text-[#17351f]"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => onDelete(product)}
+                  className="rounded-[8px] border border-[#f0c3bc] px-2.5 py-1.5 text-xs font-semibold text-[#a33b31]"
+                >
+                  Excluir
+                </button>
               </div>
             </div>
           </article>

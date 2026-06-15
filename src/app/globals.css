@@ -233,8 +233,8 @@
   .estancia-panel .panel-section {
     background: #fff;
     border: 1px solid var(--panel-border);
-    border-radius: 8px;
-    box-shadow: 0 14px 32px rgba(24, 67, 34, 0.07);
+    border-radius: 6px;
+    box-shadow: 0 10px 22px rgba(24, 67, 34, 0.05);
   }
 
   .estancia-panel .panel-eyebrow {
@@ -254,13 +254,51 @@
     align-items: center;
     border-radius: 8px !important;
     display: inline-flex;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 800;
     justify-content: center;
     line-height: 1.1;
-    min-height: 38px;
-    padding: 9px 14px;
+    min-height: 34px;
+    padding: 8px 12px;
     text-align: center;
+  }
+
+  .estancia-panel [class*="p-6"] {
+    padding: 1rem !important;
+  }
+
+  .estancia-panel [class*="p-5"] {
+    padding: 0.95rem !important;
+  }
+
+  .estancia-panel [class*="text-[34px]"] {
+    font-size: 1.8rem !important;
+    line-height: 1.08 !important;
+  }
+
+  .estancia-panel [class*="text-[28px]"] {
+    font-size: 1.55rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .estancia-panel [class*="text-[26px]"] {
+    font-size: 1.4rem !important;
+    line-height: 1.12 !important;
+  }
+
+  .estancia-panel [class*="text-[24px]"] {
+    font-size: 1.25rem !important;
+    line-height: 1.12 !important;
+  }
+
+  .estancia-panel .text-4xl {
+    font-size: 1.8rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .estancia-panel .text-3xl {
+    font-size: 1.55rem !important;
+    line-height: 1.1 !important;
   }
 
   .estancia-panel .panel-button,

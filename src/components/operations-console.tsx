@@ -4314,7 +4314,7 @@ export function OperationsConsole({
                       <div className="grid gap-3">
                         <div className="grid gap-3 md:grid-cols-2">
                           <div className="rounded-2xl border border-[#d9e7f1] bg-[#f8fcff] p-3 text-sm text-[#35576f]">
-                            Adulto: {agreementPurchaseReport.indicators.qtdnormal} /{" "}
+                            Passaporte: {agreementPurchaseReport.indicators.qtdnormal} /{" "}
                             {agreementPurchaseReport.indicators.vlnormal}
                           </div>
                           <div className="rounded-2xl border border-[#d9e7f1] bg-[#f8fcff] p-3 text-sm text-[#35576f]">
@@ -4332,7 +4332,7 @@ export function OperationsConsole({
                                 {row.agreementName}
                               </div>
                               <div className="mt-1 text-xs leading-5 text-[#5d7282]">
-                                adulto {row.adultQuantity} · infantil{" "}
+                                passaporte {row.adultQuantity} · passaporte infantil{" "}
                                 {row.childQuantity} · escolar {row.schoolQuantity} ·
                                 total {row.totalQuantity} / {row.totalValue}
                               </div>
@@ -5123,11 +5123,11 @@ export function OperationsConsole({
                       </div>
                       <div className="grid gap-3 rounded-[20px] border border-[#eadbc9] bg-[#fffaf5] p-4 text-sm text-[#6f5535] md:grid-cols-4">
                         <div>
-                          <div className="font-semibold">Adulto</div>
+                          <div className="font-semibold">Passaporte</div>
                           <div>{formatCurrency(boxOfficeAdultBasePrice)}</div>
                         </div>
                         <div>
-                          <div className="font-semibold">Crianca</div>
+                          <div className="font-semibold">Passaporte Infantil</div>
                           <div>{formatCurrency(boxOfficeChildBasePrice)}</div>
                         </div>
                         <div>
@@ -5184,7 +5184,7 @@ export function OperationsConsole({
                             Ingressos
                           </div>
                           <label className="flex flex-col gap-2 text-sm font-semibold text-[#6f5535]">
-                            Adultos
+                            Passaportes
                             <input
                               value={boxOfficeAdultQuantity}
                               onChange={(event) =>
@@ -5194,7 +5194,7 @@ export function OperationsConsole({
                             />
                           </label>
                           <label className="flex flex-col gap-2 text-sm font-semibold text-[#6f5535]">
-                            Desconto adulto
+                            Desconto passaporte
                             <select
                               value={boxOfficeAdultDiscountId}
                               onChange={(event) =>
@@ -5211,7 +5211,7 @@ export function OperationsConsole({
                             </select>
                           </label>
                           <label className="flex flex-col gap-2 text-sm font-semibold text-[#6f5535]">
-                            Criancas
+                            Passaportes infantis
                             <input
                               value={boxOfficeChildQuantity}
                               onChange={(event) =>
@@ -5221,7 +5221,7 @@ export function OperationsConsole({
                             />
                           </label>
                           <label className="flex flex-col gap-2 text-sm font-semibold text-[#6f5535]">
-                            Desconto crianca
+                            Desconto passaporte infantil
                             <select
                               value={boxOfficeChildDiscountId}
                               onChange={(event) =>

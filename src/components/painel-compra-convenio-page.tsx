@@ -6,8 +6,8 @@ type PainelCompraConvenioPageProps = {
 };
 
 const voucherTypeOptions = [
-  { value: "norma", label: "Adulto" },
-  { value: "infan", label: "Infantil" },
+  { value: "norma", label: "Passaporte" },
+  { value: "infan", label: "Passaporte Infantil" },
   { value: "escol", label: "Escolar" },
   { value: "isent", label: "Isento" },
 ];
@@ -129,12 +129,12 @@ export function PainelCompraConvenioPage({
             <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
               {[
                 {
-                  label: "Adulto",
+                  label: "Passaporte",
                   count: result.indicators.qtdnormal,
                   value: formatMoney(result.indicators.vlnormal),
                 },
                 {
-                  label: "Infantil",
+                  label: "Passaporte Infantil",
                   count: result.indicators.qtdinfantil,
                   value: formatMoney(result.indicators.vlinfantil),
                 },
@@ -179,9 +179,9 @@ export function PainelCompraConvenioPage({
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">
                       Convenios
                     </th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Adulto</th>
+                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Passaporte</th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Infantil</th>
+                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Passaporte Infantil</th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor</th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Escolar</th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor</th>

@@ -39,7 +39,6 @@ export function BilheteriaCashClosureHistoryPage({
         actorName={actorName}
         primaryActions={[
           { href: "/painel/bilheteria/fechamento-caixa", label: "Fechamento de Caixa" },
-          { href: "/painel", label: "Voltar ao Painel" },
         ]}
       />
 

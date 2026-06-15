@@ -11,3 +11,15 @@ export type CustomerRegistrationLocationsResponse = {
     selectedUf: string | null;
   };
 };
+
+export type CustomerRegistrationCepResponse = {
+  ok: true;
+  data: {
+    cep: string;
+    address: string;
+    district: string;
+    uf: CustomerProfileUfOption;
+    city: CustomerProfileCityOption;
+    complement: string | null;
+  };
+};

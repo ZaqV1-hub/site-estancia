@@ -11,11 +11,8 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 };
 
 const VOUCHER_TYPE_LABELS: Record<string, string> = {
-  norma: "Adulto",
-  infan: "Crianca",
   isent: "Isento",
   corte: "Cortesia",
-  escol: "Escola",
 };
 
 const PAYMENT_METHOD_ORDER = [

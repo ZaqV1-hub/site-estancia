@@ -138,8 +138,8 @@ export async function listPainelCompraConvenioAgreementOptions() {
 export function mapPainelCompraConvenioExportRows(result: PainelCompraConvenioResult) {
   return result.rows.map((row) => ({
     Convenios: row.agreementName,
-    Adulto: String(row.adultQuantity),
-    ValorAdulto: row.adultValue,
+    Passaporte: String(row.adultQuantity),
+    ValorPassaporte: row.adultValue,
     Infantil: String(row.childQuantity),
     ValorInfantil: row.childValue,
     Escolar: String(row.schoolQuantity),
@@ -155,8 +155,8 @@ export function renderPainelCompraConvenioExportTable(
 ) {
   const headers = [
     "Convenios",
-    "Adulto",
-    "ValorAdulto",
+    "Passaporte",
+    "ValorPassaporte",
     "Infantil",
     "ValorInfantil",
     "Escolar",

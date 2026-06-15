@@ -55,133 +55,118 @@ export function PainelDescontosPage({ data }: Props) {
   const nextHref = data.page < data.pageCount ? buildHref(data.page + 1) : null;
 
   return (
-    <section className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_300px]">
-      <div className="rounded-[6px] bg-white px-4 py-6 shadow-[0_10px_28px_rgba(26,61,94,0.08)] md:px-8">
-        <div className="border-b border-[#d8d8d8] pb-3 text-sm text-[#909090]">
-          <Link className="text-[#1d68a2] underline" href="/painel">
-            Home
-          </Link>{" "}
-          <span className="mx-2 text-[#b8b8b8]">&gt;</span>
-          <span>Descontos</span>
+    <section className="grid gap-3">
+      <div className="panel-section p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="panel-eyebrow">Descontos</p>
+            <h1 className="mt-1 text-[24px] font-black text-[#17351f]">
+              Lista de descontos
+            </h1>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-xs font-semibold text-[#17351f]"
+              href="/painel/categorias"
+            >
+              Categorias
+            </Link>
+            <Link
+              className="rounded-[8px] bg-[#17342d] px-3 py-2 text-xs font-semibold text-white"
+              href="/painel/descontos/novo"
+            >
+              Novo desconto
+            </Link>
+          </div>
         </div>
+      </div>
 
-        <p className="my-6 border-t border-[#e3e8ed]" />
+      {feedback ? (
+        <div className="rounded-[8px] border border-[#b7dfc0] bg-[#edf8f0] px-4 py-3 text-sm text-[#245336]">
+          {feedback}
+        </div>
+      ) : null}
+      {error ? (
+        <div className="rounded-[8px] border border-[#efc0c0] bg-[#fff0f0] px-4 py-3 text-sm text-[#7a2b2b]">
+          {error}
+        </div>
+      ) : null}
 
-        {feedback ? (
-          <div className="mb-4 border border-[#b7dfc0] bg-[#edf8f0] px-4 py-3 text-sm text-[#245336]">
-            {feedback}
-          </div>
-        ) : null}
-        {error ? (
-          <div className="mb-4 border border-[#efc0c0] bg-[#fff0f0] px-4 py-3 text-sm text-[#7a2b2b]">
-            {error}
-          </div>
-        ) : null}
-
+      <div className="panel-section overflow-hidden p-0">
         {data.total === 0 ? (
-          <h2 className="text-[24px] text-[#5a5a5a]">Nenhum desconto encontrado</h2>
+          <div className="px-4 py-6 text-sm text-[#5f7564]">
+            Nenhum desconto encontrado.
+          </div>
         ) : (
-          <>
-            <div className="overflow-x-auto border border-[#cfcfcf]">
-              <table className="min-w-full border-collapse text-[15px]">
-                <thead className="bg-[#5f84a3] text-left text-white">
-                  <tr>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">ID</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Categoria</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Nome</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">
-                      Aplicacao
-                    </th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Acoes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.items.map((item, index) => (
-                    <tr
-                      className={index % 2 === 1 ? "bg-[#fafafa]" : "bg-white"}
-                      key={item.id}
-                    >
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.id}</td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">
-                        {item.typeDescription ?? "-"}
-                      </td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.name}</td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">
-                        {item.applicationTypeLabel}
-                      </td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.valueLabel}</td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-[#f7fbf5] text-left text-[#35503b]">
+                <tr>
+                  <th className="px-3 py-2.5 text-xs font-semibold">ID</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Categoria</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Nome</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Aplicacao</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Valor</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold text-right">Acoes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.items.map((item, index) => (
+                  <tr
+                    className={index % 2 === 1 ? "bg-[#fbfdf9]" : "bg-white"}
+                    key={item.id}
+                  >
+                    <td className="px-3 py-3">{item.id}</td>
+                    <td className="px-3 py-3">{item.typeDescription ?? "-"}</td>
+                    <td className="px-3 py-3 font-semibold text-[#17351f]">{item.name}</td>
+                    <td className="px-3 py-3">{item.applicationTypeLabel}</td>
+                    <td className="px-3 py-3">{item.valueLabel}</td>
+                    <td className="px-3 py-3 text-right">
+                      <div className="flex justify-end gap-2">
                         <Link
-                          className="text-[#1868d6] underline"
+                          className="rounded-[8px] border border-[#dbe7d7] px-2.5 py-1 text-xs font-semibold text-[#17351f]"
                           href={`/painel/descontos/${item.id}/editar`}
                         >
                           Editar
-                        </Link>{" "}
-                        |{" "}
+                        </Link>
                         <button
-                          className="text-[#1868d6] underline"
+                          className="rounded-[8px] border border-[#efc0c0] px-2.5 py-1 text-xs font-semibold text-[#a33b31]"
                           disabled={isPending}
                           onClick={() => handleDelete(item.id)}
                           type="button"
                         >
                           Excluir
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {data.pageCount > 1 ? (
-              <div className="mt-5 flex flex-wrap justify-end gap-3">
-                {previousHref ? (
-                  <Link
-                    className="rounded-full border border-[#c9d8e3] px-4 py-2 text-sm font-semibold text-[#205a7f]"
-                    href={previousHref}
-                  >
-                    Pagina anterior
-                  </Link>
-                ) : null}
-                {nextHref ? (
-                  <Link
-                    className="rounded-full border border-[#c9d8e3] px-4 py-2 text-sm font-semibold text-[#205a7f]"
-                    href={nextHref}
-                  >
-                    Proxima pagina
-                  </Link>
-                ) : null}
-              </div>
-            ) : null}
-          </>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
-      <aside className="self-start rounded-[6px] border border-[#d7d7d7] bg-[#f6f7f8] p-4 shadow-[0_10px_28px_rgba(26,61,94,0.08)]">
-        <ul className="space-y-3 text-[15px]">
-          <li>
-            <Link className="text-[#1d68a2] underline" href="/painel/descontos">
-              Lista de Descontos
+      {data.pageCount > 1 ? (
+        <div className="flex flex-wrap justify-end gap-2">
+          {previousHref ? (
+            <Link
+              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-sm font-semibold text-[#17351f]"
+              href={previousHref}
+            >
+              Pagina anterior
             </Link>
-          </li>
-          <li>
-            <Link className="text-[#1d68a2] underline" href="/painel/categorias">
-              Lista de Categorias
+          ) : null}
+          {nextHref ? (
+            <Link
+              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-sm font-semibold text-[#17351f]"
+              href={nextHref}
+            >
+              Proxima pagina
             </Link>
-          </li>
-          <li>
-            <Link className="text-[#1d68a2] underline" href="/painel/descontos/novo">
-              Adicionar Desconto
-            </Link>
-          </li>
-          <li>
-            <Link className="text-[#1d68a2] underline" href="/painel/categorias/novo">
-              Adicionar Categoria
-            </Link>
-          </li>
-        </ul>
-      </aside>
+          ) : null}
+        </div>
+      ) : null}
     </section>
   );
 }

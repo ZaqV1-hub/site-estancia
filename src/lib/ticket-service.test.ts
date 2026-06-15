@@ -269,6 +269,66 @@ describe("ticket-service", () => {
     });
   });
 
+  it("skips confirmed purchase ticket processing when the local testing service is unreachable", async () => {
+    delete process.env.INGRESSO_TICKET_API_BASE_URL;
+    delete process.env.INGRESSO_TICKET_API_USERNAME;
+    delete process.env.INGRESSO_TICKET_API_PASSWORD;
+    process.env = {
+      ...process.env,
+      NODE_ENV: "development",
+    };
+    const fetchMock = vi.fn().mockRejectedValue(
+      Object.assign(new TypeError("fetch failed"), {
+        cause: { code: "ECONNREFUSED" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    dbQuery.mockImplementation(async (sql: string) => {
+      if (sql.includes("FROM compra")) {
+        return {
+          rows: [
+            {
+              idcompra: 456,
+              cpf: "52998224725",
+              tpcompra: "ponli",
+              dtcompra: "2026-04-23",
+              email: "cliente@example.com",
+              nmusuario: "Cliente Teste",
+              celular: "51999999999",
+            },
+          ],
+        };
+      }
+
+      if (sql.includes("FROM voucher")) {
+        return {
+          rows: [
+            {
+              idvoucher: 9001,
+              numvoucher: "123456",
+              tpvoucher: "norma",
+              vlunicompra: "129.90",
+              stusado: "n",
+              voucherenviado: "n",
+              identificacao: null,
+              idagenda: 10,
+              dtagenda: "2026-05-01",
+            },
+          ],
+        };
+      }
+
+      return { rows: [] };
+    });
+
+    await expect(processConfirmedPurchaseTickets(456)).resolves.toEqual({
+      status: "skipped",
+      purchaseId: 456,
+      sentVoucherIds: [],
+      skippedReason: "ticket_service_unreachable",
+    });
+  });
+
   it("sends selected vouchers by whatsapp through the ticket microservice", async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(Response.json({ ok: true }));
     vi.stubGlobal("fetch", fetchMock);
@@ -472,6 +532,31 @@ describe("ticket-service", () => {
         voucherId: "9001",
         voucherCode: "A123456",
       },
+    });
+  });
+
+  it("skips voucher validation sync when the local testing service is unreachable", async () => {
+    delete process.env.INGRESSO_TICKET_API_BASE_URL;
+    delete process.env.INGRESSO_TICKET_API_USERNAME;
+    delete process.env.INGRESSO_TICKET_API_PASSWORD;
+    process.env = {
+      ...process.env,
+      NODE_ENV: "development",
+    };
+    const fetchMock = vi.fn().mockRejectedValue(
+      Object.assign(new TypeError("fetch failed"), {
+        cause: { code: "ECONNREFUSED" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      syncTicketValidation([{ purchaseId: 456, voucherId: 9001 }], "validate"),
+    ).resolves.toEqual({
+      status: "skipped",
+      action: "validate",
+      pairs: ["456-9001"],
+      skippedReason: "ticket_service_unreachable",
     });
   });
 });

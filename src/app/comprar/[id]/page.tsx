@@ -10,6 +10,7 @@ import {
   isAgendaDateExpired,
 } from "@/lib/agenda-repository";
 import { requireAuthenticatedCustomer } from "@/lib/customer-area";
+import { getAgendaProductAvailability } from "@/lib/painel-agenda-product-availability";
 import { getPurchaseAgendaContext } from "@/lib/purchase-repository";
 
 export const metadata: Metadata = {
@@ -66,5 +67,12 @@ export default async function BuyRoutePage({ params }: BuyRoutePageProps) {
     notFound();
   }
 
-  return <PurchasePage agenda={agenda} user={customer} products={listB2cProducts()} />;
+  const availability = getAgendaProductAvailability(agenda.date);
+  const products = listB2cProducts().filter((product) =>
+    product.type === "passport"
+      ? availability.passportIds.includes(product.id)
+      : availability.addonIds.includes(product.id),
+  );
+
+  return <PurchasePage agenda={agenda} user={customer} products={products} />;
 }

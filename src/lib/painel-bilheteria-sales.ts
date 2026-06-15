@@ -3,8 +3,8 @@ export const PAINEL_BILHETERIA_SALE_DRAFT_KEY = "painel-bilheteria-sale-draft";
 export type PainelBilheteriaSaleDraftItem = {
   type: "norma" | "infan" | "isent";
   quantity: number;
-  discountId?: number | null;
   label: string;
+  baseUnitValue: string;
   unitValue: string;
   totalValue: string;
 };
@@ -23,6 +23,10 @@ export type PainelBilheteriaSaleDraft = {
   cpf: string;
   items: PainelBilheteriaSaleDraftItem[];
   courtesies: PainelBilheteriaSaleDraftCourtesy[];
+  purchaseDiscountId: number | null;
+  purchaseDiscountLabel: string | null;
+  discountValue: string;
+  subtotalValue: string;
   totalValue: string;
   reason: string;
   createdAt: string;

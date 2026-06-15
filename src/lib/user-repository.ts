@@ -427,6 +427,93 @@ export async function listProfileCitiesByUf(uf: string) {
   return result.rows;
 }
 
+export async function ensureProfileUf(input: UfOption) {
+  const pool = getIngressoDbPool();
+  const normalizedId = String(input.id ?? "").trim().toUpperCase();
+  const normalizedName = String(input.name ?? "").trim();
+
+  if (!normalizedId || !normalizedName) {
+    throw new Error("invalid_profile_uf");
+  }
+
+  const existing = await pool.query<UfOption>(
+    `
+      SELECT iduf AS id, nmuf AS name
+      FROM uf
+      WHERE iduf = $1
+      LIMIT 1
+    `,
+    [normalizedId],
+  );
+
+  if (existing.rows[0]) {
+    return existing.rows[0];
+  }
+
+  await pool.query(
+    `
+      INSERT INTO uf (iduf, nmuf)
+      VALUES ($1, $2)
+    `,
+    [normalizedId, normalizedName],
+  );
+
+  return {
+    id: normalizedId,
+    name: normalizedName,
+  } satisfies UfOption;
+}
+
+export async function ensureProfileCity(input: {
+  uf: string;
+  name: string;
+}) {
+  const pool = getIngressoDbPool();
+  const normalizedUf = String(input.uf ?? "").trim().toUpperCase();
+  const normalizedName = String(input.name ?? "").trim();
+
+  if (!normalizedUf || !normalizedName) {
+    throw new Error("invalid_profile_city");
+  }
+
+  const existing = await pool.query<CityOption>(
+    `
+      SELECT idcidade AS id, nmcidade AS name
+      FROM cidade
+      WHERE iduf = $1
+        AND lower(trim(nmcidade)) = lower(trim($2))
+      ORDER BY idcidade ASC
+      LIMIT 1
+    `,
+    [normalizedUf, normalizedName],
+  );
+
+  if (existing.rows[0]) {
+    return existing.rows[0];
+  }
+
+  const nextIdResult = await pool.query<{ next_id: number }>(
+    `
+      SELECT COALESCE(MAX(idcidade), 0) + 1 AS next_id
+      FROM cidade
+    `,
+  );
+  const nextId = Number(nextIdResult.rows[0]?.next_id ?? 0);
+
+  await pool.query(
+    `
+      INSERT INTO cidade (idcidade, nmcidade, iduf)
+      VALUES ($1, $2, $3)
+    `,
+    [nextId, normalizedName, normalizedUf],
+  );
+
+  return {
+    id: nextId,
+    name: normalizedName,
+  } satisfies CityOption;
+}
+
 export async function getProfileCityById(cityId: number) {
   const pool = getIngressoDbPool();
   const result = await pool.query<CityLookup>(

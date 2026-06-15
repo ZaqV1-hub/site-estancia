@@ -135,6 +135,13 @@ function sortByOrder<T extends { sortOrder?: number; title?: string }>(items: T[
   });
 }
 
+function readManagedList<T extends { sortOrder?: number; title?: string }>(
+  value: T[] | undefined,
+  fallback: T[],
+) {
+  return Array.isArray(value) ? sortByOrder(value) : sortByOrder(fallback);
+}
+
 export function readEstanciaContent() {
   ensureStore();
 
@@ -142,10 +149,10 @@ export function readEstanciaContent() {
     const parsed = JSON.parse(readFileSync(dataFile, "utf8")) as Partial<EstanciaContentData>;
 
     return {
-      homeImages: sortByOrder(parsed.homeImages?.length ? parsed.homeImages : defaultContent.homeImages),
-      attractions: sortByOrder(parsed.attractions?.length ? parsed.attractions : defaultContent.attractions),
-      events: sortByOrder(parsed.events?.length ? parsed.events : defaultContent.events),
-      products: sortByOrder(parsed.products?.length ? parsed.products : defaultContent.products),
+      homeImages: readManagedList(parsed.homeImages, defaultContent.homeImages),
+      attractions: readManagedList(parsed.attractions, defaultContent.attractions),
+      events: readManagedList(parsed.events, defaultContent.events),
+      products: readManagedList(parsed.products, defaultContent.products),
     } satisfies EstanciaContentData;
   } catch {
     return defaultContent;

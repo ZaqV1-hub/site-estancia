@@ -1,5 +1,10 @@
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 import { registerOpsAuditLog } from "@/lib/ops-audit-log";
+import {
+  getAgendaProductAvailability,
+  removeAgendaProductAvailability,
+  setAgendaProductAvailabilityRange,
+} from "@/lib/painel-agenda-product-availability";
 import { formatPainelAgendaDateLabel } from "@/lib/painel-agenda-ui";
 
 export type PainelAgendaType =
@@ -58,6 +63,8 @@ export type PainelAgendaDayDetail = {
   selectedDate: string;
   agenda: PainelAgendaMonthEntry | null;
   vouchers: PainelAgendaVoucherEntry[];
+  selectedPassportIds: string[];
+  selectedAddonIds: string[];
 };
 
 export type PainelAgendaScreenData = {
@@ -85,6 +92,8 @@ export type PainelAgendaMutationInput = {
   status: PainelAgendaStatus;
   promotionName?: string | null;
   promotionDescription?: string | null;
+  passportIds?: string[] | null;
+  addonIds?: string[] | null;
   confirmOverwrite?: boolean;
   reason: string;
   actor?: {
@@ -131,6 +140,7 @@ type AgendaVoucherRow = {
   email: string | null;
   numvoucher: string | null;
   tpvoucher: string | null;
+  descricao: string | null;
   vlunicompra: string | null;
   dtuso: string | null;
   stusado: string | null;
@@ -160,8 +170,8 @@ const painelAgendaStatusLabels: Record<PainelAgendaStatus, string> = {
 };
 
 const voucherTypeLabels: Record<string, string> = {
-  norma: "Normal",
-  infan: "Infantil",
+  norma: "Passaporte",
+  infan: "Passaporte Infantil",
   isent: "Isento",
   corte: "Cortesia",
   espec: "Especial",
@@ -268,7 +278,8 @@ function mapVoucherEntry(row: AgendaVoucherRow): PainelAgendaVoucherEntry {
     voucherNumber: row.numvoucher,
     voucherType: row.tpvoucher,
     voucherTypeLabel:
-      voucherTypeLabels[String(row.tpvoucher ?? "").trim()] ??
+      String(row.descricao ?? "").trim() ||
+      voucherTypeLabels[String(row.tpvoucher ?? "").trim()] ||
       String(row.tpvoucher ?? ""),
     unitValue: toMoney(row.vlunicompra),
     useDate: row.dtuso ? row.dtuso.slice(0, 10) : null,
@@ -391,6 +402,7 @@ export async function getPainelAgendaDay(date: string) {
           usuario.email,
           voucher.numvoucher,
           voucher.tpvoucher,
+          voucher.descricao,
           voucher.vlunicompra::text AS vlunicompra,
           to_char(voucher.dtuso, 'YYYY-MM-DD') AS dtuso,
           voucher.stusado
@@ -408,6 +420,13 @@ export async function getPainelAgendaDay(date: string) {
     selectedDate: date,
     agenda: agendaResult.rows[0] ? mapMonthEntry(agendaResult.rows[0]) : null,
     vouchers: vouchersResult.rows.map(mapVoucherEntry),
+    ...(() => {
+      const availability = getAgendaProductAvailability(date);
+      return {
+        selectedPassportIds: availability.passportIds,
+        selectedAddonIds: availability.addonIds,
+      };
+    })(),
   } satisfies PainelAgendaDayDetail;
 }
 
@@ -524,6 +543,8 @@ function validateMutationInput(input: PainelAgendaMutationInput) {
       name: input.actor?.name?.trim() || null,
       cpf: input.actor?.cpf?.trim() || null,
     },
+    passportIds: Array.isArray(input.passportIds) ? input.passportIds : [],
+    addonIds: Array.isArray(input.addonIds) ? input.addonIds : [],
   };
 }
 
@@ -701,11 +722,17 @@ export async function upsertPainelAgendaRange(input: PainelAgendaMutationInput) 
         informationId: normalized.informationId,
         type: normalized.type,
         status: normalized.status,
+        passportIds: normalized.passportIds,
+        addonIds: normalized.addonIds,
         overwrittenDates: preview.existingDates,
       },
     });
 
     await client.query("COMMIT");
+    setAgendaProductAvailabilityRange(dates, {
+      passportIds: normalized.passportIds,
+      addonIds: normalized.addonIds,
+    });
 
     return {
       ok: true,
@@ -810,6 +837,7 @@ export async function deletePainelAgenda(
     });
 
     await client.query("COMMIT");
+    removeAgendaProductAvailability(agenda.dtagenda);
 
     return {
       ok: true,

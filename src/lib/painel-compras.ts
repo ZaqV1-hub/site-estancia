@@ -260,6 +260,7 @@ type PainelPurchaseDetailVoucherRow = {
   idvoucher: number;
   numvoucher: string | null;
   tpvoucher: string | null;
+  descricao: string | null;
   dtagenda: string | null;
   idagenda: number | null;
   idescola: number | null;
@@ -357,8 +358,8 @@ const gatewayStatusLabels: Record<string, string> = {
 };
 
 const voucherTypeLabels: Record<string, string> = {
-  norma: "Adulto",
-  infan: "Infantil",
+  norma: "Passaporte",
+  infan: "Passaporte Infantil",
   escol: "Escolar",
   corte: "Cortesia",
   espec: "Especial",
@@ -1046,11 +1047,7 @@ function mapPainelPurchaseVoucherListItem(
   row: PainelPurchaseVoucherListRow,
 ): PainelPurchaseVoucherListItem {
   const specialDescription = String(row.descricao ?? "").trim();
-  const ticketTypeLabel =
-    String(row.tpvoucher ?? "").trim() === "corte" ||
-    String(row.tpvoucher ?? "").trim() === "espec"
-      ? specialDescription || "-"
-      : formatVoucherTypeLabel(row.tpvoucher);
+  const ticketTypeLabel = specialDescription || formatVoucherTypeLabel(row.tpvoucher);
 
   return {
     purchaseId: Number(row.idcompra),
@@ -1204,7 +1201,7 @@ export function mapPainelPurchaseVoucherListExportRows(
       "ID",
       "Voucher",
       "Data Visita",
-      "Tipo Voucher",
+      "Passaporte",
       "Tipo Compra",
       "Valor",
       "Usado",
@@ -1286,6 +1283,7 @@ export async function getPainelPurchaseDetail(
         voucher.idvoucher,
         voucher.numvoucher,
         voucher.tpvoucher,
+        voucher.descricao,
         voucher.idagenda,
         agenda.dtagenda::text AS dtagenda,
         voucher.idescola,
@@ -1334,7 +1332,8 @@ export async function getPainelPurchaseDetail(
       voucherNumber: voucher.numvoucher,
       visitDate: formatDateLabel(voucher.dtagenda),
       voucherType: String(voucher.tpvoucher ?? "").trim(),
-      voucherTypeLabel: formatVoucherTypeLabel(voucher.tpvoucher),
+      voucherTypeLabel:
+        String(voucher.descricao ?? "").trim() || formatVoucherTypeLabel(voucher.tpvoucher),
       schoolName: voucher.nmescola,
       className: voucher.turma,
       periodName: voucher.periodo,

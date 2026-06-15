@@ -7,7 +7,6 @@ import { formatPainelBilheteriaDate } from "@/lib/painel-bilheteria-format";
 import {
   type PainelBilheteriaCustomerLookupResult,
   type PainelBilheteriaTicketLookupResult,
-  type PainelBilheteriaTripLookupResult,
 } from "@/lib/painel-bilheteria-workstation";
 
 type WorkstationMessage = {
@@ -61,8 +60,78 @@ function messageToneClasses(tone: WorkstationMessage["tone"]) {
 
 function actionButtonClasses(active = false) {
   return active
-    ? "bg-[#2b8c46] text-white"
+    ? "border-[#1f7a3d] bg-[#23823f] text-white"
     : "border border-[#dbe7d7] bg-white text-[#17351f] hover:bg-[#f6faf3]";
+}
+
+function WorkstationFormIcon({ formId }: { formId: string }) {
+  const className = "h-8 w-8 text-[#244f2c]";
+
+  switch (formId) {
+    case "voucher-validation":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <path d="M7 7.5h10a2 2 0 0 1 2 2v1.5a2 2 0 0 0-2 2 2 2 0 0 0 2 2V16.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V15a2 2 0 0 0 0-4V9.5a2 2 0 0 1 2-2Z" />
+          <path d="M9.5 10h5M9.5 14h5" />
+        </svg>
+      );
+    case "customer-validation":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+          <path d="M5 20a7 7 0 0 1 14 0" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <path d="M12 20s7-4.4 7-10a7 7 0 1 0-14 0c0 5.6 7 10 7 10Z" />
+          <path d="M12 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM18 7h3M19.5 5.5v3" />
+        </svg>
+      );
+  }
+}
+
+function WorkstationActionIcon({ actionKey }: { actionKey?: string }) {
+  const className = "h-6 w-6 shrink-0";
+
+  switch (actionKey) {
+    case "sales":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <path d="M5 18V10M12 18V6M19 18V13" />
+          <path d="M3 18h18" />
+        </svg>
+      );
+    case "cash-closure":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <path d="M5 7h14v11H5z" />
+          <path d="M8 7V5h8v2M8 12h8M8 15h3" />
+        </svg>
+      );
+    case "cash-fund":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <path d="M4 7.5h16v10H4z" />
+          <path d="M15 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM7 10h.01M17 14h.01" />
+        </svg>
+      );
+    case "history":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <path d="M4 12a8 8 0 1 0 3-6.24" />
+          <path d="M4 4v4h4M12 8v5l3 2" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+          <path d="M7 7.5h10a2 2 0 0 1 2 2v1.5a2 2 0 0 0-2 2 2 2 0 0 0 2 2V16.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V15a2 2 0 0 0 0-4V9.5a2 2 0 0 1 2-2Z" />
+          <path d="M9.5 10h5M9.5 14h5" />
+        </svg>
+      );
+  }
 }
 
 async function readJson<T>(response: Response) {
@@ -82,7 +151,6 @@ export function PainelBilheteriaWorkstation({
   const contract = legacyPanelContracts.bilheteriaIndex;
   const [voucherNumber, setVoucherNumber] = useState("");
   const [customerDocument, setCustomerDocument] = useState("");
-  const [tripCode, setTripCode] = useState("");
   const [ticketLookup, setTicketLookup] = useState(initialTicketLookupState?.lookup ?? "");
   const [ticketLookupOpen, setTicketLookupOpen] = useState(
     initialTicketLookupState?.isOpen ?? false,
@@ -103,8 +171,6 @@ export function PainelBilheteriaWorkstation({
   const [message, setMessage] = useState<WorkstationMessage | null>(null);
   const [customerLookup, setCustomerLookup] =
     useState<PainelBilheteriaCustomerLookupResult | null>(null);
-  const [tripLookup, setTripLookup] =
-    useState<PainelBilheteriaTripLookupResult | null>(null);
   const [selectedCustomerVouchers, setSelectedCustomerVouchers] = useState<
     Record<number, number[]>
   >({});
@@ -114,7 +180,6 @@ export function PainelBilheteriaWorkstation({
   const [runningActionKey, setRunningActionKey] = useState<string | null>(null);
   const [submittingVoucher, setSubmittingVoucher] = useState(false);
   const [submittingCustomer, setSubmittingCustomer] = useState(false);
-  const [submittingTrip, setSubmittingTrip] = useState(false);
   const hasServerDrivenTicketLookup = Boolean(initialTicketLookupState?.isOpen);
 
   function normalizeVoucherIds(voucherIds: number[]) {
@@ -183,39 +248,6 @@ export function PainelBilheteriaWorkstation({
     return data;
   }
 
-  async function loadTripLookup(code: string) {
-    const response = await fetch("/api/painel/bilheteria/trip-lookup", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        code,
-      }),
-    });
-    const payload = await readJson<LookupResponse<PainelBilheteriaTripLookupResult>>(response);
-
-    if (!response.ok || !payload?.ok || !payload.data) {
-      setMessage({
-        tone: "error",
-        text: payload?.error?.message || "Nao foi possivel consultar este passeio.",
-      });
-      setTripLookup(null);
-      return null;
-    }
-
-    const data = payload.data;
-    setTripLookup(data);
-    setMessage({
-      tone: data.items.length > 0 ? "success" : "warning",
-      text:
-        data.items.length > 0
-          ? `${data.items.length} voucher(s) encontrado(s) para o passeio.`
-          : "Nenhum voucher ativo encontrado para este passeio.",
-    });
-    return data;
-  }
-
   async function runVoucherMutation(
     actionKey: string,
     endpoint: string,
@@ -263,20 +295,6 @@ export function PainelBilheteriaWorkstation({
       await loadCustomerLookup(customerDocument);
     } finally {
       setSubmittingCustomer(false);
-    }
-  }
-
-  async function refreshTripLookup() {
-    if (!tripCode.trim()) {
-      return;
-    }
-
-    setSubmittingTrip(true);
-
-    try {
-      await loadTripLookup(tripCode);
-    } finally {
-      setSubmittingTrip(false);
     }
   }
 
@@ -411,23 +429,10 @@ export function PainelBilheteriaWorkstation({
     }
   }
 
-  async function handleValidateTripVoucher(voucherId: number) {
-    const ok = await runVoucherMutation(
-      `validate-trip-voucher-${voucherId}`,
-      "/api/painel/bilheteria/vouchers/validate",
-      { voucherIds: [voucherId] },
-    );
-
-    if (ok) {
-      await refreshTripLookup();
-    }
-  }
-
   async function handleVoucherSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmittingVoucher(true);
     setCustomerLookup(null);
-    setTripLookup(null);
 
     try {
       const response = await fetch("/api/painel/bilheteria/vouchers/validate", {
@@ -467,67 +472,11 @@ export function PainelBilheteriaWorkstation({
   async function handleCustomerSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmittingCustomer(true);
-    setTripLookup(null);
 
     try {
       await loadCustomerLookup(customerDocument);
     } finally {
       setSubmittingCustomer(false);
-    }
-  }
-
-  async function handleTripSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSubmittingTrip(true);
-    setCustomerLookup(null);
-
-    try {
-      await loadTripLookup(tripCode);
-    } finally {
-      setSubmittingTrip(false);
-    }
-  }
-
-  async function handleTripValidation() {
-    if (!tripLookup?.schoolId || !tripLookup.agendaId) {
-      return;
-    }
-
-    setSubmittingTrip(true);
-
-    try {
-      const response = await fetch("/api/painel/bilheteria/vouchers/validate", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          schoolId: tripLookup.schoolId,
-          agendaId: tripLookup.agendaId,
-          actor: {
-            name: actorName,
-            cpf: actorCpf,
-          },
-        }),
-      });
-      const payload = await readJson<VoucherValidationResponse>(response);
-
-      if (!response.ok || !payload?.ok) {
-        setMessage({
-          tone: "error",
-          text: payload?.error?.message || "Não foi possível validar o passeio agora.",
-        });
-        return;
-      }
-
-      setMessage({
-        tone: payload.data?.warnings?.length ? "warning" : "success",
-        text: payload.data?.message || "Passeio validado com sucesso.",
-        warnings: payload.data?.warnings || [],
-      });
-      await refreshTripLookup();
-    } finally {
-      setSubmittingTrip(false);
     }
   }
 
@@ -648,88 +597,101 @@ export function PainelBilheteriaWorkstation({
 
   return (
     <div className="grid gap-6">
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="grid gap-5">
-          {contract.forms?.map((form) => {
+          {contract.forms
+            ?.filter((form) => form.id !== "trip-validation")
+            .map((form) => {
             const field = form.fields[0];
             const isVoucher = form.id === "voucher-validation";
             const isCustomer = form.id === "customer-validation";
-            const value = isVoucher
-              ? voucherNumber
-              : isCustomer
-                ? customerDocument
-                : tripCode;
-            const setValue = isVoucher
-              ? setVoucherNumber
-              : isCustomer
-                ? setCustomerDocument
-                : setTripCode;
-            const submitting = isVoucher
-              ? submittingVoucher
-              : isCustomer
-                ? submittingCustomer
-                : submittingTrip;
-            const onSubmit = isVoucher
-              ? handleVoucherSubmit
-              : isCustomer
-                ? handleCustomerSubmit
-                : handleTripSubmit;
+            const value = isVoucher ? voucherNumber : customerDocument;
+            const setValue = isVoucher ? setVoucherNumber : setCustomerDocument;
+            const submitting = isVoucher ? submittingVoucher : submittingCustomer;
+            const onSubmit = isCustomer ? handleCustomerSubmit : handleVoucherSubmit;
 
             return (
-              <form
-                key={form.id}
-                onSubmit={(event) => void onSubmit(event)}
-                className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_300px]"
-              >
-                <label className="grid gap-2">
-                  <span className="text-[15px] font-semibold text-[#275330]">{form.title}</span>
-                  <input
-                    value={value}
-                    onChange={(event) => setValue(event.target.value)}
-                    placeholder={field?.placeholder || field?.label}
-                    className="min-h-[138px] rounded-[28px] border border-[#d7e3d2] bg-white px-7 text-[34px] font-light text-[#3d5642] shadow-[0_18px_40px_rgba(24,67,34,0.08)] outline-none placeholder:text-[#8aa18f]"
-                  />
-                </label>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="min-h-[138px] rounded-[28px] bg-[linear-gradient(135deg,#1f6b36,#7bc043)] px-7 text-[34px] font-light text-white shadow-[0_16px_40px_rgba(24,67,34,0.18)] transition hover:brightness-105 disabled:opacity-60"
+              <article key={form.id} className="panel-section px-7 py-8">
+                <form
+                  onSubmit={(event) => void onSubmit(event)}
+                  className="grid gap-5 md:grid-cols-[80px_minmax(0,1fr)]"
                 >
-                  {submitting ? "Aguarde" : form.submitLabel}
-                </button>
-              </form>
+                  <div className="flex h-18 w-18 items-center justify-center rounded-[8px] bg-[#f1f7f0]">
+                    <WorkstationFormIcon formId={form.id} />
+                  </div>
+
+                  <div>
+                    <h2 className="text-[22px] font-black leading-tight text-[#17351f]">
+                      {form.title}
+                    </h2>
+
+                    <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_136px]">
+                      <input
+                        value={value}
+                        onChange={(event) => setValue(event.target.value)}
+                        placeholder={field?.placeholder || field?.label}
+                        className="estancia-field min-h-[56px] rounded-[6px] px-4 text-base"
+                      />
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="inline-flex min-h-[56px] items-center justify-center rounded-[6px] border border-[#3b7e40] bg-white px-5 text-base font-bold text-[#275330] transition hover:bg-[#f7fbf5] disabled:opacity-60"
+                      >
+                        {submitting ? "Aguarde" : form.submitLabel}
+                      </button>
+                    </div>
+
+                    <p className="mt-3 text-sm text-[#667c6a]">
+                      {form.id === "voucher-validation"
+                        ? "Digite o codigo do voucher para validar."
+                        : "Digite o RG ou CPF do cliente para consultar."}
+                    </p>
+                  </div>
+                </form>
+              </article>
             );
           })}
         </div>
 
-        <aside className="panel-section p-5">
+        <aside className="panel-section p-6">
           <p className="panel-eyebrow">
             Ações
           </p>
           <div className="mt-5 grid gap-3">
             {contract.header.actions
-              ?.filter((action) => !action.managerOnly || isManager)
+              ?.filter(
+                (action) =>
+                  (!action.managerOnly || isManager) && action.key !== "back-to-panel",
+              )
               .map((action) => (
                 action.key === "ticket-lookup" ? (
                   <button
                     key={action.key}
                     type="button"
                     onClick={handleOpenTicketLookup}
-                    className={`inline-flex min-h-[42px] items-center justify-center rounded-[8px] px-5 py-2.5 text-center text-sm font-bold ${
+                    className={`inline-flex min-h-[58px] items-center justify-between rounded-[6px] px-5 py-3 text-left text-[15px] font-bold shadow-[0_8px_22px_rgba(24,67,34,0.05)] ${
                       actionButtonClasses(ticketLookupOpen)
                     }`}
                   >
-                    {action.label}
+                    <span className="flex items-center gap-3">
+                      <WorkstationActionIcon actionKey={action.key} />
+                      <span>{action.label}</span>
+                    </span>
+                    <span aria-hidden="true" className="text-xl leading-none">{">"}</span>
                   </button>
                 ) : (
                   <Link
                     key={action.key}
                     href={action.href}
-                    className={`inline-flex min-h-[42px] items-center justify-center rounded-[8px] px-5 py-2.5 text-center text-sm font-bold ${
+                    className={`inline-flex min-h-[58px] items-center justify-between rounded-[6px] px-5 py-3 text-left text-[15px] font-bold shadow-[0_8px_22px_rgba(24,67,34,0.05)] ${
                       actionButtonClasses(false)
                     }`}
                   >
-                    {action.label}
+                    <span className="flex items-center gap-3">
+                      <WorkstationActionIcon actionKey={action.key} />
+                      <span>{action.label}</span>
+                    </span>
+                    <span aria-hidden="true" className="text-xl leading-none">{">"}</span>
                   </Link>
                 )
               ))}
@@ -971,9 +933,11 @@ export function PainelBilheteriaWorkstation({
                                     <span>Todos</span>
                                   </label>
                                 </th>
+                                <th className="border border-[#6f8ea8] px-4 py-3 font-normal">ID</th>
                                 <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Voucher</th>
-                                <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Tipo</th>
-                                <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Data</th>
+                                <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Data da visita</th>
+                                <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Passaporte</th>
+                                <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor</th>
                                 <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Status</th>
                               </tr>
                             </thead>
@@ -995,13 +959,17 @@ export function PainelBilheteriaWorkstation({
                                       }
                                     />
                                   </td>
+                                  <td className="border border-[#d2dde6] px-4 py-3">
+                                    {voucher.voucherId}
+                                  </td>
                                   <td className="border border-[#d2dde6] px-4 py-3 font-semibold text-[#205a7f]">
                                     {voucher.voucherNumber || `#${voucher.voucherId}`}
                                   </td>
-                                  <td className="border border-[#d2dde6] px-4 py-3">{voucher.voucherTypeLabel}</td>
                                   <td className="border border-[#d2dde6] px-4 py-3">
                                     {formatPainelBilheteriaDate(voucher.visitDate)}
                                   </td>
+                                  <td className="border border-[#d2dde6] px-4 py-3">{voucher.voucherTypeLabel}</td>
+                                  <td className="border border-[#d2dde6] px-4 py-3">{voucher.unitValue}</td>
                                   <td className="border border-[#d2dde6] px-4 py-3">{voucher.statusLabel}</td>
                                 </tr>
                               ))}
@@ -1088,87 +1056,6 @@ export function PainelBilheteriaWorkstation({
                   })()}
                 </article>
               ))}
-            </div>
-          )}
-        </section>
-      ) : null}
-
-      {tripLookup ? (
-        <section className="rounded-[6px] border border-[#d3dde6] bg-white p-5 shadow-[0_8px_22px_rgba(32,90,127,0.08)]">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-semibold text-[#205a7f]">
-                Resultado do passeio
-              </h2>
-              <p className="mt-2 text-sm text-[#5d7282]">
-                {tripLookup.schoolName || "Passeio não encontrado"} •{" "}
-                {formatPainelBilheteriaDate(tripLookup.visitDate)} •{" "}
-                {tripLookup.statusLabel}
-              </p>
-            </div>
-            {tripLookup.items.length > 0 && tripLookup.schoolId && tripLookup.agendaId ? (
-              <button
-                type="button"
-                onClick={() => void handleTripValidation()}
-                disabled={submittingTrip}
-                className="rounded-[4px] bg-[linear-gradient(180deg,#3e9ce1_0%,#245f88_100%)] px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
-              >
-                {submittingTrip ? "Validando..." : "Validar todos do passeio"}
-              </button>
-            ) : null}
-          </div>
-
-          {tripLookup.items.length === 0 ? (
-            <p className="mt-5 text-sm text-[#5d7282]">
-              Nenhum voucher ativo encontrado para este passeio.
-            </p>
-          ) : (
-            <div className="mt-5 overflow-x-auto">
-              <table className="min-w-full border-collapse border border-[#d2dde6] text-sm">
-                <thead className="bg-[#5f84a3] text-left text-white">
-                  <tr>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Aluno</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Voucher</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Tipo</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Status</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Compra</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Acoes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tripLookup.items.map((item) => (
-                    <tr key={item.voucherId} className="bg-white">
-                      <td className="border border-[#d2dde6] px-4 py-3">
-                        {item.studentName || "-"}
-                        {(item.className || item.periodName) && (
-                          <div className="text-xs text-[#5d7282]">
-                            {[item.className, item.periodName].filter(Boolean).join(" • ")}
-                          </div>
-                        )}
-                      </td>
-                      <td className="border border-[#d2dde6] px-4 py-3 font-semibold text-[#205a7f]">
-                        {item.voucherNumber || `#${item.voucherId}`}
-                      </td>
-                      <td className="border border-[#d2dde6] px-4 py-3">{item.voucherTypeLabel}</td>
-                      <td className="border border-[#d2dde6] px-4 py-3">{item.statusLabel}</td>
-                      <td className="border border-[#d2dde6] px-4 py-3">
-                        {item.purchaseId ? `#${item.purchaseId}` : "-"} •{" "}
-                        {item.purchaseTypeLabel}
-                      </td>
-                      <td className="border border-[#d2dde6] px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => void handleValidateTripVoucher(item.voucherId)}
-                          disabled={isActionRunning(`validate-trip-voucher-${item.voucherId}`)}
-                          className="rounded-[4px] bg-[linear-gradient(180deg,#3e9ce1_0%,#245f88_100%)] px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
-                        >
-                          Validar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           )}
         </section>

@@ -24,12 +24,12 @@ export function FlowStepper({ current }: { current: OrderFlowStep }) {
   return (
     <nav
       aria-label="Etapas da compra"
-      className="mx-auto w-full max-w-[500px] px-2 sm:max-w-[620px]"
+      className="mx-auto w-full max-w-[430px] px-2 sm:max-w-[540px]"
     >
       <ol className="relative grid grid-cols-4 gap-0">
-        <span className="absolute left-[12.5%] right-[12.5%] top-[14px] h-px bg-[#d5d8d3] sm:top-[16px]" />
+        <span className="absolute left-[12.5%] right-[12.5%] top-[12px] h-px bg-[#d5d8d3] sm:top-[14px]" />
         <span
-          className="absolute left-[12.5%] top-[14px] h-px bg-[#25a524] transition-all sm:top-[16px]"
+          className="absolute left-[12.5%] top-[12px] h-px bg-[#25a524] transition-all sm:top-[14px]"
           style={{ width: `${Math.max(activeIndex, 0) * 25}%` }}
         />
         {steps.map((step, index) => {
@@ -41,7 +41,7 @@ export function FlowStepper({ current }: { current: OrderFlowStep }) {
               className="relative flex flex-col items-center gap-1.5 text-center"
             >
               <span
-                className={`grid h-7 w-7 place-items-center rounded-full border text-[14px] font-black shadow-[0_8px_18px_rgba(18,52,45,0.06)] sm:h-9 sm:w-9 sm:text-[16px] ${
+                className={`grid h-6 w-6 place-items-center rounded-full border text-[12px] font-bold shadow-[0_7px_16px_rgba(18,52,45,0.055)] sm:h-8 sm:w-8 sm:text-[14px] ${
                   isActive
                     ? "border-[#063f35] bg-[#063f35] text-white"
                     : "border-[#cfd4cf] bg-white text-[#6b6f72]"
@@ -50,7 +50,7 @@ export function FlowStepper({ current }: { current: OrderFlowStep }) {
                 {index + 1}
               </span>
               <span
-                className={`text-[10px] font-bold sm:text-[12px] ${
+                className={`text-[9px] font-bold sm:text-[11px] ${
                   isActive ? "text-[#073f35]" : "text-[#6e7175]"
                 }`}
               >
@@ -161,7 +161,7 @@ export function IconBubble({
 }) {
   return (
     <span
-      className={`grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#eaf3e5] text-[#073f35] [&>svg]:h-5 [&>svg]:w-5 sm:h-10 sm:w-10 ${className}`}
+      className={`grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eaf3e5] text-[#073f35] [&>svg]:h-4 [&>svg]:w-4 sm:h-9 sm:w-9 ${className}`}
     >
       <FlowIcon name={name} />
     </span>
@@ -186,10 +186,10 @@ export function PrimaryFlowButton({
   const content = (
     <>
       <span>{children}</span>
-      <span className="text-[20px] leading-none sm:text-[24px]">›</span>
+      <span className="text-[18px] leading-none sm:text-[22px]">›</span>
     </>
   );
-  const classes = `inline-flex min-h-[40px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-[12px] bg-[#20aa1f] px-3 text-center text-[13px] font-black text-white shadow-[0_12px_24px_rgba(32,170,31,0.16)] transition hover:bg-[#178b17] disabled:cursor-not-allowed disabled:bg-[#8bcf89] sm:min-h-[46px] sm:px-4 sm:text-[15px] ${className}`;
+  const classes = `inline-flex min-h-[36px] w-full items-center justify-center gap-2 rounded-[10px] bg-[#20aa1f] px-3 text-center text-[12px] font-bold leading-tight text-white shadow-[0_10px_20px_rgba(32,170,31,0.15)] transition hover:bg-[#178b17] disabled:cursor-not-allowed disabled:bg-[#8bcf89] sm:min-h-[40px] sm:px-4 sm:text-[13px] ${className}`;
 
   if (href) {
     return (

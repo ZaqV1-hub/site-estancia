@@ -101,55 +101,55 @@ function ProductCard({
 
   return (
     <article
-      className={`relative overflow-hidden rounded-[12px] border bg-white p-2.5 shadow-[0_10px_24px_rgba(18,52,45,0.055)] transition ${
+      className={`relative overflow-hidden rounded-[11px] border bg-white p-2 shadow-[0_8px_18px_rgba(18,52,45,0.05)] transition ${
         selected ? "border-[#18ac26]" : "border-[#dfe8dc]"
       }`}
     >
       {selected ? (
-        <span className="absolute right-2.5 top-2.5 z-10 grid h-7 w-7 place-items-center rounded-full bg-[#20aa1f] text-[16px] font-black text-white">
+        <span className="absolute right-2 top-2 z-10 grid h-6 w-6 place-items-center rounded-full bg-[#20aa1f] text-[14px] font-black text-white">
           ✓
         </span>
       ) : null}
 
-      <div className="grid grid-cols-[92px_1fr] gap-3 sm:grid-cols-[132px_1fr] xl:grid-cols-1 xl:gap-0">
-        <div className="relative h-[88px] overflow-hidden rounded-[9px] bg-[#eef3e8] sm:h-[112px] xl:h-[108px]">
+      <div className="grid grid-cols-[82px_1fr] gap-2.5 sm:grid-cols-[118px_1fr] xl:grid-cols-1 xl:gap-0">
+        <div className="relative h-[78px] overflow-hidden rounded-[8px] bg-[#eef3e8] sm:h-[96px] xl:h-[92px]">
           <Image
             src={product.imageSrc}
             alt={product.title}
             fill
             className="object-cover"
-            sizes="(max-width: 640px) 92px, (max-width: 1280px) 132px, 200px"
+            sizes="(max-width: 640px) 82px, (max-width: 1280px) 118px, 180px"
           />
         </div>
 
-        <div className="flex min-h-[88px] flex-col xl:min-h-[142px] xl:pt-2.5">
-          <h3 className="text-[16px] font-black leading-tight text-[#073f35] xl:text-[18px]">
+        <div className="flex min-h-[78px] flex-col xl:min-h-[126px] xl:pt-2">
+          <h3 className="text-[15px] font-extrabold leading-tight text-[#073f35] xl:text-[16px]">
             {product.title}
           </h3>
-          <p className="mt-1 text-[12px] leading-4 text-[#626469] xl:min-h-[34px] xl:text-[13px]">
+          <p className="mt-0.5 text-[11px] leading-4 text-[#626469] xl:min-h-[30px] xl:text-[12px]">
             {product.subtitle}
           </p>
-          <strong className="mt-2 block text-[17px] font-black text-[#073f35] xl:mt-2.5 xl:text-[18px]">
+          <strong className="mt-1.5 block text-[15px] font-extrabold text-[#073f35] xl:mt-2 xl:text-[16px]">
             {formatCurrency(product.fixedPrice)}
           </strong>
 
-          <div className="mt-auto flex items-center gap-1.5 pt-2.5">
+          <div className="mt-auto flex items-center gap-1.5 pt-2">
             <button
               type="button"
               aria-label={`Remover ${product.title}`}
               onClick={() => onStep(-1)}
-              className="grid h-8 w-8 place-items-center rounded-[7px] border border-[#d7e3d2] bg-white text-[19px] font-black text-[#073f35] hover:border-[#20aa1f] sm:h-9 sm:w-9"
+              className="grid h-7 w-7 place-items-center rounded-[7px] border border-[#d7e3d2] bg-white text-[17px] font-bold text-[#073f35] hover:border-[#20aa1f] sm:h-8 sm:w-8"
             >
               -
             </button>
-            <span className="grid h-8 min-w-8 place-items-center rounded-[7px] border border-[#d7e3d2] bg-white px-2.5 text-[16px] font-black text-[#073f35] sm:h-9 sm:min-w-9 sm:text-[17px]">
+            <span className="grid h-7 min-w-7 place-items-center rounded-[7px] border border-[#d7e3d2] bg-white px-2 text-[14px] font-bold text-[#073f35] sm:h-8 sm:min-w-8 sm:text-[15px]">
               {quantity}
             </span>
             <button
               type="button"
               aria-label={`Adicionar ${product.title}`}
               onClick={() => onStep(1)}
-              className="grid h-8 w-8 place-items-center rounded-[7px] bg-[#11883b] text-[21px] font-black text-white shadow-[0_10px_20px_rgba(17,136,59,0.16)] hover:bg-[#0c6e30] sm:h-9 sm:w-9"
+              className="grid h-7 w-7 place-items-center rounded-[7px] bg-[#11883b] text-[19px] font-bold text-white shadow-[0_8px_16px_rgba(17,136,59,0.15)] hover:bg-[#0c6e30] sm:h-8 sm:w-8"
             >
               +
             </button>
@@ -206,7 +206,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
       return;
     }
 
-    function syncPage() {
+    const syncPage = () => {
       const width = element.clientWidth || 1;
       const ratio = element.scrollLeft / width;
       const nextPage = Math.max(
@@ -214,7 +214,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
         Math.min(desktopDotCount - 1, Math.round(ratio)),
       );
       setActiveCarouselPage(nextPage);
-    }
+    };
 
     syncPage();
     element.addEventListener("scroll", syncPage, { passive: true });
@@ -312,18 +312,18 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
   function renderProducts(currentProducts: B2cProduct[], title: string) {
     return (
       <div>
-        <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-[21px] font-black leading-[1.04] text-[#073f35] sm:text-[28px] lg:text-[32px]">
+            <h1 className="text-[20px] font-extrabold leading-[1.06] text-[#073f35] sm:text-[25px] lg:text-[28px]">
               {title}
             </h1>
-            <p className="mt-2 max-w-[500px] text-[13px] leading-5 text-[#626469] lg:text-[15px]">
+            <p className="mt-1.5 max-w-[460px] text-[12px] leading-5 text-[#626469] lg:text-[13px]">
               Selecione os passaportes que deseja incluir na sua visita.
             </p>
           </div>
           <Link
             href="/agenda"
-            className="hidden min-h-10 items-center gap-2.5 rounded-full border border-[#d8dfd7] bg-white px-3.5 text-[13px] font-black text-[#073f35] shadow-[0_8px_18px_rgba(18,52,45,0.045)] hover:border-[#20aa1f] lg:inline-flex"
+            className="hidden min-h-9 items-center gap-2 rounded-full border border-[#d8dfd7] bg-white px-3 text-[12px] font-bold text-[#073f35] shadow-[0_8px_18px_rgba(18,52,45,0.045)] hover:border-[#20aa1f] lg:inline-flex"
           >
             <FlowIcon name="calendar" className="h-4 w-4" />
             Alterar data
@@ -335,18 +335,18 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
             type="button"
             aria-label="Ver item anterior"
             onClick={() => scrollProducts("prev")}
-            className="absolute -left-10 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-[#d8dfd7] bg-white text-[22px] font-black leading-none text-[#073f35] shadow-[0_10px_20px_rgba(18,52,45,0.07)] xl:grid"
+            className="absolute -left-9 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 place-items-center rounded-full border border-[#d8dfd7] bg-white text-[19px] font-black leading-none text-[#073f35] shadow-[0_8px_18px_rgba(18,52,45,0.06)] xl:grid"
           >
             ‹
           </button>
           <div
             ref={carouselRef}
-            className="grid gap-3 md:grid-cols-2 xl:flex xl:snap-x xl:snap-mandatory xl:overflow-x-auto xl:pb-4 xl:pr-8 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden"
+            className="grid gap-2.5 md:grid-cols-2 xl:flex xl:snap-x xl:snap-mandatory xl:overflow-x-auto xl:pb-3 xl:pr-6 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden"
           >
             {currentProducts.map((product) => (
               <div
                 key={product.id}
-                className="xl:w-[212px] xl:min-w-[212px] xl:snap-start"
+                className="xl:w-[185px] xl:min-w-[185px] xl:snap-start"
               >
                 <ProductCard
                   product={product}
@@ -360,7 +360,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
             type="button"
             aria-label="Ver próximo item"
             onClick={() => scrollProducts("next")}
-            className="absolute -right-2 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-[#d8dfd7] bg-white text-[22px] font-black leading-none text-[#073f35] shadow-[0_10px_20px_rgba(18,52,45,0.07)] xl:grid"
+            className="absolute -right-2 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 place-items-center rounded-full border border-[#d8dfd7] bg-white text-[19px] font-black leading-none text-[#073f35] shadow-[0_8px_18px_rgba(18,52,45,0.06)] xl:grid"
           >
             ›
           </button>
@@ -395,8 +395,10 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
             cart.lines.map((line) => (
               <div
                 key={line.productId}
-                className={`flex items-center justify-between gap-3 ${
-                  compact ? "" : "border-b border-[#dfe8dc] pb-4"
+                className={`gap-3 ${
+                  compact
+                    ? "grid grid-cols-[minmax(0,1fr)_auto] items-start"
+                    : "flex items-center justify-between border-b border-[#dfe8dc] pb-4"
                 }`}
               >
                 {!compact && line.imageSrc ? (
@@ -420,7 +422,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
                     </span>
                   ) : null}
                 </div>
-                <strong className="whitespace-nowrap text-[13px] font-black text-[#073f35] sm:text-[14px]">
+                <strong className="whitespace-nowrap text-right text-[13px] font-extrabold text-[#073f35] sm:text-[14px]">
                   {formatCurrency(line.totalValue)}
                 </strong>
               </div>
@@ -443,8 +445,14 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
 
   return (
     <IngressoShell active="buy" user={user} variant="checkout">
-      <div className="min-h-[calc(100vh-58px)] pb-32 text-[#073f35] lg:pb-8">
-        <div className="mx-auto w-[min(960px,calc(100%-18px))] py-3 sm:w-[min(960px,calc(100%-28px))] sm:py-4 lg:py-5">
+      <div className="min-h-[calc(100vh-58px)] pb-28 text-[#073f35] lg:pb-6">
+        <div
+          className={`mx-auto py-3 sm:py-4 ${
+            step === "review"
+              ? "w-[min(1080px,calc(100%-16px))] sm:w-[min(1080px,calc(100%-24px))]"
+              : "w-[min(860px,calc(100%-16px))] sm:w-[min(860px,calc(100%-24px))]"
+          }`}
+        >
           <FlowStepper
             current={
               step === "passports"
@@ -462,15 +470,15 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
           ) : null}
 
           {step !== "review" ? (
-            <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_250px] xl:items-start">
+            <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px] xl:items-start">
               <section>
-                <div className="mb-3 inline-flex items-center gap-3 rounded-[12px] border border-[#dce8d8] bg-white px-3 py-2.5 shadow-[0_10px_20px_rgba(18,52,45,0.035)] lg:hidden">
-                  <IconBubble name="calendar" className="h-9 w-9" />
+                <div className="mb-3 inline-flex items-center gap-2.5 rounded-[10px] border border-[#dce8d8] bg-white px-2.5 py-2 shadow-[0_8px_16px_rgba(18,52,45,0.035)] lg:hidden">
+                  <IconBubble name="calendar" className="h-8 w-8" />
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#087842]">
                       Data da visita
                     </p>
-                    <strong className="block text-[14px] font-black text-[#073f35]">
+                    <strong className="block text-[13px] font-black text-[#073f35]">
                       {dateLabel}
                     </strong>
                   </div>
@@ -480,19 +488,19 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
                   : renderProducts(addons, "Escolha seus adicionais")}
               </section>
 
-              <aside className="hidden h-fit rounded-[12px] border border-[#dfe8dc] bg-white p-4 text-left shadow-[0_12px_28px_rgba(18,52,45,0.055)] xl:block">
-                <h2 className="text-[19px] font-black text-[#073f35]">
+              <aside className="hidden h-fit rounded-[12px] border border-[#dfe8dc] bg-white p-3.5 text-left shadow-[0_10px_22px_rgba(18,52,45,0.05)] xl:block">
+                <h2 className="text-[17px] font-extrabold text-[#073f35]">
                   Carrinho
                 </h2>
-                <p className="mt-3 flex items-center gap-2.5 border-b border-[#dfe8dc] pb-3 text-[13px] text-[#626469]">
-                  <IconBubble name="bag" className="h-9 w-9" />
+                <p className="mt-2.5 flex items-center gap-2 border-b border-[#dfe8dc] pb-2.5 text-[12px] text-[#626469]">
+                  <IconBubble name="bag" className="h-8 w-8" />
                   {totalQuantity}{" "}
                   {totalQuantity === 1 ? "item selecionado" : "itens selecionados"}
                 </p>
                 {renderCartSummary()}
                 <PrimaryFlowButton
                   onClick={() => goTo(step === "passports" ? "addons" : "review")}
-                  className="mt-4 min-h-[42px] text-[13px] sm:text-[14px]"
+                  className="mt-3 min-h-[38px] text-[12px] sm:text-[13px]"
                 >
                   {step === "passports" ? "Ir para adicionais" : "Ir para pagamento"}
                 </PrimaryFlowButton>
@@ -503,7 +511,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
               </aside>
             </div>
           ) : (
-            <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-start">
+            <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_290px] xl:items-start">
               <section className="text-left">
                 <p className="mb-2 text-[10px] font-black uppercase tracking-[0.26em] text-[#087842]">
                   {dateLabel}
@@ -519,7 +527,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
                   <section className="rounded-[12px] border border-[#dfe8dc] bg-white p-4 shadow-[0_10px_24px_rgba(18,52,45,0.055)]">
                     <div className="flex items-start gap-3">
                       <IconBubble name="cart" className="h-10 w-10" />
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <h2 className="text-[18px] font-black text-[#073f35]">
                           Seu carrinho
                         </h2>
@@ -539,7 +547,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
                   <section className="rounded-[12px] border border-[#dfe8dc] bg-white p-4 shadow-[0_10px_24px_rgba(18,52,45,0.055)]">
                     <div className="flex items-start gap-3">
                       <IconBubble name="user" className="h-10 w-10" />
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <h2 className="text-[18px] font-black text-[#073f35]">
                           Seus dados
                         </h2>

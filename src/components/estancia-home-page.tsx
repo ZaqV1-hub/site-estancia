@@ -318,10 +318,10 @@ export function EstanciaHomePage({
                   Agenda do parque
                 </p>
                 <h3 className="mt-3 text-[28px] font-black text-[#17342d]">
-                  Nao ha eventos atuais
+                  Não há eventos atuais
                 </h3>
                 <p className="mx-auto mt-3 max-w-[560px] text-[15px] leading-7 text-[#4b6570]">
-                  Assim que uma nova programacao for publicada, ela vai aparecer aqui para o cliente.
+                  Assim que uma nova programação for publicada, ela vai aparecer aqui para o cliente.
                 </p>
               </div>
             ) : (

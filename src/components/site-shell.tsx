@@ -78,19 +78,19 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             : "bg-transparent"
         }`}
       >
-        <div className="mx-auto grid min-h-[108px] w-[min(1240px,calc(100%-40px))] grid-cols-[auto_1fr] items-center gap-5 py-2 lg:grid-cols-[260px_1fr_260px]">
+        <div className="mx-auto grid min-h-[76px] w-[min(1240px,calc(100%-28px))] grid-cols-[auto_1fr] items-center gap-3 py-2 sm:w-[min(1240px,calc(100%-40px))] lg:min-h-[108px] lg:grid-cols-[220px_1fr_220px] lg:gap-5">
           <EstanciaLogo
             href="/"
             compact
             light={!headerIsSolid}
-            className="h-[62px] max-w-[260px]"
+            className="h-[40px] max-w-[170px] sm:h-[48px] sm:max-w-[210px] lg:h-[62px] lg:max-w-[260px]"
           />
 
           <button
             type="button"
             aria-label="Abrir menu"
             onClick={() => setMenuOpen((current) => !current)}
-            className={`flex h-[50px] w-[50px] items-center justify-center justify-self-end rounded-[8px] border text-[22px] font-black lg:hidden ${
+            className={`flex h-[46px] w-[46px] items-center justify-center justify-self-end rounded-[8px] border text-[22px] font-black lg:hidden ${
               headerIsSolid
                 ? "border-[#d8e0d4] bg-white text-[#17342d] shadow-[0_12px_28px_rgba(22,47,41,0.1)]"
                 : "border-white/20 bg-white/10 text-white"

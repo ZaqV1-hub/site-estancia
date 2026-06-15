@@ -9,6 +9,11 @@ import type {
   PublicAgendaResponse,
 } from "@/lib/agenda-contracts";
 import {
+  FlowStepper,
+  IconBubble,
+  PrimaryFlowButton,
+} from "@/components/order-flow-ui";
+import {
   buildPublicAgendaPurchaseHref,
   buildPublicAgendaSelectionHref,
 } from "@/lib/public-agenda-selection";
@@ -18,8 +23,7 @@ const monthFormatter = new Intl.DateTimeFormat("pt-BR", {
   year: "numeric",
 });
 
-const fullDateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  weekday: "long",
+const selectedDateFormatter = new Intl.DateTimeFormat("pt-BR", {
   day: "numeric",
   month: "long",
   year: "numeric",
@@ -102,10 +106,8 @@ function buildCalendarDays(month: number, year: number) {
   return days;
 }
 
-function formatDateLabel(event: PublicAgendaEvent) {
-  const label = fullDateFormatter.format(new Date(`${event.date}T12:00:00`));
-
-  return label.charAt(0).toUpperCase() + label.slice(1);
+function formatSelectedDate(event: PublicAgendaEvent) {
+  return selectedDateFormatter.format(new Date(`${event.date}T12:00:00`));
 }
 
 function updateUrl(
@@ -193,7 +195,7 @@ export function PublicAgenda({
         if (!response.ok || !payload.ok) {
           throw new Error(
             payload.ok
-              ? "Nao foi possivel consultar a agenda."
+              ? "Não foi possível consultar a agenda."
               : payload.error.message,
           );
         }
@@ -214,7 +216,7 @@ export function PublicAgenda({
           error:
             error instanceof Error
               ? error.message
-              : "Nao foi possivel consultar a agenda.",
+              : "Não foi possível consultar a agenda.",
         });
       }
     }
@@ -262,73 +264,83 @@ export function PublicAgenda({
     });
   }
 
-  return (
-    <div className="min-h-[calc(100vh-108px)] text-[#17312d]">
-      <div className="mx-auto w-[min(980px,calc(100%-24px))] py-7 md:py-8">
-        <div className="grid gap-5 text-left md:grid-cols-[1fr_auto] md:items-end">
-          <div>
-            <p className="mb-4 text-[12px] font-bold uppercase tracking-[0.2em] text-[#1e5564]">
-              Agendamento
-            </p>
-            <h1 className="m-0 max-w-[390px] text-[clamp(1.55rem,2.7vw,2.3rem)] font-semibold leading-tight text-[#17342d]">
-              Escolha a data da visita
-            </h1>
-          </div>
+  const selectedDateLabel = selectedEvent ? formatSelectedDate(selectedEvent) : "";
 
-          <div className="grid grid-cols-4 overflow-hidden rounded-full border border-[rgba(35,73,63,0.12)] bg-white/86 p-1 text-center text-[9px] font-bold text-[#5e746e] shadow-[0_16px_36px_rgba(25,54,48,0.07)] md:min-w-[390px] md:text-[10px]">
-            <span className="rounded-full bg-[#17342d] px-2 py-2.5 text-white">
-              Data
-            </span>
-            <span className="px-2 py-2.5">Passaportes</span>
-            <span className="px-2 py-2.5">Adicionais</span>
-            <span className="px-2 py-2.5">Pagamento</span>
-          </div>
-        </div>
+  return (
+    <div className="min-h-[calc(100vh-78px)] pb-36 text-[#073f35] lg:pb-12">
+      <div className="mx-auto w-[min(1450px,calc(100%-32px))] py-8 lg:py-9">
+        <FlowStepper current="date" />
 
         {state.status === "error" ? (
-          <div className="mt-8 rounded-[8px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-left text-sm font-semibold text-[#9f3f36]">
+          <div className="mt-8 rounded-[18px] border border-[#efc3c3] bg-[#fff3f1] px-4 py-3 text-left text-sm font-semibold text-[#9f3f36]">
             {state.error}
           </div>
         ) : null}
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,620px)_240px] lg:items-start">
-          <section className="rounded-[8px] border border-[rgba(35,73,63,0.08)] bg-white/92 p-3 shadow-[0_18px_42px_rgba(19,48,41,0.08)]">
-            <div className="grid grid-cols-[36px_1fr_36px] items-center gap-2">
-              <button
-                type="button"
-                aria-label="Mes anterior"
-                disabled={!previousPeriod}
-                onClick={() => previousPeriod && changeMonth(previousPeriod)}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(35,73,63,0.12)] text-[18px] font-black text-[#23493f] hover:border-[#23493f] disabled:cursor-not-allowed disabled:opacity-35"
-              >
-                {"<"}
-              </button>
-              <h2 className="text-center text-[19px] font-semibold text-[#17342d] md:text-[21px]">
-                {getMonthLabel(period.month, period.year)}
-              </h2>
-              <button
-                type="button"
-                aria-label="Proximo mes"
-                disabled={!nextPeriod}
-                onClick={() => nextPeriod && changeMonth(nextPeriod)}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(35,73,63,0.12)] text-[18px] font-black text-[#23493f] hover:border-[#23493f] disabled:cursor-not-allowed disabled:opacity-35"
-              >
-                {">"}
-              </button>
-            </div>
+        <div className="mt-9 grid gap-7 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
+          <section className="rounded-[18px] border border-[#dfe8dc] bg-white/82 p-6 text-left shadow-[0_22px_55px_rgba(18,52,45,0.08)] lg:p-8">
+            <p className="text-[13px] font-black uppercase tracking-[0.36em] text-[#087842]">
+              {getMonthLabel(period.month, period.year)}
+            </p>
+            <h1 className="mt-5 max-w-[760px] text-[38px] font-black leading-[1.04] text-[#073f35] sm:text-[52px]">
+              Escolha a data da visita
+            </h1>
+            <p className="mt-4 max-w-[580px] text-[20px] font-medium leading-[1.38] text-[#626469] sm:text-[24px]">
+              Selecione o dia em que você deseja visitar a Estância e Parque
+              Ecológico das Águas.
+            </p>
 
-            <div className="mt-4 grid grid-cols-7 gap-1.5 text-center">
+            {selectedEvent ? (
+              <div className="mt-8 flex max-w-[560px] items-center gap-5 rounded-[18px] border border-[#dce8d8] bg-white p-5 shadow-[0_14px_28px_rgba(18,52,45,0.05)]">
+                <IconBubble name="calendar" />
+                <div>
+                  <p className="text-[13px] font-black uppercase tracking-[0.28em] text-[#087842]">
+                    Dia da visita
+                  </p>
+                  <strong className="mt-1 block text-[26px] font-black text-[#073f35]">
+                    {selectedDateLabel}
+                  </strong>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-6 rounded-[18px] border border-[#dfe8dc] bg-white p-4 shadow-[0_18px_42px_rgba(18,52,45,0.06)] sm:p-7">
+              <div className="grid grid-cols-[48px_1fr_48px] items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Mês anterior"
+                  disabled={!previousPeriod}
+                  onClick={() => previousPeriod && changeMonth(previousPeriod)}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-[#d8dfd7] bg-white text-[30px] font-black leading-none text-[#073f35] hover:border-[#073f35] disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  ‹
+                </button>
+                <h2 className="text-center text-[24px] font-black text-[#073f35] md:text-[31px]">
+                  {getMonthLabel(period.month, period.year)}
+                </h2>
+                <button
+                  type="button"
+                  aria-label="Próximo mês"
+                  disabled={!nextPeriod}
+                  onClick={() => nextPeriod && changeMonth(nextPeriod)}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-[#d8dfd7] bg-white text-[30px] font-black leading-none text-[#073f35] hover:border-[#073f35] disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  ›
+                </button>
+              </div>
+
+            <div className="mt-7 grid grid-cols-7 gap-2 text-center sm:gap-3">
               {weekdayLabels.map((weekday) => (
                 <div
                   key={weekday.key}
-                  className="rounded-[6px] bg-[#f0f3ea] py-1.5 text-[11px] font-bold text-[#23493f] md:text-[12px]"
+                  className="py-1.5 text-[14px] font-black text-[#073f35]"
                 >
                   {weekday.label}
                 </div>
               ))}
             </div>
 
-            <div className="mt-2 grid grid-cols-7 gap-1.5 text-center">
+            <div className="mt-3 grid grid-cols-7 gap-2 text-center sm:gap-3">
               {days.map((day, index) => {
                 const event = day.inMonth ? eventsByDay.get(day.day) : null;
                 const isSelected = event?.id === selectedEventId;
@@ -341,10 +353,10 @@ export function PublicAgenda({
                   return (
                     <span
                       key={`${period.year}-${period.month}-${index}-${day.key}`}
-                      className={`flex aspect-square min-h-[34px] items-center justify-center rounded-[8px] border text-[12px] font-bold md:min-h-[42px] md:text-[14px] ${
+                      className={`flex aspect-square min-h-[42px] items-center justify-center rounded-[12px] border text-[16px] font-black sm:min-h-[70px] sm:text-[22px] ${
                         day.inMonth
-                          ? "border-[#e4e9df] bg-[#f3f4ef] text-[#9aa39a]"
-                          : "border-[#f2f4f0] bg-white text-[#c4cac2]"
+                          ? "border-transparent bg-[#f4f2ed] text-[#9aa39a]"
+                          : "border-[#ece9e2] bg-white text-[#b9b8b4]"
                       } ${isToday ? "ring-2 ring-[#b6d9ad]" : ""}`}
                     >
                       {day.day}
@@ -361,10 +373,10 @@ export function PublicAgenda({
                       event.id,
                     )}
                     onClick={() => setSelectedEventId(event.id)}
-                    className={`flex aspect-square min-h-[34px] items-center justify-center rounded-[8px] text-[12px] font-black transition md:min-h-[42px] md:text-[14px] ${
+                    className={`flex aspect-square min-h-[42px] items-center justify-center rounded-[12px] border text-[16px] font-black transition sm:min-h-[70px] sm:text-[22px] ${
                       isSelected
-                        ? "bg-[#17342d] text-white shadow-[0_10px_24px_rgba(19,52,45,0.22)]"
-                        : "bg-[#e8f0df] text-[#23493f] hover:bg-[#17342d] hover:text-white"
+                        ? "border-[#18ac26] bg-[#073f35] text-white shadow-[0_12px_28px_rgba(7,63,53,0.25)]"
+                        : "border-transparent bg-[#f4f2ed] text-[#073f35] hover:border-[#18ac26]"
                     } ${isToday ? "ring-2 ring-[#7fcf72]" : ""}`}
                   >
                     {day.day}
@@ -372,30 +384,16 @@ export function PublicAgenda({
                 );
               })}
             </div>
-
-            <div className="mt-4 flex flex-wrap gap-3 text-[12px] font-bold text-[#5e746e]">
-              <span className="inline-flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-[#17342d]" />
-                {"Dispon\u00edvel"}
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-[#f1f3ef]" />
-                {"Indispon\u00edvel"}
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-[#7fcf72]" />
-                Hoje
-              </span>
             </div>
           </section>
 
-          <aside className="h-fit rounded-[8px] border border-[rgba(35,73,63,0.08)] bg-white/92 p-4 text-left shadow-[0_18px_42px_rgba(19,48,41,0.08)]">
+          <aside className="hidden h-fit rounded-[18px] border border-[#dfe8dc] bg-white p-8 text-left shadow-[0_22px_55px_rgba(18,52,45,0.08)] lg:block">
             {state.status === "loading" ? (
               <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#1e5564]">
+                <p className="text-[13px] font-black uppercase tracking-[0.28em] text-[#087842]">
                   Consultando
                 </p>
-                <h2 className="mt-3 text-[20px] font-semibold leading-tight text-[#17342d]">
+                <h2 className="mt-3 text-[24px] font-black leading-tight text-[#073f35]">
                   Carregando agenda
                 </h2>
               </div>
@@ -403,17 +401,18 @@ export function PublicAgenda({
 
             {state.status !== "loading" && !selectedEvent ? (
               <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#1e5564]">
+                <p className="text-[13px] font-black uppercase tracking-[0.28em] text-[#087842]">
                   Dia da visita
                 </p>
-                <h2 className="mt-3 text-[20px] font-semibold leading-tight text-[#17342d]">
+                <h2 className="mt-3 text-[24px] font-black leading-tight text-[#073f35]">
                   {sortedEvents.length > 0
-                    ? "Escolha uma data disponivel"
-                    : "Nao ha eventos atuais"}
+                    ? "Escolha uma data disponível"
+                    : "Não há eventos atuais"}
                 </h2>
                 {sortedEvents.length === 0 ? (
-                  <p className="mt-3 text-sm leading-6 text-[#5e746e]">
-                    No momento nao existem datas abertas para compra ou agendamento.
+                  <p className="mt-3 text-[15px] leading-7 text-[#626469]">
+                    No momento não existem datas abertas para compra ou
+                    agendamento.
                   </p>
                 ) : null}
               </div>
@@ -421,29 +420,53 @@ export function PublicAgenda({
 
             {selectedEvent ? (
               <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#1e5564]">
-                  Data escolhida
-                </p>
-                <div className="mt-4 rounded-[8px] bg-[#17342d] p-4 text-center text-white">
-                  <strong className="block text-[54px] font-semibold leading-none">
-                    {selectedEvent.day}
-                  </strong>
-                  <span className="mt-2 block text-[14px] font-bold uppercase leading-6">
-                    {formatDateLabel(selectedEvent)}
-                  </span>
+                <div className="flex items-center gap-5">
+                  <IconBubble name="calendar" />
+                  <div>
+                    <p className="text-[16px] font-bold text-[#626469]">
+                      Data selecionada
+                    </p>
+                    <strong className="mt-1 block text-[25px] font-black text-[#073f35]">
+                      {selectedDateLabel}
+                    </strong>
+                  </div>
                 </div>
 
-                <Link
+                <PrimaryFlowButton
                   href={buildPublicAgendaPurchaseHref(selectedEvent)}
-                  className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,#1e5564_0%,#23493f_100%)] px-5 text-[15px] font-bold text-white shadow-[0_12px_24px_rgba(28,80,84,0.16)] hover:-translate-y-0.5"
+                  className="mt-7"
                 >
-                  Escolher passaportes
-                </Link>
+                  Continuar para passaportes
+                </PrimaryFlowButton>
+                <p className="mt-7 flex gap-3 text-[16px] leading-7 text-[#626469]">
+                  <span className="text-[#20aa1f]">↱</span>
+                  Após escolher a data, você seguirá para a seleção de
+                  passaportes.
+                </p>
               </div>
             ) : null}
           </aside>
         </div>
       </div>
+
+      {selectedEvent ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 rounded-t-[28px] border border-[#e2e8df] bg-white/96 px-6 pb-[calc(env(safe-area-inset-bottom)+18px)] pt-6 text-left shadow-[0_-18px_46px_rgba(18,52,45,0.13)] backdrop-blur lg:hidden">
+          <div className="mb-5 flex items-center gap-4">
+            <IconBubble name="calendar" className="h-14 w-14" />
+            <div>
+              <p className="text-[17px] font-bold text-[#626469]">
+                Data selecionada
+              </p>
+              <strong className="block text-[22px] font-black text-[#073f35]">
+                {selectedDateLabel}
+              </strong>
+            </div>
+          </div>
+          <PrimaryFlowButton href={buildPublicAgendaPurchaseHref(selectedEvent)}>
+            Continuar para passaportes
+          </PrimaryFlowButton>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Script from "next/script";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EstanciaLogo } from "@/components/estancia-logo";
 import { IngressoShell } from "@/components/ingresso-shell";
+import { FlowStepper } from "@/components/order-flow-ui";
 import type { AuthUser } from "@/lib/auth-contracts";
 import type { CheckoutMode } from "@/lib/checkout-mode";
 import type { UserVoucherPurchase } from "@/lib/voucher-contracts";
@@ -22,7 +23,7 @@ type CustomerCheckoutPageProps = {
   threeDsEnabled: boolean;
 };
 
-type MockPaymentType = "CreditCard" | "DebitCard" | "Pix";
+type MockPaymentType = "CreditCard" | "Pix";
 
 const mockPaymentOptions: Array<{
   value: MockPaymentType;
@@ -31,10 +32,6 @@ const mockPaymentOptions: Array<{
   {
     value: "CreditCard",
     label: "Cartão de Crédito",
-  },
-  {
-    value: "DebitCard",
-    label: "Cartão de Débito",
   },
   {
     value: "Pix",
@@ -246,9 +243,7 @@ export function CustomerCheckoutPage({
       container: "#cieloCheckoutInline",
       continueShoppingUrl: "/meus-ingressos",
       logoUrl: "/brand/estancia-logo-dark.png",
-      paymentMethods: widgetThreeDsEnabled
-        ? ["CreditCard", "DebitCard", "Pix"]
-        : ["CreditCard", "Pix"],
+      paymentMethods: ["CreditCard", "Pix"],
       maxInstallments: 12,
       minInstallmentValue: 1,
     };
@@ -332,8 +327,11 @@ export function CustomerCheckoutPage({
   }
 
   return (
-    <IngressoShell active="buy" user={user}>
-      <div className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-8 md:px-8">
+    <IngressoShell active="buy" user={user} variant="checkout">
+      <div className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-6 md:px-8 md:pt-8">
+        <div className="mb-8">
+          <FlowStepper current="payment" />
+        </div>
         {mode === "widget" ? (
           <>
             <Script
@@ -366,10 +364,10 @@ export function CustomerCheckoutPage({
             </div>
           </section>
         ) : (
-          <section className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_340px]">
-            <section className="rounded-[28px] border border-[#e4e8e2] bg-white p-6 shadow-[0_22px_55px_rgba(15,23,42,0.08)] md:p-8">
-              <div className="flex flex-col gap-5 border-b border-[#d9dfd4] pb-7 md:flex-row md:items-center">
-                <div className="w-[120px] shrink-0">
+          <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+            <section className="rounded-[28px] border border-[#e4e8e2] bg-white p-5 shadow-[0_22px_55px_rgba(15,23,42,0.08)] md:p-8">
+              <div className="flex flex-col gap-4 border-b border-[#d9dfd4] pb-6 md:flex-row md:items-center">
+                <div className="w-[96px] shrink-0 md:w-[120px]">
                   <EstanciaLogo href={null} className="h-auto w-full" />
                 </div>
                 <div>
@@ -385,13 +383,13 @@ export function CustomerCheckoutPage({
 
               {mode === "mock" ? (
                 <>
-                  <div className="mt-8 text-center">
+                  <div className="mt-6 text-center">
                     <p className="text-[18px] font-semibold text-[#111827]">
                       Escolha a forma de pagamento:
                     </p>
                   </div>
 
-                  <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
                     {mockPaymentOptions.map((option) => {
                       const active = mockPaymentType === option.value;
 
@@ -400,14 +398,14 @@ export function CustomerCheckoutPage({
                           key={option.value}
                           type="button"
                           onClick={() => setMockPaymentType(option.value)}
-                          className={`flex min-h-[90px] items-center gap-4 rounded-full border px-6 text-left transition ${
+                          className={`flex min-h-[90px] items-center gap-4 rounded-[28px] border px-6 text-left transition ${
                             active
-                              ? "border-[#6f7dff] bg-[#eef1ff] shadow-[0_18px_36px_rgba(109,125,255,0.2)]"
+                              ? "border-[#2b8c46] bg-[#eef8f0] shadow-[0_18px_36px_rgba(43,140,70,0.16)]"
                               : "border-[#d7d9e5] bg-[#f7f7fb] hover:border-[#9ca3c9]"
                           }`}
                         >
                           <PaymentIcon type={option.value} />
-                          <span className="text-[16px] font-black uppercase text-[#111827]">
+                          <span className="text-[16px] font-black text-[#111827]">
                             {option.label}
                           </span>
                         </button>
@@ -452,7 +450,7 @@ export function CustomerCheckoutPage({
               )}
             </section>
 
-            <aside className="h-fit rounded-[28px] bg-[#f1f1f6] p-6 shadow-[0_22px_55px_rgba(15,23,42,0.08)]">
+            <aside className="h-fit rounded-[28px] bg-[#f1f1f6] p-5 shadow-[0_22px_55px_rgba(15,23,42,0.08)] md:p-6">
               <h2 className="text-[20px] font-bold text-[#111827]">
                 Resumo do pedido
               </h2>
@@ -494,7 +492,7 @@ export function CustomerCheckoutPage({
                   type="button"
                   onClick={() => void handleMockPayment()}
                   disabled={mockSubmitting}
-                  className="mt-7 flex min-h-[58px] w-full items-center justify-center rounded-full bg-[#5464ff] px-6 text-[16px] font-black text-white shadow-[0_18px_34px_rgba(84,100,255,0.28)] transition hover:bg-[#4150df] disabled:cursor-wait disabled:bg-[#9aa2f2]"
+                  className="mt-7 flex min-h-[58px] w-full items-center justify-center rounded-full bg-[#2b8c46] px-6 text-[16px] font-black text-white shadow-[0_18px_34px_rgba(43,140,70,0.28)] transition hover:bg-[#1f6b36] disabled:cursor-wait disabled:bg-[#9ac8a4]"
                 >
                   {mockSubmitting ? "Processando..." : "Continuar pagamento"}
                 </button>

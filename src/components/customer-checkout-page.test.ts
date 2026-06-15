@@ -62,7 +62,7 @@ describe("CustomerCheckoutPage", () => {
     expect(html).toContain("Continuar pagamento");
     expect(html).toContain("Pix");
     expect(html).toContain("Cartão de Crédito");
-    expect(html).toContain("Cartão de Débito");
+    expect(html).not.toContain("Cartão de Débito");
   });
 
   it("still shows unavailable state when checkout is blocked entirely", () => {

@@ -167,6 +167,29 @@ function normalizeManagedHomeImage(item: ManagedHomeImage, fallback: ManagedHome
   };
 }
 
+function normalizeManagedAttraction(
+  item: ManagedAttraction,
+  fallback: ManagedAttraction,
+) {
+  return {
+    ...item,
+    title: item.title?.trim() || fallback.title,
+    description: item.description?.trim() || fallback.description,
+    imageSrc: item.imageSrc?.trim() || fallback.imageSrc,
+  };
+}
+
+function normalizeManagedEvent(item: ManagedEvent, fallback: ManagedEvent) {
+  return {
+    ...item,
+    title: item.title?.trim() || fallback.title,
+    description: item.description?.trim() || fallback.description,
+    imageSrc: item.imageSrc?.trim() || fallback.imageSrc,
+    href: item.href?.trim() || fallback.href,
+    buttonLabel: item.buttonLabel?.trim() || fallback.buttonLabel,
+  };
+}
+
 function readManagedList<T extends { sortOrder?: number; title?: string }>(
   value: T[] | undefined,
   fallback: T[],
@@ -187,11 +210,27 @@ export function readEstanciaContent() {
           ),
         )
       : undefined;
+    const parsedAttractions = Array.isArray(parsed.attractions)
+      ? parsed.attractions.map((item, index) =>
+          normalizeManagedAttraction(
+            item,
+            defaultContent.attractions[index] ?? defaultContent.attractions[0],
+          ),
+        )
+      : undefined;
+    const parsedEvents = Array.isArray(parsed.events)
+      ? parsed.events.map((item, index) =>
+          normalizeManagedEvent(
+            item,
+            defaultContent.events[index] ?? defaultContent.events[0],
+          ),
+        )
+      : undefined;
 
     return {
       homeImages: readManagedList(parsedHomeImages, defaultContent.homeImages),
-      attractions: readManagedList(parsed.attractions, defaultContent.attractions),
-      events: readManagedList(parsed.events, defaultContent.events),
+      attractions: readManagedList(parsedAttractions, defaultContent.attractions),
+      events: readManagedList(parsedEvents, defaultContent.events),
       products: readManagedList(parsed.products, defaultContent.products),
     } satisfies EstanciaContentData;
   } catch {
@@ -205,15 +244,18 @@ export function writeEstanciaContent(data: EstanciaContentData) {
 }
 
 export function getActiveHomeImages() {
-  return readEstanciaContent().homeImages.filter((item) => item.active);
+  const items = readEstanciaContent().homeImages.filter((item) => item.active);
+  return items.length > 0 ? items : defaultContent.homeImages.filter((item) => item.active);
 }
 
 export function getActiveAttractions() {
-  return readEstanciaContent().attractions.filter((item) => item.active);
+  const items = readEstanciaContent().attractions.filter((item) => item.active);
+  return items.length > 0 ? items : defaultContent.attractions.filter((item) => item.active);
 }
 
 export function getActiveEvents() {
-  return readEstanciaContent().events.filter((item) => item.active);
+  const items = readEstanciaContent().events.filter((item) => item.active);
+  return items.length > 0 ? items : defaultContent.events.filter((item) => item.active);
 }
 
 export function getManagedB2cProducts(type?: B2cProductType) {

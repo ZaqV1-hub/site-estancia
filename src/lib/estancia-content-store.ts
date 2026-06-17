@@ -55,6 +55,12 @@ function resolveSiteStorageRoot() {
   ].filter((value): value is string => Boolean(value));
 
   for (const candidate of candidates) {
+    if (existsSync(join(candidate, ".env.local")) || existsSync(join(candidate, "src"))) {
+      return candidate;
+    }
+  }
+
+  for (const candidate of candidates) {
     if (existsSync(join(candidate, "public"))) {
       return candidate;
     }

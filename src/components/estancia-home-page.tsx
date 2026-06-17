@@ -81,6 +81,41 @@ function ChevronIcon({ direction }: { direction: "left" | "right" }) {
     </svg>
   );
 }
+
+function HeroBannerImage({
+  image,
+  active,
+  preload,
+}: {
+  image: ManagedHomeImage;
+  active: boolean;
+  preload: boolean;
+}) {
+  const mobileSrc = image.mobileSrc?.trim() || image.desktopSrc;
+
+  return (
+    <div
+      className={`absolute inset-0 transition-opacity duration-500 ${
+        active ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <picture className="block h-full w-full">
+        {mobileSrc !== image.desktopSrc ? (
+          <source media="(max-width: 767px)" srcSet={mobileSrc} />
+        ) : null}
+        <img
+          src={image.desktopSrc}
+          alt={image.alt}
+          className="block h-full w-full object-cover"
+          loading={preload ? "eager" : "lazy"}
+          fetchPriority={preload ? "high" : "auto"}
+          draggable={false}
+        />
+      </picture>
+    </div>
+  );
+}
+
 export function EstanciaHomePage({
   heroImages,
   attractions,
@@ -167,16 +202,11 @@ export function EstanciaHomePage({
       >
         <div className="absolute inset-0">
           {heroImages.map((image, index) => (
-            <Image
+            <HeroBannerImage
               key={image.id}
-              src={image.desktopSrc}
-              alt={image.alt}
-              fill
-              priority={index === 0}
-              className={`object-cover transition-opacity duration-500 ${
-                index === heroIndex ? "opacity-100" : "opacity-0"
-              }`}
-              sizes="100vw"
+              image={image}
+              active={index === heroIndex}
+              preload={index === 0}
             />
           ))}
         </div>

@@ -195,7 +195,7 @@ Variaveis aceitas para conectar no Postgres do `/ingresso`:
 - `INGRESSO_CIELO_3DS_ENVIRONMENT`, padrao `PRD`
 - `INGRESSO_CIELO_3DS_DEBUG`, padrao `false`
 - `INGRESSO_CIELO_3DS_TIMEOUT_MS`, padrao `30000`
-- `INGRESSO_TICKET_API_BASE_URL`, `INGRESSO_TICKET_API_USERNAME` e `INGRESSO_TICKET_API_PASSWORD`, para emissao/envio pos-confirmacao via microservico de tickets
+- `INGRESSO_TICKET_API_BASE_URL`, `INGRESSO_TICKET_API_USERNAME` e `INGRESSO_TICKET_API_PASSWORD`, para emissao/envio pos-confirmacao via microservico de tickets. A base padrao atual e `https://estanciaticketapi.azurewebsites.net`
 - `INGRESSO_TICKET_API_TIMEOUT_MS`, padrao `25000`
 - `INGRESSO_TICKET_API_TESTING=true`, quando o microservico exigir o header de homologacao
 

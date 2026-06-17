@@ -79,10 +79,11 @@ npm run build
 node .next/standalone/server.js
 ```
 
-Depois do build, copie tambem os assets publicos para o runtime final:
+Depois do build, o runtime `standalone` precisa receber tambem os assets publicos e
+os assets compilados do Next:
 
-- `apps/web/public`
-- `apps/web/.next/static`
+- `public` para `.next/standalone/public`
+- `.next/static` para `.next/standalone/.next/static`
 
 No deploy em Windows com IIS, o recomendado e manter o Next.js rodando em um
 processo Node dedicado e usar o IIS apenas como reverse proxy para a porta local

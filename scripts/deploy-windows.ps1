@@ -39,7 +39,20 @@ if ($LASTEXITCODE -ne 0) {
   throw "npm run build falhou."
 }
 
+Write-Host "Sincronizando assets publicos para o runtime standalone..."
+robocopy public .next\standalone\public /E /NFL /NDL /NJH /NJS /NP | Out-Null
+if ($LASTEXITCODE -ge 8) {
+  throw "Falha ao copiar a pasta public para .next\\standalone\\public."
+}
+
+Write-Host "Sincronizando assets compilados do Next para o runtime standalone..."
+robocopy .next\static .next\standalone\.next\static /E /NFL /NDL /NJH /NJS /NP | Out-Null
+if ($LASTEXITCODE -ge 8) {
+  throw "Falha ao copiar .next\\static para .next\\standalone\\.next\\static."
+}
+
 Write-Host ""
 Write-Host "Deploy preparado com sucesso."
 Write-Host "Para subir o app novamente:"
-Write-Host "  `$env:PORT='$Port'; node .next\\standalone\\server.js"
+Write-Host "  Get-Content .env.local | ForEach-Object { if ($_ -match '^[^#=]+=' ) { `$name, `$value = `$_ -split '=', 2; [Environment]::SetEnvironmentVariable(`$name, `$value, 'Process') } }"
+Write-Host "  `$env:HOSTNAME='127.0.0.1'; `$env:PORT='$Port'; node .next\\standalone\\server.js"

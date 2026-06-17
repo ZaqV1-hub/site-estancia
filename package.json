@@ -13,7 +13,7 @@
     "db:down": "docker compose down",
     "db:reset": "docker compose down -v",
     "db:schema:pull": "powershell -ExecutionPolicy Bypass -File ./scripts/bootstrap-local-db.ps1",
-    "deploy:windows": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-windows.ps1",
+    "deploy:windows": "powershell.exe -ExecutionPolicy Bypass -File ./scripts/deploy-windows.ps1",
     "duplication": "jscpd --config .jscpd.json",
     "duplication:strict": "jscpd --config .jscpd.strict.json",
     "audit:readiness": "node ../../scripts/audit-readiness.mjs"

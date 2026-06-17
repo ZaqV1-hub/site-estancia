@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { extname, join } from "path";
+import { dirname, extname, join, resolve } from "path";
 import {
   DEFAULT_B2C_PRODUCTS,
   type B2cProduct,
@@ -43,9 +43,30 @@ export type EstanciaContentData = {
   products: B2cProduct[];
 };
 
-const dataDir = join(process.cwd(), ".data");
+function resolveSiteStorageRoot() {
+  const configuredRoot = process.env.ESTANCIA_SITE_STORAGE_ROOT?.trim();
+  const runtimeEntry = process.argv[1] ? dirname(resolve(process.argv[1])) : null;
+  const candidates = [
+    configuredRoot,
+    process.cwd(),
+    runtimeEntry,
+    runtimeEntry ? dirname(runtimeEntry) : null,
+    runtimeEntry ? dirname(dirname(runtimeEntry)) : null,
+  ].filter((value): value is string => Boolean(value));
+
+  for (const candidate of candidates) {
+    if (existsSync(join(candidate, "public"))) {
+      return candidate;
+    }
+  }
+
+  return process.cwd();
+}
+
+const storageRoot = resolveSiteStorageRoot();
+const dataDir = join(storageRoot, ".data");
 const dataFile = join(dataDir, "estancia-content.json");
-export const siteUploadDir = join(process.cwd(), "public", "uploads", "site");
+export const siteUploadDir = join(storageRoot, "public", "uploads", "site");
 
 const defaultContent: EstanciaContentData = {
   homeImages: [

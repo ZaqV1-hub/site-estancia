@@ -57,6 +57,11 @@ export async function POST(request: Request) {
     const current = data.homeImages.find((item) => item.id === id);
     const desktopUpload = await saveUploadedSiteImage(formData.get("desktopImage"));
     const mobileUpload = await saveUploadedSiteImage(formData.get("mobileImage"));
+    const fallbackImage = "/hero/current/banner-site-oficial-1.jpg";
+    const desktopSrc =
+      desktopUpload ?? current?.desktopSrc ?? mobileUpload ?? current?.mobileSrc ?? fallbackImage;
+    const mobileSrc =
+      mobileUpload ?? current?.mobileSrc ?? desktopUpload ?? current?.desktopSrc ?? fallbackImage;
 
     writeEstanciaContent({
       ...data,
@@ -64,8 +69,8 @@ export async function POST(request: Request) {
         ...data.homeImages.filter((item) => item.id !== id),
         {
           id,
-          desktopSrc: desktopUpload ?? current?.desktopSrc ?? "/hero/current/banner-site-oficial-1.jpg",
-          mobileSrc: mobileUpload ?? current?.mobileSrc ?? desktopUpload ?? "/hero/current/banner-site-oficial-1.jpg",
+          desktopSrc,
+          mobileSrc,
           alt: asText(formData.get("alt")) || current?.alt || "Imagem da home",
           active: asBool(formData.get("active")),
           sortOrder: Number(formData.get("sortOrder")) || current?.sortOrder || data.homeImages.length + 1,

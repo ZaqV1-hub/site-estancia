@@ -34,6 +34,10 @@ function itemTitle(item: EditableItem) {
   return item.item ? "Editar evento" : "Adicionar evento";
 }
 
+function shouldUseDirectImage(src: string) {
+  return src.startsWith("/uploads/site/");
+}
+
 function ImagePicker({ name, label }: { name: string; label: string }) {
   return (
     <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
@@ -46,6 +50,7 @@ function ImagePicker({ name, label }: { name: string; label: string }) {
       />
       <span className="text-xs font-medium text-[#6a806e]">
         Clique em escolher arquivo para enviar a imagem.
+        {name === "mobileImage" ? " Se nao enviar a versao mobile, a imagem desktop sera usada no celular." : ""}
       </span>
     </label>
   );
@@ -149,7 +154,14 @@ export function PainelSiteManager({ content }: { content: EstanciaContentData })
           {content.homeImages.map((item) => (
             <article key={item.id} className="min-w-[320px] rounded-[8px] border border-[#dbe7d7] bg-white p-4">
               <div className="relative h-36 overflow-hidden rounded-[8px] bg-[#eef3e8]">
-                <Image src={item.desktopSrc} alt={item.alt} fill className="object-cover" sizes="320px" />
+                <Image
+                  src={item.desktopSrc}
+                  alt={item.alt}
+                  fill
+                  className="object-cover"
+                  sizes="320px"
+                  unoptimized={shouldUseDirectImage(item.desktopSrc)}
+                />
               </div>
               <h4 className="mt-3 text-lg font-black text-[#17351f]">{item.alt}</h4>
               <p className="text-sm text-[#5f7564]">{item.active ? "Publicado" : "Oculto"}</p>
@@ -314,7 +326,14 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
         {items.map((item) => (
           <div key={item.id} className="rounded-[8px] border border-[#dbe7d7] bg-white p-4">
             <div className="relative h-32 overflow-hidden rounded-[8px] bg-[#eef3e8]">
-              <Image src={item.imageSrc} alt={item.title} fill className="object-cover" sizes="420px" />
+              <Image
+                src={item.imageSrc}
+                alt={item.title}
+                fill
+                className="object-cover"
+                sizes="420px"
+                unoptimized={shouldUseDirectImage(item.imageSrc)}
+              />
             </div>
             <h3 className="mt-3 text-lg font-black text-[#17351f]">{item.title}</h3>
             <p className="mt-1 line-clamp-3 text-sm leading-6 text-[#5f7564]">{item.description}</p>

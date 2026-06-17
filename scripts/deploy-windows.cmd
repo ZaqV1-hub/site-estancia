@@ -2,6 +2,11 @@
 setlocal
 
 set "PORT=%~1"
+if "%PORT%"=="" (
+  for /f "usebackq tokens=1,* delims==" %%A in (".env.local") do (
+    if /I "%%A"=="PORT" set "PORT=%%B"
+  )
+)
 if "%PORT%"=="" set "PORT=3001"
 
 cd /d "%~dp0.."
@@ -11,6 +16,11 @@ echo Porta do app: %PORT%
 
 for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":%PORT% .*LISTENING"') do (
   echo Parando processo PID %%P que esta usando a porta %PORT%
+  taskkill /PID %%P /F >nul 2>nul
+)
+
+for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":3002 .*LISTENING"') do (
+  echo Parando processo PID %%P que esta usando a porta 3002
   taskkill /PID %%P /F >nul 2>nul
 )
 

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState, type PointerEvent } from "react";
 import type {
@@ -99,14 +98,14 @@ function HeroBannerImage({
         active ? "opacity-100" : "opacity-0"
       }`}
     >
-      <picture className="block h-full w-full">
+      <picture className="block h-full w-full bg-[#17342d]">
         {mobileSrc !== image.desktopSrc ? (
           <source media="(max-width: 767px)" srcSet={mobileSrc} />
         ) : null}
         <img
           src={image.desktopSrc}
           alt={image.alt}
-          className="block h-full w-full object-cover"
+          className="block h-full w-full object-contain"
           loading={preload ? "eager" : "lazy"}
           fetchPriority={preload ? "high" : "auto"}
           draggable={false}
@@ -310,14 +309,14 @@ export function EstanciaHomePage({
                     key={attraction.title}
                     className="grid min-w-[86vw] snap-center overflow-hidden rounded-[8px] bg-[#efeded] md:min-w-[920px] md:grid-cols-[0.98fr_1fr] lg:min-w-[1120px]"
                   >
-                    <div className="order-2 min-h-[220px] md:order-none">
-                      <div className="relative h-full min-h-[220px] md:min-h-[340px]">
-                        <Image
+                    <div className="order-2 md:order-none">
+                      <div className="bg-[#dfe8d8]">
+                        <img
                           src={attraction.imageSrc}
                           alt={attraction.title}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 86vw, 560px"
+                          className="block h-[220px] w-full object-cover md:h-[340px]"
+                          loading="lazy"
+                          draggable={false}
                         />
                       </div>
                     </div>
@@ -399,15 +398,15 @@ export function EstanciaHomePage({
                   >
                     <Link
                       href={event.href}
-                      className="relative block min-h-[260px] bg-white md:min-h-[380px]"
+                      className="block overflow-hidden bg-white"
                       aria-label={event.title}
                     >
-                      <Image
+                      <img
                         src={event.imageSrc}
                         alt={event.title}
-                        fill
-                        className="object-cover transition-transform duration-500 hover:scale-[1.03]"
-                        sizes="(max-width: 1024px) 86vw, 560px"
+                        className="block h-[260px] w-full object-cover transition-transform duration-500 hover:scale-[1.03] md:h-[380px]"
+                        loading="lazy"
+                        draggable={false}
                       />
                     </Link>
 

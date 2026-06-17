@@ -156,9 +156,54 @@ function sortByOrder<T extends { sortOrder?: number; title?: string }>(items: T[
   });
 }
 
+function ensureWebPath(value: string) {
+  return value.startsWith("/") ? value : `/${value}`;
+}
+
+function normalizeManagedImageSrc(src: string | undefined, fallback: string) {
+  const raw = (src?.trim() || fallback).replace(/\\/g, "/");
+  const lower = raw.toLowerCase();
+
+  if (!raw) {
+    return fallback;
+  }
+
+  if (
+    lower.startsWith("http://") ||
+    lower.startsWith("https://") ||
+    lower.startsWith("data:")
+  ) {
+    return raw;
+  }
+
+  const publicSegmentIndex = lower.lastIndexOf("/public/");
+  if (publicSegmentIndex >= 0) {
+    return ensureWebPath(raw.slice(publicSegmentIndex + "/public".length));
+  }
+
+  if (lower.startsWith("public/")) {
+    return ensureWebPath(raw.slice("public".length));
+  }
+
+  if (
+    lower.startsWith("uploads/") ||
+    lower.startsWith("hero/") ||
+    lower.startsWith("photos/") ||
+    lower.startsWith("theme/")
+  ) {
+    return ensureWebPath(raw);
+  }
+
+  if (raw.startsWith("/")) {
+    return raw;
+  }
+
+  return fallback;
+}
+
 function normalizeManagedHomeImage(item: ManagedHomeImage, fallback: ManagedHomeImage) {
-  const desktopSrc = item.desktopSrc?.trim() || fallback.desktopSrc;
-  const mobileSrc = item.mobileSrc?.trim() || desktopSrc;
+  const desktopSrc = normalizeManagedImageSrc(item.desktopSrc, fallback.desktopSrc);
+  const mobileSrc = normalizeManagedImageSrc(item.mobileSrc, desktopSrc);
 
   return {
     ...item,
@@ -175,7 +220,7 @@ function normalizeManagedAttraction(
     ...item,
     title: item.title?.trim() || fallback.title,
     description: item.description?.trim() || fallback.description,
-    imageSrc: item.imageSrc?.trim() || fallback.imageSrc,
+    imageSrc: normalizeManagedImageSrc(item.imageSrc, fallback.imageSrc),
   };
 }
 
@@ -184,7 +229,7 @@ function normalizeManagedEvent(item: ManagedEvent, fallback: ManagedEvent) {
     ...item,
     title: item.title?.trim() || fallback.title,
     description: item.description?.trim() || fallback.description,
-    imageSrc: item.imageSrc?.trim() || fallback.imageSrc,
+    imageSrc: normalizeManagedImageSrc(item.imageSrc, fallback.imageSrc),
     href: item.href?.trim() || fallback.href,
     buttonLabel: item.buttonLabel?.trim() || fallback.buttonLabel,
   };

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { PainelModal } from "@/components/painel-modal";
@@ -32,10 +31,6 @@ function itemTitle(item: EditableItem) {
   }
 
   return item.item ? "Editar evento" : "Adicionar evento";
-}
-
-function shouldUseDirectImage(src: string) {
-  return src.startsWith("/uploads/site/");
 }
 
 function ImagePicker({ name, label }: { name: string; label: string }) {
@@ -153,14 +148,12 @@ export function PainelSiteManager({ content }: { content: EstanciaContentData })
         <div className="mt-5 flex gap-4 overflow-x-auto pb-3">
           {content.homeImages.map((item) => (
             <article key={item.id} className="min-w-[320px] rounded-[8px] border border-[#dbe7d7] bg-white p-4">
-              <div className="relative h-36 overflow-hidden rounded-[8px] bg-[#eef3e8]">
-                <Image
+              <div className="h-36 overflow-hidden rounded-[8px] bg-[#eef3e8]">
+                <img
                   src={item.desktopSrc}
                   alt={item.alt}
-                  fill
-                  className="object-cover"
-                  sizes="320px"
-                  unoptimized={shouldUseDirectImage(item.desktopSrc)}
+                  className="block h-full w-full object-cover"
+                  loading="lazy"
                 />
               </div>
               <h4 className="mt-3 text-lg font-black text-[#17351f]">{item.alt}</h4>
@@ -325,14 +318,12 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
       <div className="mt-5 grid max-h-[520px] gap-3 overflow-y-auto pr-2">
         {items.map((item) => (
           <div key={item.id} className="rounded-[8px] border border-[#dbe7d7] bg-white p-4">
-            <div className="relative h-32 overflow-hidden rounded-[8px] bg-[#eef3e8]">
-              <Image
+            <div className="h-32 overflow-hidden rounded-[8px] bg-[#eef3e8]">
+              <img
                 src={item.imageSrc}
                 alt={item.title}
-                fill
-                className="object-cover"
-                sizes="420px"
-                unoptimized={shouldUseDirectImage(item.imageSrc)}
+                className="block h-full w-full object-cover"
+                loading="lazy"
               />
             </div>
             <h3 className="mt-3 text-lg font-black text-[#17351f]">{item.title}</h3>

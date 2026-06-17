@@ -24,9 +24,31 @@ for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":3002 .*LISTENING"') d
   taskkill /PID %%P /F >nul 2>nul
 )
 
+if exist node_modules (
+  echo Limpando node_modules anterior...
+  rmdir /S /Q node_modules
+  if exist node_modules (
+    echo Nao foi possivel remover node_modules. Feche editores, terminais e antivirus que estejam usando a pasta.
+    goto :error
+  )
+)
+
+if exist .next (
+  echo Limpando build anterior...
+  rmdir /S /Q .next
+  if exist .next (
+    echo Nao foi possivel remover .next.
+    goto :error
+  )
+)
+
 echo Rodando npm ci...
 call npm ci
 if errorlevel 1 goto :error
+if not exist node_modules\next (
+  echo npm ci terminou sem instalar o Next corretamente.
+  goto :error
+)
 
 echo Rodando npm run build...
 call npm run build

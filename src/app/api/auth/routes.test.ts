@@ -264,6 +264,8 @@ describe("auth BFF routes", () => {
         cpf: "52998224725",
         email: "cliente@example.com",
         cityId: 9668,
+        phone: "1155550000",
+        mobile: "11999990000",
       }),
     );
     expect(setAuthCookie).toHaveBeenCalledWith(response, "signed-token");

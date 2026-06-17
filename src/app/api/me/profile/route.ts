@@ -97,13 +97,13 @@ function cleanOptionalPhone(value: unknown) {
     return null;
   }
 
-  const trimmed = value.trim();
+  const digits = value.replace(/\D/g, "");
 
-  if (!trimmed) {
+  if (!digits) {
     return null;
   }
 
-  return trimmed.length <= 20 ? trimmed : null;
+  return digits.length <= 14 ? digits : null;
 }
 
 async function readAuthenticatedProfile() {

@@ -51,6 +51,28 @@ function ImagePicker({ name, label }: { name: string; label: string }) {
   );
 }
 
+function CurrentImagePreview({
+  label,
+  src,
+  alt,
+}: {
+  label: string;
+  src: string;
+  alt: string;
+}) {
+  return (
+    <div className="grid gap-2">
+      <p className="text-sm font-semibold text-[#17351f]">{label}</p>
+      <div className="overflow-hidden rounded-[8px] border border-[#dbe7d7] bg-[#eef3e8]">
+        <img src={src} alt={alt} className="block h-40 w-full object-cover" loading="lazy" />
+      </div>
+      <p className="text-xs font-medium text-[#6a806e]">
+        O navegador nao reabre esse campo com um arquivo ja selecionado. Para trocar a imagem, escolha um novo arquivo abaixo.
+      </p>
+    </div>
+  );
+}
+
 function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <button
@@ -198,6 +220,20 @@ export function PainelSiteManager({ content }: { content: EstanciaContentData })
                 <Field label="Texto da imagem">
                   <input name="alt" defaultValue={editing.item?.alt ?? ""} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
                 </Field>
+                {editing.item ? (
+                  <>
+                    <CurrentImagePreview
+                      label="Imagem desktop atual"
+                      src={editing.item.desktopSrc}
+                      alt={editing.item.alt}
+                    />
+                    <CurrentImagePreview
+                      label="Imagem mobile atual"
+                      src={editing.item.mobileSrc}
+                      alt={editing.item.alt}
+                    />
+                  </>
+                ) : null}
                 <ImagePicker name="desktopImage" label="Imagem desktop" />
                 <ImagePicker name="mobileImage" label="Imagem mobile" />
               </>
@@ -248,6 +284,13 @@ export function PainelSiteManager({ content }: { content: EstanciaContentData })
                       <input name="buttonLabel" defaultValue={currentEvent?.buttonLabel ?? "Compre seu ingresso!"} className="rounded-[8px] border border-[#dbe7d7] px-4 py-3" />
                     </Field>
                   </>
+                ) : null}
+                {editing.item?.imageSrc ? (
+                  <CurrentImagePreview
+                    label="Imagem atual"
+                    src={editing.item.imageSrc}
+                    alt={editing.item.title}
+                  />
                 ) : null}
                 <ImagePicker name="image" label="Imagem" />
               </>

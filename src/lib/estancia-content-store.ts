@@ -78,168 +78,13 @@ const siteBinaryUploadDir = join(dataDir, "uploads", "site");
 const siteContentKey = "main";
 const runtimeEntry = process.argv[1] ? dirname(resolve(process.argv[1])) : null;
 
-const canonicalAttractions = new Map([
-  [
-    "stand-up-paddle",
-    {
-      title: "Stand Up Paddle",
-      description:
-        "Explore as águas com equilíbrio, diversão e contato direto com a natureza em uma experiência leve e refrescante.",
-    },
-  ],
-  [
-    "pesca-esportiva",
-    {
-      title: "Pesca Esportiva",
-      description:
-        "Viva a emoção da pesca em um ambiente cercado por natureza, ideal para quem busca tranquilidade e momentos de lazer.",
-    },
-  ],
-  [
-    "passeio-de-bote",
-    {
-      title: "Passeio de Bote",
-      description:
-        "Aproveite um passeio divertido sobre a água, perfeito para curtir em grupo e viver momentos de aventura com segurança.",
-    },
-  ],
-  [
-    "tirolesa-dupla",
-    {
-      title: "Tirolesa Dupla",
-      description:
-        "Sinta a adrenalina de deslizar pelo cenário natural em uma experiência emocionante para compartilhar em dupla.",
-    },
-  ],
-  [
-    "animais-brasileiros",
-    {
-      title: "Animais Brasileiros",
-      description:
-        "Encante-se com a beleza da fauna brasileira e viva uma experiência de conexão, aprendizado e respeito à natureza.",
-    },
-  ],
-  [
-    "rampa-de-escalada",
-    {
-      title: "Rampa de Escalada",
-      description:
-        "Desafie seus limites em uma atividade cheia de movimento, superação e diversão em meio ao verde.",
-    },
-  ],
-  [
-    "ponte-pensil",
-    {
-      title: "Ponte Pênsil",
-      description:
-        "Atravesse a ponte suspensa e aproveite uma experiência de aventura com uma vista incrível da natureza ao redor.",
-    },
-  ],
-  [
-    "falsa-baiana",
-    {
-      title: "Falsa Baiana",
-      description:
-        "Teste seu equilíbrio em uma travessia divertida sobre a água, ideal para quem gosta de desafios ao ar livre.",
-    },
-  ],
-  [
-    "piscina-natural",
-    {
-      title: "Piscina Natural",
-      description:
-        "Relaxe e aproveite um banho refrescante em um espaço cercado pela natureza, perfeito para toda a família.",
-    },
-  ],
-  [
-    "caiaque",
-    {
-      title: "Caiaque",
-      description:
-        "Navegue com tranquilidade e diversão, explorando o lago em uma atividade que une lazer, esporte e contato com a paisagem.",
-    },
-  ],
-  [
-    "quintal-indigena",
-    {
-      title: "Quintal Indígena",
-      description:
-        "Conheça um espaço inspirado na cultura indígena, pensado para proporcionar aprendizado, reflexão e conexão com nossas raízes.",
-    },
-  ],
-  [
-    "aventura-kids",
-    {
-      title: "Aventura Kids",
-      description:
-        "Um circuito pensado para as crianças se divertirem com segurança, desenvolvendo coordenação, coragem e espírito de aventura.",
-    },
-  ],
-  [
-    "trampolim-aquatico",
-    {
-      title: "Trampolim Aquático",
-      description:
-        "Uma atração cheia de energia e diversão, perfeita para brincar, se equilibrar e se refrescar ao mesmo tempo.",
-    },
-  ],
-  [
-    "mini-fazendinha",
-    {
-      title: "Mini Fazendinha",
-      description:
-        "Um espaço encantador para interação com os animais, ideal para crianças e para quem ama experiências no campo.",
-    },
-  ],
-  [
-    "restaurante",
-    {
-      title: "Restaurante",
-      description:
-        "Saboreie refeições preparadas com carinho em um ambiente acolhedor, ideal para repor as energias durante o passeio.",
-    },
-  ],
-  [
-    "cafe-da-manha",
-    {
-      title: "Café da Manhã",
-      description:
-        "Comece o dia com um café da manhã saboroso e acolhedor, com delícias que combinam com momentos especiais em família.",
-    },
-  ],
-  [
-    "parquinho",
-    {
-      title: "Parquinho",
-      description:
-        "Um espaço alegre e seguro para as crianças brincarem, explorarem e aproveitarem o passeio com muita diversão.",
-    },
-  ],
-  [
-    "trilhas",
-    {
-      title: "Trilhas",
-      description:
-        "Caminhe por trilhas em meio à mata e descubra paisagens naturais que tornam o passeio ainda mais especial.",
-    },
-  ],
-  [
-    "esquibunda",
-    {
-      title: "Esquibunda",
-      description:
-        "Divirta-se deslizando em uma atração cheia de adrenalina, risadas e muita animação para todas as idades.",
-    },
-  ],
-]);
-
 const defaultContent: EstanciaContentData = {
   homeImages: [
     {
       id: "home-1",
       desktopSrc: "/hero/current/banner-site-oficial-1.jpg",
       mobileSrc: "/hero/current/banner-site-oficial-1.jpg",
-      alt: "Piscina e área verde do Estância",
+      alt: "Piscina e área verde da Estância",
       active: true,
       sortOrder: 1,
     },
@@ -344,14 +189,6 @@ function repairMojibakeText(value: string | undefined, fallback: string) {
   return raw.normalize("NFC");
 }
 
-function shouldUseCanonicalCopy(value: string | undefined) {
-  if (!value) {
-    return true;
-  }
-
-  return /[?ÃÂ�]/.test(value);
-}
-
 function normalizeManagedImageSrc(src: string | undefined, fallback: string) {
   const raw = (src?.trim() || fallback).replace(/\\/g, "/");
   const lower = raw.toLowerCase();
@@ -409,26 +246,10 @@ function normalizeManagedAttraction(
   item: ManagedAttraction,
   fallback: ManagedAttraction,
 ) {
-  const canonical = canonicalAttractions.get(item.id);
-  const title = repairMojibakeText(
-    item.title,
-    canonical?.title ?? fallback.title,
-  );
-  const description = repairMojibakeText(
-    item.description,
-    canonical?.description ?? fallback.description,
-  );
-
   return {
     ...item,
-    title:
-      canonical && shouldUseCanonicalCopy(item.title)
-        ? canonical.title
-        : title,
-    description:
-      canonical && shouldUseCanonicalCopy(item.description)
-        ? canonical.description
-        : description,
+    title: repairMojibakeText(item.title, fallback.title),
+    description: repairMojibakeText(item.description, fallback.description),
     imageSrc: normalizeManagedImageSrc(item.imageSrc, fallback.imageSrc),
   };
 }

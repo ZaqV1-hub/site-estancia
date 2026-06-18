@@ -387,12 +387,12 @@ export async function getActiveHomeImages() {
 
 export async function getActiveAttractions() {
   const items = (await readEstanciaContent()).attractions.filter((item) => item.active);
-  return items.length > 0 ? items : defaultContent.attractions.filter((item) => item.active);
+  return items;
 }
 
 export async function getActiveEvents() {
   const items = (await readEstanciaContent()).events.filter((item) => item.active);
-  return items.length > 0 ? items : defaultContent.events.filter((item) => item.active);
+  return items;
 }
 
 export async function getManagedB2cProducts(type?: B2cProductType) {

@@ -94,11 +94,11 @@ function HeroBannerImage({
 
   return (
     <div
-      className={`absolute inset-0 transition-opacity duration-500 ${
-        active ? "opacity-100" : "opacity-0"
+      className={`absolute inset-0 transition-opacity duration-300 ${
+        active ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
-      <picture className="block h-full w-full bg-[#17342d]">
+      <picture className="block h-full w-full bg-[#0b1110]">
         {mobileSrc !== image.desktopSrc ? (
           <source media="(max-width: 767px)" srcSet={mobileSrc} />
         ) : null}
@@ -227,7 +227,7 @@ export function EstanciaHomePage({
         onPointerCancel={() => {
           heroDragRef.current = null;
         }}
-        className="relative h-[76svh] min-h-[520px] cursor-grab overflow-hidden bg-[#17342d] [touch-action:pan-y] active:cursor-grabbing"
+        className="relative h-[76svh] min-h-[520px] cursor-grab select-none overflow-hidden bg-[#0b1110] [touch-action:pan-y] active:cursor-grabbing"
       >
         <div className="absolute inset-0">
           {heroImages.map((image, index) => (
@@ -240,35 +240,6 @@ export function EstanciaHomePage({
           ))}
         </div>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.68)_0%,rgba(0,0,0,0.36)_30%,rgba(16,43,37,0.1)_58%,rgba(0,0,0,0.38)_100%)]" />
-
-        {heroImages.length > 1 ? (
-          <>
-            <button
-              type="button"
-              aria-label="Imagem anterior"
-              onClick={() =>
-                setHeroIndex((current) =>
-                  moveIndex(current, -1, heroImages.length),
-                )
-              }
-              className="absolute left-5 top-1/2 z-10 hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white shadow-[0_16px_30px_rgba(0,0,0,0.22)] transition hover:bg-black/55 md:flex"
-            >
-              <ChevronIcon direction="left" />
-            </button>
-            <button
-              type="button"
-              aria-label="Pr\u00f3xima imagem"
-              onClick={() =>
-                setHeroIndex((current) =>
-                  moveIndex(current, 1, heroImages.length),
-                )
-              }
-              className="absolute right-5 top-1/2 z-10 hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white shadow-[0_16px_30px_rgba(0,0,0,0.22)] transition hover:bg-black/55 md:flex"
-            >
-              <ChevronIcon direction="right" />
-            </button>
-          </>
-        ) : null}
 
         <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-2">
           {heroImages.map((image, index) => (

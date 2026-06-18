@@ -18,6 +18,26 @@ function formatCurrency(value: string) {
   }).format(Number(value));
 }
 
+function CurrentImagePreview({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="grid gap-2">
+      <p className="text-[13px] font-semibold text-[#17351f]">Imagem atual</p>
+      <div className="overflow-hidden rounded-[8px] border border-[#dbe7d7] bg-[#eef3e8]">
+        <img
+          src={src}
+          alt={alt}
+          className="block h-40 w-full object-cover"
+          loading="lazy"
+        />
+      </div>
+      <p className="text-xs font-medium text-[#6a806e]">
+        O navegador não reabre esse campo com um arquivo já selecionado. Para
+        trocar a imagem, escolha um novo arquivo abaixo.
+      </p>
+    </div>
+  );
+}
+
 function ImageInput() {
   return (
     <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
@@ -57,13 +77,17 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
       } | null;
 
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error?.message || "Nao foi possivel salvar.");
+        throw new Error(payload?.error?.message || "Não foi possível salvar.");
       }
 
       setEditing(null);
       router.refresh();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Nao foi possivel salvar.");
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Não foi possível salvar.",
+      );
     } finally {
       setPending(false);
     }
@@ -89,14 +113,16 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
       } | null;
 
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error?.message || "Nao foi possivel excluir.");
+        throw new Error(payload?.error?.message || "Não foi possível excluir.");
       }
 
       setDeleteTarget(null);
       router.refresh();
     } catch (deleteError) {
       setError(
-        deleteError instanceof Error ? deleteError.message : "Nao foi possivel excluir.",
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Não foi possível excluir.",
       );
     } finally {
       setPending(false);
@@ -130,22 +156,24 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
         {editing ? (
           <form onSubmit={submitForm} className="grid gap-3">
             <input type="hidden" name="type" value={editing.type} />
-            {editing.product ? <input type="hidden" name="id" value={editing.product.id} /> : null}
-            <Field label="Titulo">
+            {editing.product ? (
+              <input type="hidden" name="id" value={editing.product.id} />
+            ) : null}
+            <Field label="Título">
               <input
                 name="title"
                 defaultValue={editing.product?.title ?? ""}
                 className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5"
               />
             </Field>
-            <Field label="Subtitulo">
+            <Field label="Subtítulo">
               <input
                 name="subtitle"
                 defaultValue={editing.product?.subtitle ?? ""}
                 className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5"
               />
             </Field>
-            <Field label="Descricao">
+            <Field label="Descrição">
               <textarea
                 name="description"
                 defaultValue={editing.product?.description ?? ""}
@@ -153,6 +181,12 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
                 className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5"
               />
             </Field>
+            {editing.product?.imageSrc ? (
+              <CurrentImagePreview
+                src={editing.product.imageSrc}
+                alt={editing.product.title}
+              />
+            ) : null}
             <ImageInput />
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Valor">
@@ -197,7 +231,7 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
       </PainelModal>
 
       <PainelModal
-        title="Confirmar exclusao"
+        title="Confirmar exclusão"
         open={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
       >
@@ -258,7 +292,9 @@ function ProductSection({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="panel-eyebrow">{eyebrow}</p>
-          <h3 className="mt-1 text-[20px] font-black text-[#17351f]">{title}</h3>
+          <h3 className="mt-1 text-[20px] font-black text-[#17351f]">
+            {title}
+          </h3>
         </div>
         <button
           onClick={onCreate}
@@ -285,7 +321,9 @@ function ProductSection({
             <div className="p-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h4 className="text-base font-black text-[#17351f]">{product.title}</h4>
+                  <h4 className="text-base font-black text-[#17351f]">
+                    {product.title}
+                  </h4>
                   <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#5f7564]">
                     {product.subtitle}
                   </p>

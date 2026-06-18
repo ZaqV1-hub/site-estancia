@@ -12,7 +12,7 @@ import { authenticateOperationsRequest } from "@/lib/ops-auth";
 export const runtime = "nodejs";
 
 function asText(value: FormDataEntryValue | null) {
-  return String(value ?? "").trim();
+  return String(value ?? "").trim().normalize("NFC");
 }
 
 function asBool(value: FormDataEntryValue | null) {
@@ -32,7 +32,10 @@ async function authorize(request: Request) {
     return auth.response;
   }
 
-  const painelAuth = await authorizePainelApiAccess(request, ["vis_info", "vis_param"]);
+  const painelAuth = await authorizePainelApiAccess(request, [
+    "vis_info",
+    "vis_param",
+  ]);
   return painelAuth.ok ? null : painelAuth.response;
 }
 
@@ -59,9 +62,17 @@ export async function POST(request: Request) {
     const mobileUpload = await saveUploadedSiteImage(formData.get("mobileImage"));
     const fallbackImage = "/hero/current/banner-site-oficial-1.jpg";
     const desktopSrc =
-      desktopUpload ?? current?.desktopSrc ?? mobileUpload ?? current?.mobileSrc ?? fallbackImage;
+      desktopUpload ??
+      current?.desktopSrc ??
+      mobileUpload ??
+      current?.mobileSrc ??
+      fallbackImage;
     const mobileSrc =
-      mobileUpload ?? current?.mobileSrc ?? desktopUpload ?? current?.desktopSrc ?? fallbackImage;
+      mobileUpload ??
+      current?.mobileSrc ??
+      desktopUpload ??
+      current?.desktopSrc ??
+      fallbackImage;
 
     await writeEstanciaContent({
       ...data,
@@ -73,7 +84,10 @@ export async function POST(request: Request) {
           mobileSrc,
           alt: asText(formData.get("alt")) || current?.alt || "Imagem da home",
           active: asBool(formData.get("active")),
-          sortOrder: Number(formData.get("sortOrder")) || current?.sortOrder || data.homeImages.length + 1,
+          sortOrder:
+            Number(formData.get("sortOrder")) ||
+            current?.sortOrder ||
+            data.homeImages.length + 1,
         },
       ],
     });
@@ -94,10 +108,14 @@ export async function POST(request: Request) {
         {
           id,
           title: title || current?.title || "Nova atração",
-          description: asText(formData.get("description")) || current?.description || "",
+          description:
+            asText(formData.get("description")) || current?.description || "",
           imageSrc: imageUpload ?? current?.imageSrc ?? "/photos/day-use.jpg",
           active: asBool(formData.get("active")),
-          sortOrder: Number(formData.get("sortOrder")) || current?.sortOrder || data.attractions.length + 1,
+          sortOrder:
+            Number(formData.get("sortOrder")) ||
+            current?.sortOrder ||
+            data.attractions.length + 1,
         },
       ],
     });
@@ -124,12 +142,22 @@ export async function POST(request: Request) {
         {
           id,
           title: title || current?.title || "Novo evento",
-          description: asText(formData.get("description")) || current?.description || "",
-          imageSrc: imageUpload ?? current?.imageSrc ?? "/hero/current/banner-14-06-2026.jpg",
+          description:
+            asText(formData.get("description")) || current?.description || "",
+          imageSrc:
+            imageUpload ??
+            current?.imageSrc ??
+            "/hero/current/banner-14-06-2026.jpg",
           href: derivedHref || asText(formData.get("href")) || current?.href || "/agenda",
-          buttonLabel: asText(formData.get("buttonLabel")) || current?.buttonLabel || "Compre seu ingresso!",
+          buttonLabel:
+            asText(formData.get("buttonLabel")) ||
+            current?.buttonLabel ||
+            "Compre seu ingresso!",
           active: asBool(formData.get("active")),
-          sortOrder: Number(formData.get("sortOrder")) || current?.sortOrder || data.events.length + 1,
+          sortOrder:
+            Number(formData.get("sortOrder")) ||
+            current?.sortOrder ||
+            data.events.length + 1,
         },
       ],
     });

@@ -14,7 +14,7 @@ import { authenticateOperationsRequest } from "@/lib/ops-auth";
 export const runtime = "nodejs";
 
 function asText(value: FormDataEntryValue | null) {
-  return String(value ?? "").trim();
+  return String(value ?? "").trim().normalize("NFC");
 }
 
 function asBool(value: FormDataEntryValue | null) {
@@ -70,7 +70,10 @@ export async function POST(request: Request) {
     voucherType,
     voucherPrefix: type === "addon" ? "E" : "A",
     active: asBool(formData.get("active")),
-    sortOrder: Number(formData.get("sortOrder")) || current?.sortOrder || data.products.length + 1,
+    sortOrder:
+      Number(formData.get("sortOrder")) ||
+      current?.sortOrder ||
+      data.products.length + 1,
   };
 
   await writeEstanciaContent({

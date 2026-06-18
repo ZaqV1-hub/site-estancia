@@ -75,6 +75,7 @@ const dataDir = join(storageRoot, ".data");
 const dataFile = join(dataDir, "estancia-content.json");
 export const siteUploadDir = join(storageRoot, "public", "uploads", "site");
 const siteContentKey = "main";
+const runtimeEntry = process.argv[1] ? dirname(resolve(process.argv[1])) : null;
 
 const defaultContent: EstanciaContentData = {
   homeImages: [
@@ -300,6 +301,15 @@ function writeLegacyEstanciaContentBackup(data: EstanciaContentData) {
   writeFileSync(dataFile, JSON.stringify(data, null, 2), "utf8");
 }
 
+function getSiteUploadTargets() {
+  const candidates = [
+    siteUploadDir,
+    runtimeEntry ? join(runtimeEntry, "public", "uploads", "site") : null,
+  ].filter((value): value is string => Boolean(value));
+
+  return [...new Set(candidates)];
+}
+
 async function ensureDatabaseStore() {
   const pool = getIngressoDbPool();
   await pool.query(`
@@ -435,10 +445,12 @@ export async function saveUploadedSiteImage(file: FormDataEntryValue | null) {
   const sourceName = file.name || "imagem.png";
   const extension = extname(sourceName).toLowerCase() || ".png";
   const fileName = `${Date.now()}-${makeContentId(sourceName.replace(extension, ""))}${extension}`;
-  const diskPath = join(siteUploadDir, fileName);
   const bytes = Buffer.from(await file.arrayBuffer());
 
-  writeFileSync(diskPath, bytes);
+  for (const targetDir of getSiteUploadTargets()) {
+    mkdirSync(targetDir, { recursive: true });
+    writeFileSync(join(targetDir, fileName), bytes);
+  }
 
   return `/uploads/site/${fileName}`;
 }

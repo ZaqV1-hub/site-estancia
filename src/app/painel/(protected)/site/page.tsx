@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PainelSiteRoute() {
   await requirePainelAccess(["vis_info", "vis_param"], "/painel/site");
+  const content = await readEstanciaContent();
 
   return (
     <div className="space-y-5">
@@ -28,7 +29,7 @@ export default async function PainelSiteRoute() {
         </p>
       </section>
 
-      <PainelSiteManager content={readEstanciaContent()} />
+      <PainelSiteManager content={content} />
     </div>
   );
 }

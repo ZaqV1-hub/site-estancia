@@ -7,25 +7,25 @@ import {
 } from "@/lib/b2c-catalog";
 
 describe("b2c catalog", () => {
-  it("exposes the Estancia passport and addon catalog", () => {
-    expect(listB2cPassports().map((product) => product.id)).toEqual([
+  it("exposes the Estancia passport and addon catalog", async () => {
+    expect((await listB2cPassports()).map((product) => product.id)).toEqual([
       "passaporte-explorador",
       "passaporte-aventura",
       "passaporte-infantil",
     ]);
-    expect(listB2cAddons().map((product) => product.id)).toEqual([
+    expect((await listB2cAddons()).map((product) => product.id)).toEqual([
       "almoco-caipira-buffet",
       "cafe-da-manha",
       "ecobag-algodao",
       "kit-bebidas",
     ]);
-    expect(getB2cProduct("passaporte-explorador")?.title).toBe(
+    expect((await getB2cProduct("passaporte-explorador"))?.title).toBe(
       "Passaporte Explorador",
     );
   });
 
-  it("calculates cart totals and requires a passport before addons", () => {
-    const summary = buildB2cCartSummary(
+  it("calculates cart totals and requires a passport before addons", async () => {
+    const summary = await buildB2cCartSummary(
       [
         { productId: "passaporte-explorador", quantity: 2 },
         { productId: "passaporte-infantil", quantity: 1 },
@@ -42,10 +42,10 @@ describe("b2c catalog", () => {
       "Café da Manhã",
     ]);
 
-    expect(() =>
+    await expect(
       buildB2cCartSummary(
         [{ productId: "cafe-da-manha", quantity: 1 }],
       ),
-    ).toThrow("Selecione pelo menos um passaporte para continuar.");
+    ).rejects.toThrow("Selecione pelo menos um passaporte para continuar.");
   });
 });

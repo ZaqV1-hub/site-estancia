@@ -333,8 +333,8 @@ export async function createOnlinePurchase(
       );
     }
 
-    const cart = buildB2cCartSummary(selection.lineItems);
-    const availability = getAgendaProductAvailability(agenda.date);
+    const cart = await buildB2cCartSummary(selection.lineItems);
+    const availability = await getAgendaProductAvailability(agenda.date);
 
     for (const line of cart.lines) {
       const allowedIds =

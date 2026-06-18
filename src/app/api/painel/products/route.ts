@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   }
 
   const formData = await request.formData();
-  const data = readEstanciaContent();
+  const data = await readEstanciaContent();
   const title = asText(formData.get("title"));
   const type = asText(formData.get("type")) === "addon" ? "addon" : "passport";
   const id = asText(formData.get("id")) || makeContentId(title);
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     sortOrder: Number(formData.get("sortOrder")) || current?.sortOrder || data.products.length + 1,
   };
 
-  writeEstanciaContent({
+  await writeEstanciaContent({
     ...data,
     products: [...data.products.filter((item) => item.id !== id), product],
   });
@@ -95,8 +95,8 @@ export async function DELETE(request: Request) {
     return errorResponse("Produto não informado.");
   }
 
-  const data = readEstanciaContent();
-  writeEstanciaContent({
+  const data = await readEstanciaContent();
+  await writeEstanciaContent({
     ...data,
     products: data.products.filter((item) => item.id !== payload.id),
   });

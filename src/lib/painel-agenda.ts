@@ -416,17 +416,14 @@ export async function getPainelAgendaDay(date: string) {
     ),
   ]);
 
+  const availability = await getAgendaProductAvailability(date);
+
   return {
     selectedDate: date,
     agenda: agendaResult.rows[0] ? mapMonthEntry(agendaResult.rows[0]) : null,
     vouchers: vouchersResult.rows.map(mapVoucherEntry),
-    ...(() => {
-      const availability = getAgendaProductAvailability(date);
-      return {
-        selectedPassportIds: availability.passportIds,
-        selectedAddonIds: availability.addonIds,
-      };
-    })(),
+    selectedPassportIds: availability.passportIds,
+    selectedAddonIds: availability.addonIds,
   } satisfies PainelAgendaDayDetail;
 }
 
@@ -729,7 +726,7 @@ export async function upsertPainelAgendaRange(input: PainelAgendaMutationInput) 
     });
 
     await client.query("COMMIT");
-    setAgendaProductAvailabilityRange(dates, {
+    await setAgendaProductAvailabilityRange(dates, {
       passportIds: normalized.passportIds,
       addonIds: normalized.addonIds,
     });

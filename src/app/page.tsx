@@ -7,12 +7,18 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home() {
+  const [heroImages, attractions, events] = await Promise.all([
+    getActiveHomeImages(),
+    getActiveAttractions(),
+    getActiveEvents(),
+  ]);
+
   return (
     <EstanciaHomePage
-      heroImages={getActiveHomeImages()}
-      attractions={getActiveAttractions()}
-      events={getActiveEvents()}
+      heroImages={heroImages}
+      attractions={attractions}
+      events={events}
     />
   );
 }

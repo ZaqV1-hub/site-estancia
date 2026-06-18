@@ -44,29 +44,29 @@ function resolveUnitPrice(product: B2cProduct) {
   return parseMoney(product.fixedPrice);
 }
 
-export function getB2cProductUnitPrice(productId: string) {
-  const product = getB2cProduct(productId);
+export async function getB2cProductUnitPrice(productId: string) {
+  const product = await getB2cProduct(productId);
 
   return product ? normalizeMoney(resolveUnitPrice(product)) : null;
 }
 
-export function listB2cProducts() {
+export async function listB2cProducts() {
   return getManagedB2cProducts();
 }
 
-export function listB2cPassports() {
+export async function listB2cPassports() {
   return getManagedB2cProducts("passport");
 }
 
-export function listB2cAddons() {
+export async function listB2cAddons() {
   return getManagedB2cProducts("addon");
 }
 
-export function getB2cProduct(productId: string) {
-  return listB2cProducts().find((product) => product.id === productId) ?? null;
+export async function getB2cProduct(productId: string) {
+  return (await listB2cProducts()).find((product) => product.id === productId) ?? null;
 }
 
-export function buildB2cCartSummary(lineItems: B2cCartLineItem[]) {
+export async function buildB2cCartSummary(lineItems: B2cCartLineItem[]) {
   const lines: B2cCartSummaryLine[] = [];
 
   for (const item of lineItems) {
@@ -74,7 +74,7 @@ export function buildB2cCartSummary(lineItems: B2cCartLineItem[]) {
       throw new Error("Informe quantidades validas para continuar.");
     }
 
-    const product = getB2cProduct(item.productId);
+    const product = await getB2cProduct(item.productId);
 
     if (!product) {
       throw new Error("Produto indisponivel para compra.");

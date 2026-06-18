@@ -40,17 +40,17 @@ function writeStore(store: AvailabilityStore) {
   writeFileSync(dataFile, JSON.stringify(store, null, 2), "utf8");
 }
 
-export function getDefaultAgendaProductAvailability(): PainelAgendaProductAvailability {
+export async function getDefaultAgendaProductAvailability(): Promise<PainelAgendaProductAvailability> {
   return {
-    passportIds: getManagedB2cProducts("passport").map((product) => product.id),
-    addonIds: getManagedB2cProducts("addon").map((product) => product.id),
+    passportIds: (await getManagedB2cProducts("passport")).map((product) => product.id),
+    addonIds: (await getManagedB2cProducts("addon")).map((product) => product.id),
   };
 }
 
-export function normalizeAgendaProductAvailability(
+export async function normalizeAgendaProductAvailability(
   availability: Partial<PainelAgendaProductAvailability> | null | undefined,
 ) {
-  const defaults = getDefaultAgendaProductAvailability();
+  const defaults = await getDefaultAgendaProductAvailability();
   const availablePassportIds = new Set(defaults.passportIds);
   const availableAddonIds = new Set(defaults.addonIds);
 
@@ -67,25 +67,25 @@ export function normalizeAgendaProductAvailability(
   } satisfies PainelAgendaProductAvailability;
 }
 
-export function getAgendaProductAvailability(date: string) {
+export async function getAgendaProductAvailability(date: string) {
   const store = readStore();
   return normalizeAgendaProductAvailability(store[date]);
 }
 
-export function setAgendaProductAvailability(
+export async function setAgendaProductAvailability(
   date: string,
   availability: Partial<PainelAgendaProductAvailability> | null | undefined,
 ) {
   const store = readStore();
-  store[date] = normalizeAgendaProductAvailability(availability);
+  store[date] = await normalizeAgendaProductAvailability(availability);
   writeStore(store);
 }
 
-export function setAgendaProductAvailabilityRange(
+export async function setAgendaProductAvailabilityRange(
   dates: string[],
   availability: Partial<PainelAgendaProductAvailability> | null | undefined,
 ) {
-  const normalized = normalizeAgendaProductAvailability(availability);
+  const normalized = await normalizeAgendaProductAvailability(availability);
   const store = readStore();
 
   for (const date of dates) {

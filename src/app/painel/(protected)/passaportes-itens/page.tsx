@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PainelPassaportesItensRoute() {
   await requirePainelAccess(["vis_agenda", "vis_tabpre"], "/painel/passaportes-itens");
+  const content = await readEstanciaContent();
 
   return (
     <div className="space-y-3">
@@ -28,7 +29,7 @@ export default async function PainelPassaportesItensRoute() {
         </p>
       </section>
 
-      <PainelProductsManager products={readEstanciaContent().products} />
+      <PainelProductsManager products={content.products} />
     </div>
   );
 }

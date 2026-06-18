@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
   const formData = await request.formData();
   const section = asText(formData.get("section"));
-  const data = readEstanciaContent();
+  const data = await readEstanciaContent();
 
   if (section === "home") {
     const id = asText(formData.get("id")) || makeContentId(asText(formData.get("alt")));
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     const mobileSrc =
       mobileUpload ?? current?.mobileSrc ?? desktopUpload ?? current?.desktopSrc ?? fallbackImage;
 
-    writeEstanciaContent({
+    await writeEstanciaContent({
       ...data,
       homeImages: [
         ...data.homeImages.filter((item) => item.id !== id),
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     const current = data.attractions.find((item) => item.id === id);
     const imageUpload = await saveUploadedSiteImage(formData.get("image"));
 
-    writeEstanciaContent({
+    await writeEstanciaContent({
       ...data,
       attractions: [
         ...data.attractions.filter((item) => item.id !== id),
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
         ? `/agenda?mes=${Number(eventDate.slice(5, 7))}&ano=${eventDate.slice(0, 4)}&date=${eventDate}`
         : "";
 
-    writeEstanciaContent({
+    await writeEstanciaContent({
       ...data,
       events: [
         ...data.events.filter((item) => item.id !== id),
@@ -151,24 +151,24 @@ export async function DELETE(request: Request) {
     section?: string;
     id?: string;
   } | null;
-  const data = readEstanciaContent();
+  const data = await readEstanciaContent();
 
   if (!payload?.id) {
     return errorResponse("Item não informado.");
   }
 
   if (payload.section === "home") {
-    writeEstanciaContent({
+    await writeEstanciaContent({
       ...data,
       homeImages: data.homeImages.filter((item) => item.id !== payload.id),
     });
   } else if (payload.section === "attraction") {
-    writeEstanciaContent({
+    await writeEstanciaContent({
       ...data,
       attractions: data.attractions.filter((item) => item.id !== payload.id),
     });
   } else if (payload.section === "event") {
-    writeEstanciaContent({
+    await writeEstanciaContent({
       ...data,
       events: data.events.filter((item) => item.id !== payload.id),
     });

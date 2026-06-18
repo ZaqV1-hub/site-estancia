@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export default async function PainelEventosRoute() {
   await requirePainelAccess(["vis_info", "vis_agenda"], "/painel/eventos");
 
-  const events = readEstanciaContent().events.filter((event) => event.active);
+  const events = (await readEstanciaContent()).events.filter((event) => event.active);
   const featuredEvent = events[0] ?? null;
 
   return (

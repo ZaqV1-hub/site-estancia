@@ -67,8 +67,8 @@ export default async function BuyRoutePage({ params }: BuyRoutePageProps) {
     notFound();
   }
 
-  const availability = getAgendaProductAvailability(agenda.date);
-  const products = listB2cProducts().filter((product) =>
+  const availability = await getAgendaProductAvailability(agenda.date);
+  const products = (await listB2cProducts()).filter((product) =>
     product.type === "passport"
       ? availability.passportIds.includes(product.id)
       : availability.addonIds.includes(product.id),

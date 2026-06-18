@@ -6,6 +6,7 @@ import {
   type B2cProductType,
   type B2cVoucherType,
 } from "@/lib/b2c-catalog-defaults";
+import { getIngressoDbPool } from "@/lib/ingresso-db";
 
 export type ManagedHomeImage = {
   id: string;
@@ -73,6 +74,7 @@ const storageRoot = resolveSiteStorageRoot();
 const dataDir = join(storageRoot, ".data");
 const dataFile = join(dataDir, "estancia-content.json");
 export const siteUploadDir = join(storageRoot, "public", "uploads", "site");
+const siteContentKey = "main";
 
 const defaultContent: EstanciaContentData = {
   homeImages: [
@@ -146,13 +148,9 @@ const defaultContent: EstanciaContentData = {
   products: DEFAULT_B2C_PRODUCTS,
 };
 
-function ensureStore() {
+function ensureLocalStore() {
   mkdirSync(dataDir, { recursive: true });
   mkdirSync(siteUploadDir, { recursive: true });
-
-  if (!existsSync(dataFile)) {
-    writeFileSync(dataFile, JSON.stringify(defaultContent, null, 2), "utf8");
-  }
 }
 
 function sortByOrder<T extends { sortOrder?: number; title?: string }>(items: T[]) {
@@ -248,69 +246,157 @@ function readManagedList<T extends { sortOrder?: number; title?: string }>(
   return Array.isArray(value) ? sortByOrder(value) : sortByOrder(fallback);
 }
 
-export function readEstanciaContent() {
-  ensureStore();
+function normalizeEstanciaContent(parsed?: Partial<EstanciaContentData> | null) {
+  const parsedHomeImages = Array.isArray(parsed?.homeImages)
+    ? parsed.homeImages.map((item, index) =>
+        normalizeManagedHomeImage(
+          item,
+          defaultContent.homeImages[index] ?? defaultContent.homeImages[0],
+        ),
+      )
+    : undefined;
+  const parsedAttractions = Array.isArray(parsed?.attractions)
+    ? parsed.attractions.map((item, index) =>
+        normalizeManagedAttraction(
+          item,
+          defaultContent.attractions[index] ?? defaultContent.attractions[0],
+        ),
+      )
+    : undefined;
+  const parsedEvents = Array.isArray(parsed?.events)
+    ? parsed.events.map((item, index) =>
+        normalizeManagedEvent(
+          item,
+          defaultContent.events[index] ?? defaultContent.events[0],
+        ),
+      )
+    : undefined;
+
+  return {
+    homeImages: readManagedList(parsedHomeImages, defaultContent.homeImages),
+    attractions: readManagedList(parsedAttractions, defaultContent.attractions),
+    events: readManagedList(parsedEvents, defaultContent.events),
+    products: readManagedList(parsed?.products, defaultContent.products),
+  } satisfies EstanciaContentData;
+}
+
+function readLegacyEstanciaContent() {
+  ensureLocalStore();
+
+  if (!existsSync(dataFile)) {
+    return defaultContent;
+  }
 
   try {
     const parsed = JSON.parse(readFileSync(dataFile, "utf8")) as Partial<EstanciaContentData>;
-    const parsedHomeImages = Array.isArray(parsed.homeImages)
-      ? parsed.homeImages.map((item, index) =>
-          normalizeManagedHomeImage(
-            item,
-            defaultContent.homeImages[index] ?? defaultContent.homeImages[0],
-          ),
-        )
-      : undefined;
-    const parsedAttractions = Array.isArray(parsed.attractions)
-      ? parsed.attractions.map((item, index) =>
-          normalizeManagedAttraction(
-            item,
-            defaultContent.attractions[index] ?? defaultContent.attractions[0],
-          ),
-        )
-      : undefined;
-    const parsedEvents = Array.isArray(parsed.events)
-      ? parsed.events.map((item, index) =>
-          normalizeManagedEvent(
-            item,
-            defaultContent.events[index] ?? defaultContent.events[0],
-          ),
-        )
-      : undefined;
-
-    return {
-      homeImages: readManagedList(parsedHomeImages, defaultContent.homeImages),
-      attractions: readManagedList(parsedAttractions, defaultContent.attractions),
-      events: readManagedList(parsedEvents, defaultContent.events),
-      products: readManagedList(parsed.products, defaultContent.products),
-    } satisfies EstanciaContentData;
+    return normalizeEstanciaContent(parsed);
   } catch {
     return defaultContent;
   }
 }
 
-export function writeEstanciaContent(data: EstanciaContentData) {
-  ensureStore();
+function writeLegacyEstanciaContentBackup(data: EstanciaContentData) {
+  ensureLocalStore();
   writeFileSync(dataFile, JSON.stringify(data, null, 2), "utf8");
 }
 
-export function getActiveHomeImages() {
-  const items = readEstanciaContent().homeImages.filter((item) => item.active);
+async function ensureDatabaseStore() {
+  const pool = getIngressoDbPool();
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS public.estancia_site_content (
+      content_key text PRIMARY KEY,
+      content_json jsonb NOT NULL,
+      created_at timestamp without time zone NOT NULL DEFAULT now(),
+      updated_at timestamp without time zone NOT NULL DEFAULT now()
+    )
+  `);
+}
+
+async function ensureDatabaseSeeded() {
+  await ensureDatabaseStore();
+
+  const pool = getIngressoDbPool();
+  const existing = await pool.query<{ content_json: EstanciaContentData }>(
+    `
+      SELECT content_json
+      FROM public.estancia_site_content
+      WHERE content_key = $1
+      LIMIT 1
+    `,
+    [siteContentKey],
+  );
+
+  if (existing.rows[0]) {
+    return;
+  }
+
+  const seededContent = readLegacyEstanciaContent();
+  await pool.query(
+    `
+      INSERT INTO public.estancia_site_content (content_key, content_json)
+      VALUES ($1, $2::jsonb)
+      ON CONFLICT (content_key) DO NOTHING
+    `,
+    [siteContentKey, JSON.stringify(seededContent)],
+  );
+}
+
+export async function readEstanciaContent() {
+  await ensureDatabaseSeeded();
+
+  const pool = getIngressoDbPool();
+  const result = await pool.query<{ content_json: Partial<EstanciaContentData> }>(
+    `
+      SELECT content_json
+      FROM public.estancia_site_content
+      WHERE content_key = $1
+      LIMIT 1
+    `,
+    [siteContentKey],
+  );
+
+  const data = normalizeEstanciaContent(result.rows[0]?.content_json);
+  writeLegacyEstanciaContentBackup(data);
+  return data;
+}
+
+export async function writeEstanciaContent(data: EstanciaContentData) {
+  await ensureDatabaseSeeded();
+
+  const normalized = normalizeEstanciaContent(data);
+  const pool = getIngressoDbPool();
+  await pool.query(
+    `
+      INSERT INTO public.estancia_site_content (content_key, content_json, updated_at)
+      VALUES ($1, $2::jsonb, now())
+      ON CONFLICT (content_key)
+      DO UPDATE SET
+        content_json = EXCLUDED.content_json,
+        updated_at = now()
+    `,
+    [siteContentKey, JSON.stringify(normalized)],
+  );
+
+  writeLegacyEstanciaContentBackup(normalized);
+}
+
+export async function getActiveHomeImages() {
+  const items = (await readEstanciaContent()).homeImages.filter((item) => item.active);
   return items.length > 0 ? items : defaultContent.homeImages.filter((item) => item.active);
 }
 
-export function getActiveAttractions() {
-  const items = readEstanciaContent().attractions.filter((item) => item.active);
+export async function getActiveAttractions() {
+  const items = (await readEstanciaContent()).attractions.filter((item) => item.active);
   return items.length > 0 ? items : defaultContent.attractions.filter((item) => item.active);
 }
 
-export function getActiveEvents() {
-  const items = readEstanciaContent().events.filter((item) => item.active);
+export async function getActiveEvents() {
+  const items = (await readEstanciaContent()).events.filter((item) => item.active);
   return items.length > 0 ? items : defaultContent.events.filter((item) => item.active);
 }
 
-export function getManagedB2cProducts(type?: B2cProductType) {
-  const products = readEstanciaContent().products.filter((product) => product.active);
+export async function getManagedB2cProducts(type?: B2cProductType) {
+  const products = (await readEstanciaContent()).products.filter((product) => product.active);
   return type ? products.filter((product) => product.type === type) : products;
 }
 
@@ -344,7 +430,7 @@ export async function saveUploadedSiteImage(file: FormDataEntryValue | null) {
     return null;
   }
 
-  mkdirSync(siteUploadDir, { recursive: true });
+  ensureLocalStore();
 
   const sourceName = file.name || "imagem.png";
   const extension = extname(sourceName).toLowerCase() || ".png";

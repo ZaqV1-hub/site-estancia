@@ -32,6 +32,7 @@ export default async function PainelAgendaAddPage({
     year: params.ano,
     selectedDate: params.dia,
   });
+  const content = await readEstanciaContent();
   const returnHref = `/painel/agenda?mes=${data.month}&ano=${data.year}`;
 
   return (
@@ -59,7 +60,7 @@ export default async function PainelAgendaAddPage({
         mode="create"
         returnHref={returnHref}
         initialType={params.tipo === "promo" ? "promo" : "padra"}
-        products={readEstanciaContent().products}
+        products={content.products}
       />
     </div>
   );

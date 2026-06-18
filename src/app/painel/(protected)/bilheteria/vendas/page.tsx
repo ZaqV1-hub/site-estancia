@@ -27,13 +27,13 @@ export default async function PainelBilheteriaVendasPage() {
     ["vis_bilhet", "vis_compra"],
     "/painel/bilheteria/vendas",
   );
-  const products = getManagedB2cProducts("passport");
+  const products = await getManagedB2cProducts("passport");
   const today = getSaoPauloToday();
   const [year, month] = today.split("-").map(Number);
   const agendas = (await getPublicAgendaEvents(month, year)).filter(
     (agenda) => agenda.date === today && agenda.status === "abe",
   );
-  const availability = getAgendaProductAvailability(today);
+  const availability = await getAgendaProductAvailability(today);
   const availableProducts = products.filter((product) =>
     availability.passportIds.includes(product.id),
   );

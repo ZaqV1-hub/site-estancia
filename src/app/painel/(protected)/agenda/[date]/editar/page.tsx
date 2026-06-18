@@ -33,6 +33,7 @@ export default async function PainelAgendaEditPage({
     year: queryParams.ano,
     selectedDate: routeParams.date,
   });
+  const content = await readEstanciaContent();
   const returnHref = `/painel/agenda/${routeParams.date}?mes=${data.month}&ano=${data.year}`;
 
   return (
@@ -66,7 +67,7 @@ export default async function PainelAgendaEditPage({
         }}
         mode="edit"
         returnHref={returnHref}
-        products={readEstanciaContent().products}
+        products={content.products}
       />
     </div>
   );

@@ -121,9 +121,13 @@ export function EstanciaHomePage({
   events,
 }: EstanciaHomePageProps) {
   const [heroIndex, setHeroIndex] = useState(0);
-  const [heroDragStart, setHeroDragStart] = useState<number | null>(null);
   const [attractionIndex, setAttractionIndex] = useState(0);
   const [eventIndex, setEventIndex] = useState(0);
+  const heroDragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    deltaX: number;
+  } | null>(null);
   const attractionsRef = useRef<HTMLDivElement>(null);
   const eventsRef = useRef<HTMLDivElement>(null);
   const carouselDragRef = useRef<{
@@ -132,13 +136,36 @@ export function EstanciaHomePage({
     scrollLeft: number;
   } | null>(null);
 
-  function handleHeroPointerUp(event: PointerEvent<HTMLElement>) {
-    if (heroDragStart === null) {
+  function handleHeroPointerDown(event: PointerEvent<HTMLElement>) {
+    heroDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      deltaX: 0,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handleHeroPointerMove(event: PointerEvent<HTMLElement>) {
+    if (
+      !heroDragRef.current ||
+      heroDragRef.current.pointerId !== event.pointerId
+    ) {
       return;
     }
 
-    const distance = event.clientX - heroDragStart;
-    setHeroDragStart(null);
+    heroDragRef.current.deltaX = event.clientX - heroDragRef.current.startX;
+  }
+
+  function handleHeroPointerUp(event: PointerEvent<HTMLElement>) {
+    if (
+      !heroDragRef.current ||
+      heroDragRef.current.pointerId !== event.pointerId
+    ) {
+      return;
+    }
+
+    const distance = heroDragRef.current.deltaX;
+    heroDragRef.current = null;
 
     if (Math.abs(distance) < 34) {
       return;
@@ -194,10 +221,13 @@ export function EstanciaHomePage({
     <div className="min-h-screen bg-[#fbfaf7] text-[#17342d]">
       <section
         id="inicio"
-        onPointerDown={(event) => setHeroDragStart(event.clientX)}
+        onPointerDown={handleHeroPointerDown}
+        onPointerMove={handleHeroPointerMove}
         onPointerUp={handleHeroPointerUp}
-        onPointerCancel={() => setHeroDragStart(null)}
-        className="relative h-[76svh] min-h-[520px] cursor-grab overflow-hidden bg-[#17342d] active:cursor-grabbing"
+        onPointerCancel={() => {
+          heroDragRef.current = null;
+        }}
+        className="relative h-[76svh] min-h-[520px] cursor-grab overflow-hidden bg-[#17342d] [touch-action:pan-y] active:cursor-grabbing"
       >
         <div className="absolute inset-0">
           {heroImages.map((image, index) => (

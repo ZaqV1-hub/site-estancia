@@ -3,6 +3,7 @@ import {
   buildTicketsApiHeaders,
   getTicketsApiBaseUrl,
 } from "@/lib/ticket-api";
+import { resolveVoucherTypeLabel } from "@/lib/voucher-type-label";
 
 type TicketServiceConfig = {
   baseUrl: string;
@@ -26,6 +27,7 @@ type VoucherTicketRow = {
   idvoucher: number;
   numvoucher: string | null;
   tpvoucher: string | null;
+  descricao: string | null;
   vlunicompra: string | null;
   stusado: string | null;
   voucherenviado: string | null;
@@ -83,15 +85,6 @@ type TicketValidationSyncResult = {
   action: TicketValidationAction;
   pairs: string[];
   skippedReason?: string;
-};
-
-const voucherTypeLabels: Record<string, string> = {
-  norma: "Passaporte",
-  infan: "Passaporte Infantil",
-  isent: "de 0 a 3 anos",
-  escol: "Escola",
-  corte: "Cortesia",
-  espec: "Especial",
 };
 
 function getConfig(): TicketServiceConfig | null {
@@ -395,9 +388,10 @@ function buildValidationTicketPayload(voucher: TicketValidationVoucherRow) {
     cpf: resolveVoucherCpf(voucher.cpf, voucher),
     cellphone: String(voucher.celular ?? ""),
     type: String(voucher.tpvoucher ?? ""),
-    typeLabel:
-      voucherTypeLabels[String(voucher.tpvoucher ?? "")] ??
-      String(voucher.tpvoucher ?? ""),
+    typeLabel: resolveVoucherTypeLabel({
+      description: null,
+      type: voucher.tpvoucher,
+    }),
     purchaseLocation: voucher.tpcompra === "ponli" ? "Online" : "Bilheteria",
     purchaseDate: String(voucher.dtcompra ?? ""),
     price: String(voucher.vlunicompra ?? ""),
@@ -438,6 +432,7 @@ async function loadPendingTicketVouchers(purchaseId: number) {
         voucher.idvoucher,
         voucher.numvoucher,
         voucher.tpvoucher,
+        voucher.descricao,
         voucher.vlunicompra::text AS vlunicompra,
         voucher.stusado,
         voucher.voucherenviado,
@@ -472,6 +467,7 @@ async function loadSelectedTicketVouchers(
         voucher.idvoucher,
         voucher.numvoucher,
         voucher.tpvoucher,
+        voucher.descricao,
         voucher.vlunicompra::text AS vlunicompra,
         voucher.stusado,
         voucher.voucherenviado,
@@ -523,9 +519,10 @@ function buildTicketPayload(
     cpf: resolveVoucherCpf(purchase.cpf, voucher),
     cellphone: String(purchase.celular ?? ""),
     type: String(voucher.tpvoucher ?? ""),
-    typeLabel:
-      voucherTypeLabels[String(voucher.tpvoucher ?? "")] ??
-      String(voucher.tpvoucher ?? ""),
+    typeLabel: resolveVoucherTypeLabel({
+      description: voucher.descricao,
+      type: voucher.tpvoucher,
+    }),
     purchaseLocation,
     purchaseDate: String(purchase.dtcompra ?? ""),
     price: String(voucher.vlunicompra ?? ""),

@@ -1,6 +1,7 @@
 import { Buffer } from "node:buffer";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 import { buildSchoolDisplay } from "@/lib/school-structure";
+import { resolveVoucherTypeLabel } from "@/lib/voucher-type-label";
 import type {
   PurchaseType,
   UserVoucher,
@@ -91,15 +92,6 @@ const purchaseStatusLabels: Record<string, string> = {
   pend: "Em processamento",
 };
 
-const voucherTypeLabels: Record<string, string> = {
-  norma: "Passaporte",
-  infan: "Passaporte Infantil",
-  isent: "de 0 a 3 anos",
-  corte: "Cortesia",
-  espec: "Especial",
-  escol: "Escola",
-};
-
 const paymentStatusLabels: Record<number, string> = {
   1: "Aguardando pagamento",
   2: "Em analise",
@@ -118,11 +110,6 @@ function encodeLegacyId(id: number) {
 
 function labelFromMap(map: Record<string, string>, key: string | null) {
   return key ? map[key] ?? key : "";
-}
-
-function resolveVoucherTypeLabel(row: Pick<VoucherRow, "descricao" | "tpvoucher">) {
-  const description = String(row.descricao ?? "").trim();
-  return description || labelFromMap(voucherTypeLabels, row.tpvoucher);
 }
 
 function normalizeDate(value: string | null) {
@@ -165,7 +152,10 @@ function mapVoucher(row: VoucherRow, purchase: PurchaseRow, today: Date): UserVo
   return {
     id: row.idvoucher,
     type: row.tpvoucher,
-    typeLabel: resolveVoucherTypeLabel(row),
+    typeLabel: resolveVoucherTypeLabel({
+      description: row.descricao,
+      type: row.tpvoucher,
+    }),
     number: row.numvoucher,
     visitDate: normalizeDate(row.dtagenda),
     useDate: normalizeDate(row.dtuso),
@@ -193,7 +183,10 @@ function mapVoucherExport(row: VoucherRow): VoucherExportVoucher {
     id: row.idvoucher,
     number: row.numvoucher,
     type: row.tpvoucher,
-    typeLabel: resolveVoucherTypeLabel(row),
+    typeLabel: resolveVoucherTypeLabel({
+      description: row.descricao,
+      type: row.tpvoucher,
+    }),
     visitDate: normalizeDate(row.dtagenda),
     unitValue: row.vlunicompra,
     agendaType: row.tpagenda,

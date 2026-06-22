@@ -206,6 +206,64 @@ describe("ticket-service", () => {
     );
   });
 
+  it("prefers the voucher description as ticket title when sending online purchases", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ token: "ticket-token" }))
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+    dbQuery.mockImplementation(async (sql: string) => {
+      if (sql.includes("FROM compra")) {
+        return {
+          rows: [
+            {
+              idcompra: 456,
+              cpf: "52998224725",
+              tpcompra: "ponli",
+              dtcompra: "2026-04-23",
+              email: "cliente@example.com",
+              nmusuario: "Cliente Teste",
+              celular: "51999999999",
+            },
+          ],
+        };
+      }
+
+      if (sql.includes("FROM voucher")) {
+        return {
+          rows: [
+            {
+              idvoucher: 9001,
+              numvoucher: "123456",
+              tpvoucher: "norma",
+              descricao: "Passaporte teste",
+              vlunicompra: "129.90",
+              stusado: "n",
+              voucherenviado: "n",
+              identificacao: null,
+              idagenda: 10,
+              dtagenda: "2026-05-01",
+            },
+          ],
+        };
+      }
+
+      return { rows: [] };
+    });
+
+    await processConfirmedPurchaseTickets(456);
+
+    const [, requestInit] = fetchMock.mock.calls[1] as [string, { body: string }];
+    expect(JSON.parse(requestInit.body)).toMatchObject({
+      vouchers: [
+        {
+          voucherId: "9001",
+          typeLabel: "Passaporte teste",
+        },
+      ],
+    });
+  });
+
   it("uses bilheteria as purchase location for box-office tickets", async () => {
     const fetchMock = vi
       .fn()

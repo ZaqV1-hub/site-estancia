@@ -265,6 +265,7 @@ async function ticketRequest(
   path: string,
   body: unknown,
   token?: string,
+  allowedStatuses: number[] = [200],
 ) {
   const headers: Record<string, string> = {
     "content-type": "application/json",
@@ -293,7 +294,7 @@ async function ticketRequest(
         signal: controller.signal,
       });
 
-      if (!response.ok) {
+      if (!response.ok || !allowedStatuses.includes(response.status)) {
         throw new Error(`ticket_api_error_${response.status}`);
       }
 
@@ -319,7 +320,11 @@ async function ticketRequest(
     : new Error("ticket_api_unreachable");
 }
 
-async function websiteTicketRequest(path: string, body: unknown) {
+async function websiteTicketRequest(
+  path: string,
+  body: unknown,
+  allowedStatuses: number[] = [200],
+) {
   const baseUrl = getTicketsApiBaseUrl();
   const response = await fetch(`${baseUrl}${path}`, {
     method: "POST",
@@ -328,7 +333,7 @@ async function websiteTicketRequest(path: string, body: unknown) {
     cache: "no-store",
   });
 
-  if (!response.ok) {
+  if (!response.ok || !allowedStatuses.includes(response.status)) {
     throw new Error(`ticket_api_error_${response.status}`);
   }
 

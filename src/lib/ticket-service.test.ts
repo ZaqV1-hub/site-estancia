@@ -115,7 +115,7 @@ describe("ticket-service", () => {
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      "https://rincaoticketapi-a8buakffcrarc3an.brazilsouth-01.azurewebsites.net/website/tickets/send",
+      "https://estanciaticketapi.azurewebsites.net/website/tickets/send",
       expect.objectContaining({
         method: "POST",
       }),
@@ -385,7 +385,7 @@ describe("ticket-service", () => {
     });
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      "https://rincaoticketapi-a8buakffcrarc3an.brazilsouth-01.azurewebsites.net/website/tickets/send",
+      "https://estanciaticketapi.azurewebsites.net/website/tickets/send",
       expect.objectContaining({
         method: "POST",
       }),
@@ -404,6 +404,61 @@ describe("ticket-service", () => {
         },
       ],
     });
+  });
+
+  it("rejects async accepted whatsapp responses because delivery is not confirmed yet", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 202,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    dbQuery.mockImplementation(async (sql: string, values?: unknown[]) => {
+      if (sql.includes("FROM compra")) {
+        return {
+          rows: [
+            {
+              idcompra: 456,
+              cpf: "52998224725",
+              tpcompra: "ponli",
+              dtcompra: "2026-04-23",
+              email: "cliente@example.com",
+              nmusuario: "Cliente Teste",
+              celular: "51999999999",
+            },
+          ],
+        };
+      }
+
+      if (sql.includes("voucher.idvoucher = ANY")) {
+        expect(values).toEqual([456, [9001]]);
+
+        return {
+          rows: [
+            {
+              idvoucher: 9001,
+              numvoucher: "123456",
+              tpvoucher: "norma",
+              vlunicompra: "129.90",
+              stusado: "n",
+              voucherenviado: "n",
+              identificacao: null,
+              idagenda: 10,
+              dtagenda: "2026-05-01",
+            },
+          ],
+        };
+      }
+
+      return { rows: [] };
+    });
+
+    await expect(
+      sendPurchaseTicketsWhatsApp(456, [9001], "(51) 99999-9999"),
+    ).rejects.toThrow("ticket_api_error_202");
   });
 
   it("uses testing header for whatsapp send when ticket api testing is enabled", async () => {
@@ -460,7 +515,7 @@ describe("ticket-service", () => {
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      "https://rincaoticketapi-a8buakffcrarc3an.brazilsouth-01.azurewebsites.net/website/tickets/send",
+      "https://estanciaticketapi.azurewebsites.net/website/tickets/send",
       expect.objectContaining({
         method: "POST",
       }),

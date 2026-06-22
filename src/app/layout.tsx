@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Rubik, Salsa } from "next/font/google";
 import "./globals.css";
 import { SiteShell } from "@/components/site-shell";
+import { getAuthSession } from "@/lib/auth-session";
 import { getSiteUrl, robotsForEnvironment } from "@/lib/site-metadata";
 
 const rubik = Rubik({
@@ -40,18 +41,23 @@ export const metadata: Metadata = {
   robots: robotsForEnvironment(),
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getAuthSession();
+  const customerMenuHref = session
+    ? "/minha-conta"
+    : "/login?redirect=%2Fminha-conta";
+
   return (
     <html
       lang="pt-BR"
       className={`${rubik.variable} ${salsa.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <SiteShell>{children}</SiteShell>
+        <SiteShell customerMenuHref={customerMenuHref}>{children}</SiteShell>
       </body>
     </html>
   );

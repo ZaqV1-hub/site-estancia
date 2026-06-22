@@ -13,9 +13,23 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function PainelSiteRoute() {
+export default async function PainelSiteRoute({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    editEvent?: string;
+    createEvent?: string;
+  }>;
+}) {
   await requirePainelAccess(["vis_info", "vis_param"], "/painel/site");
+  const params = await searchParams;
   const content = await readEstanciaContent();
+  const initialCreateEventMode =
+    params.createEvent === "link"
+      ? "link"
+      : params.createEvent === "date"
+        ? "date"
+        : null;
 
   return (
     <div className="space-y-5">
@@ -29,7 +43,11 @@ export default async function PainelSiteRoute() {
         </p>
       </section>
 
-      <PainelSiteManager content={content} />
+      <PainelSiteManager
+        content={content}
+        initialEditEventId={params.editEvent ?? null}
+        initialCreateEventMode={initialCreateEventMode}
+      />
     </div>
   );
 }

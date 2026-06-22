@@ -321,6 +321,55 @@
     box-shadow: none !important;
   }
 
+  .estancia-panel a[href],
+  .estancia-panel button:not(:disabled),
+  .estancia-panel summary,
+  .estancia-panel [role="button"] {
+    cursor: pointer;
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s ease,
+      filter 0.18s ease;
+  }
+
+  .estancia-panel a[href]:focus-visible,
+  .estancia-panel button:not(:disabled):focus-visible,
+  .estancia-panel summary:focus-visible,
+  .estancia-panel [role="button"]:focus-visible {
+    border-radius: 8px;
+    box-shadow: 0 0 0 3px rgba(43, 140, 70, 0.18) !important;
+    outline: none;
+  }
+
+  .estancia-panel a[href][class*="rounded"],
+  .estancia-panel button[class*="rounded"]:not(:disabled),
+  .estancia-panel summary,
+  .estancia-panel .panel-button,
+  .estancia-panel .panel-button-secondary {
+    position: relative;
+  }
+
+  .estancia-panel a[href][class*="rounded"]:hover,
+  .estancia-panel button[class*="rounded"]:not(:disabled):hover,
+  .estancia-panel summary:hover,
+  .estancia-panel .panel-button:hover,
+  .estancia-panel .panel-button-secondary:hover {
+    box-shadow: 0 12px 24px rgba(23, 53, 31, 0.12) !important;
+    filter: brightness(0.97);
+    transform: translateY(-1px);
+  }
+
+  .estancia-panel a[href]:not([class*="rounded"]):not(.panel-eyebrow):hover,
+  .estancia-panel [role="button"]:not([class*="rounded"]):hover {
+    color: #17351f !important;
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 2px;
+  }
+
   .estancia-panel h1,
   .estancia-panel h2,
   .estancia-panel h3,

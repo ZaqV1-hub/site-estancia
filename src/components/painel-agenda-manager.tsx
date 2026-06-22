@@ -275,7 +275,7 @@ export function PainelAgendaManager({ data }: PainelAgendaManagerProps) {
               href={buildAgendaAddHref(data.month, data.year, selectedDate)}
               className="rounded-[8px] border border-[#d7e3d2] px-3 py-2 text-xs font-semibold text-[#275330] hover:bg-[#f7fbf5]"
             >
-              Adicionar
+              Adicionar data padrao
             </Link>
           </div>
 
@@ -416,10 +416,13 @@ export function PainelAgendaManager({ data }: PainelAgendaManagerProps) {
                 href={buildAgendaAddHref(data.month, data.year, data.selectedDate)}
                 className="rounded-[8px] bg-[#2b8c46] px-3 py-2 text-sm font-semibold text-white"
               >
-                Adicionar agenda
+                Adicionar data padrao
               </Link>
             )}
           </div>
+          <p className="mt-3 text-xs leading-5 text-[#5d745f]">
+            Datas promocionais e eventos devem ser criados na area de Site.
+          </p>
         </section>
       </div>
 

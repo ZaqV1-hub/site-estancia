@@ -29,11 +29,11 @@ export default async function PainelEventosRoute() {
               Datas promocionais
             </h2>
             <p className="mt-1 text-sm text-[#5f7564]">
-              Eventos e datas promocionais do site.
+              Eventos e datas promocionais do site. A criacao e a edicao das datas promocionais ficam centralizadas na area de Site.
             </p>
           </div>
           <Link
-            href="/painel/agenda/adicionar?tipo=promo"
+            href="/painel/site?createEvent=date"
             className="inline-flex items-center justify-center rounded-[8px] bg-[#17342d] px-3 py-2 text-xs font-semibold text-white"
           >
             Adicionar data promocional

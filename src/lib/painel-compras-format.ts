@@ -5,7 +5,17 @@ function normalizeScalar(value: unknown) {
 
 function normalizeDateValue(value: unknown) {
   const normalized = String(value ?? "").trim();
-  return /^\d{2}\/\d{2}\/\d{4}$/.test(normalized) ? normalized : null;
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(normalized)) {
+    return normalized;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    const [year, month, day] = normalized.split("-");
+    return `${day}/${month}/${year}`;
+  }
+
+  return null;
 }
 
 export function normalizePainelCompraScalarFilterValue(value: unknown) {

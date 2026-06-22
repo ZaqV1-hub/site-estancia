@@ -130,6 +130,15 @@ export async function POST(request: Request) {
     const imageUpload = await saveUploadedSiteImage(formData.get("image"));
     const hasDate = asText(formData.get("eventMode")) === "date";
     const eventDate = asText(formData.get("eventDate"));
+
+    if (hasDate && !eventDate) {
+      return errorResponse("Informe a data promocional do evento.");
+    }
+
+    if (!hasDate && !asText(formData.get("href")) && !current?.href) {
+      return errorResponse("Informe o link manual do botao.");
+    }
+
     const derivedHref =
       hasDate && eventDate
         ? `/agenda?mes=${Number(eventDate.slice(5, 7))}&ano=${eventDate.slice(0, 4)}&date=${eventDate}`

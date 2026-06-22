@@ -201,7 +201,9 @@ export function PainelAgendaEditor({
     return () => controller.abort();
   }, [form.startDate, form.endDate, selectedAgenda?.id]);
 
-  const typeOptions = getPainelAgendaTypeOptions(selectedAgenda?.type ?? null);
+  const typeOptions = getPainelAgendaTypeOptions(
+    mode === "create" ? "padra" : (selectedAgenda?.type ?? null),
+  );
   const overwriteRequired = rangePreview.existingDates.length > 0;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -307,6 +309,11 @@ export function PainelAgendaEditor({
             ? "Configure a data, os passaportes e os itens disponíveis."
             : "Atualize a data, os passaportes e os itens disponíveis."}
         </p>
+        {mode === "create" ? (
+          <p className="mt-2 text-sm text-[#5f7564]">
+            Datas promocionais sao cadastradas pelo painel de Site para manter o evento vinculado corretamente.
+          </p>
+        ) : null}
       </div>
 
       <form className="mt-5 grid gap-3" onSubmit={handleSubmit}>

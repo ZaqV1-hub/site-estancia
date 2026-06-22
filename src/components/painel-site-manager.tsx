@@ -21,6 +21,8 @@ type DeleteTarget = {
   title: string;
 };
 
+type EventMode = "date" | "link";
+
 function itemTitle(item: EditableItem) {
   if (item.section === "home") {
     return item.item ? "Editar imagem da home" : "Adicionar imagem da home";
@@ -31,6 +33,19 @@ function itemTitle(item: EditableItem) {
   }
 
   return item.item ? "Editar evento" : "Adicionar evento";
+}
+
+function resolveEventMode(event: ManagedEvent | null | undefined): EventMode {
+  const href = event?.href?.trim() ?? "";
+
+  return /(?:\?|&)date=\d{4}-\d{2}-\d{2}(?:&|$)/.test(href) ? "date" : "link";
+}
+
+function resolveEventDate(event: ManagedEvent | null | undefined) {
+  const href = event?.href?.trim() ?? "";
+  const match = href.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/);
+
+  return match?.[1] ?? "";
 }
 
 function ImagePicker({ name, label }: { name: string; label: string }) {
@@ -92,17 +107,56 @@ function SubmitButton({ pending }: { pending: boolean }) {
   );
 }
 
-export function PainelSiteManager({ content }: { content: EstanciaContentData }) {
+export function PainelSiteManager({
+  content,
+  initialEditEventId = null,
+  initialCreateEventMode = null,
+}: {
+  content: EstanciaContentData;
+  initialEditEventId?: string | null;
+  initialCreateEventMode?: EventMode | null;
+}) {
   const router = useRouter();
-  const [editing, setEditing] = useState<EditableItem | null>(null);
+  const [editing, setEditing] = useState<EditableItem | null>(() => {
+    if (initialEditEventId) {
+      const item = content.events.find((event) => event.id === initialEditEventId) ?? null;
+
+      if (item) {
+        return { section: "event", item };
+      }
+    }
+
+    if (initialCreateEventMode) {
+      return { section: "event", item: null };
+    }
+
+    return null;
+  });
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [eventMode, setEventMode] = useState<EventMode>(() => {
+    if (initialEditEventId) {
+      const item = content.events.find((event) => event.id === initialEditEventId) ?? null;
+      return resolveEventMode(item);
+    }
+
+    return initialCreateEventMode ?? "date";
+  });
   const currentEvent =
     editing?.section === "event" ? (editing.item as ManagedEvent | null) : null;
-  const currentEventUsesManualLink = Boolean(
-    currentEvent?.href?.startsWith("http"),
-  );
+
+  function openCreateEvent(nextMode: EventMode) {
+    setEventMode(nextMode);
+    setEditing({ section: "event", item: null });
+    setError(null);
+  }
+
+  function openEditEvent(item: ManagedEvent) {
+    setEventMode(resolveEventMode(item));
+    setEditing({ section: "event", item });
+    setError(null);
+  }
 
   async function submitForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -124,6 +178,7 @@ export function PainelSiteManager({ content }: { content: EstanciaContentData })
       }
 
       setEditing(null);
+      router.replace("/painel/site");
       router.refresh();
     } catch (saveError) {
       setError(
@@ -250,10 +305,26 @@ export function PainelSiteManager({ content }: { content: EstanciaContentData })
         />
         <ContentList
           title="Eventos"
-          buttonLabel="Adicionar evento"
+          buttonLabel={null}
+          extraActions={
+            <>
+              <button
+                onClick={() => openCreateEvent("date")}
+                className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white"
+              >
+                Evento com data
+              </button>
+              <button
+                onClick={() => openCreateEvent("link")}
+                className="rounded-full border border-[#dbe7d7] bg-white px-5 py-3 text-sm font-black text-[#17351f]"
+              >
+                Evento com link
+              </button>
+            </>
+          }
           items={content.events}
-          onEdit={(item) => setEditing({ section: "event", item })}
-          onCreate={() => setEditing({ section: "event", item: null })}
+          onEdit={openEditEvent}
+          onCreate={() => openCreateEvent("date")}
           onDelete={(item) =>
             setDeleteTarget({ section: "event", id: item.id, title: item.title })
           }
@@ -325,7 +396,8 @@ export function PainelSiteManager({ content }: { content: EstanciaContentData })
                           name="eventMode"
                           type="radio"
                           value="date"
-                          defaultChecked={!currentEventUsesManualLink}
+                          checked={eventMode === "date"}
+                          onChange={() => setEventMode("date")}
                         />
                         Sim, criar como data promocional
                       </label>
@@ -334,26 +406,31 @@ export function PainelSiteManager({ content }: { content: EstanciaContentData })
                           name="eventMode"
                           type="radio"
                           value="link"
-                          defaultChecked={currentEventUsesManualLink}
+                          checked={eventMode === "link"}
+                          onChange={() => setEventMode("link")}
                         />
                         Não, usar link manual no botão
                       </label>
                     </fieldset>
-                    <Field label="Data do evento">
-                      <input
-                        name="eventDate"
-                        type="date"
-                        className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
-                      />
-                    </Field>
-                    <Field label="Link do botão">
-                      <input
-                        name="href"
-                        defaultValue={currentEvent?.href ?? ""}
-                        placeholder="https://site.com.br ou /agenda"
-                        className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
-                      />
-                    </Field>
+                    {eventMode === "date" ? (
+                      <Field label="Data do evento">
+                        <input
+                          name="eventDate"
+                          type="date"
+                          defaultValue={resolveEventDate(currentEvent)}
+                          className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                        />
+                      </Field>
+                    ) : (
+                      <Field label="Link do botão">
+                        <input
+                          name="href"
+                          defaultValue={currentEvent?.href ?? ""}
+                          placeholder="https://site.com.br ou /agenda"
+                          className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                        />
+                      </Field>
+                    )}
                     <Field label="Texto do botão">
                       <input
                         name="buttonLabel"
@@ -448,13 +525,15 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
   title,
   buttonLabel,
   items,
+  extraActions,
   onEdit,
   onCreate,
   onDelete,
 }: {
   title: string;
-  buttonLabel: string;
+  buttonLabel: string | null;
   items: T[];
+  extraActions?: React.ReactNode;
   onEdit: (item: T) => void;
   onCreate: () => void;
   onDelete: (item: T) => void;
@@ -463,12 +542,17 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
     <article className="panel-section p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="panel-eyebrow">{title}</p>
-        <button
-          onClick={onCreate}
-          className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white"
-        >
-          {buttonLabel}
-        </button>
+        <div className="flex flex-wrap justify-end gap-2">
+          {extraActions}
+          {buttonLabel ? (
+            <button
+              onClick={onCreate}
+              className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white"
+            >
+              {buttonLabel}
+            </button>
+          ) : null}
+        </div>
       </div>
       <div className="mt-5 grid max-h-[520px] gap-3 overflow-y-auto pr-2">
         {items.map((item) => (

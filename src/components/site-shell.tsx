@@ -8,7 +8,13 @@ import { useEffect, useState } from "react";
 import { EstanciaLogo } from "@/components/estancia-logo";
 import { contact } from "@/lib/site-content";
 
-export function SiteShell({ children }: { children: React.ReactNode }) {
+export function SiteShell({
+  children,
+  customerMenuHref,
+}: {
+  children: React.ReactNode;
+  customerMenuHref: string;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
@@ -109,6 +115,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
                 ["In\u00edcio", "/"],
                 ["Atra\u00e7\u00f5es", "/#atracoes"],
                 ["Eventos", "/#eventos"],
+                ["Minha conta", customerMenuHref],
                 ["Comprar ingressos", "/agenda"],
               ].map(([label, href]) => (
                 <li key={href}>
@@ -148,6 +155,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             <Link href="/">{"In\u00edcio"}</Link>
             <Link href="/#atracoes">{"Atra\u00e7\u00f5es"}</Link>
             <Link href="/#eventos">Eventos</Link>
+            <Link href={customerMenuHref}>Minha conta</Link>
             <Link href="/agenda">Comprar ingressos</Link>
           </nav>
 

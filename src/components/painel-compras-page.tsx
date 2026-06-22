@@ -36,6 +36,17 @@ const ticketPaymentMethodOptions = [
   { value: "pix", label: "PIX" },
 ];
 
+const paymentMethodOptions = [
+  ...gatewayPaymentMethodOptions.map((option) => ({
+    value: `gateway:${option.value}`,
+    label: option.label,
+  })),
+  ...ticketPaymentMethodOptions.map((option) => ({
+    value: `ticket:${option.value}`,
+    label: option.label,
+  })),
+];
+
 const gatewayStatusOptions = [
   { value: "1", label: "Aguardando pagamento" },
   { value: "2", label: "Em analise" },
@@ -74,11 +85,11 @@ function buildComprasHref(
     params.set("stcompra", filters.purchaseStatus);
   }
 
-  if (filters.gatewayPaymentMethod) {
+  if (filters.paymentMethod) {
+    params.set("payment", filters.paymentMethod);
+  } else if (filters.gatewayPaymentMethod) {
     params.set("paymentmethodtype", filters.gatewayPaymentMethod);
-  }
-
-  if (filters.ticketPaymentMethod) {
+  } else if (filters.ticketPaymentMethod) {
     params.set("formapag", filters.ticketPaymentMethod);
   }
 
@@ -125,6 +136,23 @@ function renderSelect(
 
 function hasActiveFilters(filters: PainelPurchaseListResult["filters"]) {
   return Object.values(filters).some((value) => value != null && value !== "");
+}
+
+function toDateInputValue(value: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+    const [day, month, year] = value.split("/");
+    return `${year}-${month}-${day}`;
+  }
+
+  return "";
 }
 
 function buildLegacyUserHref(cpf: string) {
@@ -190,20 +218,18 @@ export function PainelComprasPage({
             De
             <input
               className="estancia-field rounded-[8px] px-3 py-2 text-sm"
-              defaultValue={result.filters.dateFrom ?? ""}
-              maxLength={10}
+              defaultValue={toDateInputValue(result.filters.dateFrom ?? null)}
               name="dtcompra[de]"
-              type="text"
+              type="date"
             />
           </label>
           <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
             Ate
             <input
               className="estancia-field rounded-[8px] px-3 py-2 text-sm"
-              defaultValue={result.filters.dateTo ?? ""}
-              maxLength={10}
+              defaultValue={toDateInputValue(result.filters.dateTo ?? null)}
               name="dtcompra[ate]"
-              type="text"
+              type="date"
             />
           </label>
           <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
@@ -225,19 +251,16 @@ export function PainelComprasPage({
             {renderSelect("stcompra", result.filters.purchaseStatus, purchaseStatusOptions)}
           </label>
           <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            Pgto. Cielo
+            Forma de pgto
             {renderSelect(
-              "paymentmethodtype",
-              result.filters.gatewayPaymentMethod,
-              gatewayPaymentMethodOptions,
-            )}
-          </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            Pgto. Bilheteria
-            {renderSelect(
-              "formapag",
-              result.filters.ticketPaymentMethod,
-              ticketPaymentMethodOptions,
+              "payment",
+              result.filters.paymentMethod ??
+                (result.filters.gatewayPaymentMethod
+                  ? `gateway:${result.filters.gatewayPaymentMethod}`
+                  : result.filters.ticketPaymentMethod
+                    ? `ticket:${result.filters.ticketPaymentMethod}`
+                    : null),
+              paymentMethodOptions,
             )}
           </label>
           <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">

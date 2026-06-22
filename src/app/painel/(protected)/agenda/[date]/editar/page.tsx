@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PainelAgendaEditor } from "@/components/painel-agenda-editor";
 import { readEstanciaContent } from "@/lib/estancia-content-store";
 import { getPainelAgendaScreenData } from "@/lib/painel-agenda";
@@ -34,6 +35,17 @@ export default async function PainelAgendaEditPage({
     selectedDate: routeParams.date,
   });
   const content = await readEstanciaContent();
+
+  if (data.selectedDay?.agenda?.type === "promo") {
+    const linkedEvent = content.events.find((event) =>
+      event.href.includes(`date=${routeParams.date}`),
+    );
+
+    if (linkedEvent) {
+      redirect(`/painel/site?editEvent=${encodeURIComponent(linkedEvent.id)}`);
+    }
+  }
+
   const returnHref = `/painel/agenda/${routeParams.date}?mes=${data.month}&ano=${data.year}`;
 
   return (

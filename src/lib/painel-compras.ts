@@ -14,6 +14,7 @@ export type PainelPurchaseListFilters = {
   purchaseId: string | null;
   type: string | null;
   purchaseStatus: string | null;
+  paymentMethod?: string | null;
   ticketPaymentMethod: string | null;
   gatewayPaymentMethod: string | null;
   gatewayStatus: string | null;
@@ -194,6 +195,7 @@ type PainelPurchaseListFilterInput = Record<string, unknown> & {
   idcompra?: unknown;
   tpcompra?: unknown;
   stcompra?: unknown;
+  payment?: unknown;
   formapag?: unknown;
   paymentmethodtype?: unknown;
   status?: unknown;
@@ -454,6 +456,7 @@ function normalizeWhereFilters(
     purchaseId: normalizePainelCompraScalarFilterValue(filters.purchaseId),
     type: normalizePainelCompraScalarFilterValue(filters.type),
     purchaseStatus: normalizePainelCompraScalarFilterValue(filters.purchaseStatus),
+    paymentMethod: normalizePainelCompraScalarFilterValue(filters.paymentMethod),
     ticketPaymentMethod: normalizePainelCompraScalarFilterValue(filters.ticketPaymentMethod),
     gatewayPaymentMethod: normalizePainelCompraScalarFilterValue(filters.gatewayPaymentMethod),
     gatewayStatus: normalizePainelCompraScalarFilterValue(filters.gatewayStatus),
@@ -707,10 +710,13 @@ function buildPurchaseListItem(row: PainelPurchaseListRow): PainelPurchaseListIt
 export function normalizePainelPurchaseListFilters(
   input: PainelPurchaseListFilterInput,
 ): PainelPurchaseListFilters {
+  const paymentMethod = normalizePainelCompraScalarFilterValue(input.payment);
+
   return {
     purchaseId: normalizePainelCompraScalarFilterValue(input.idcompra),
     type: normalizePainelCompraScalarFilterValue(input.tpcompra),
     purchaseStatus: normalizePainelCompraScalarFilterValue(input.stcompra),
+    paymentMethod,
     ticketPaymentMethod: normalizePainelCompraScalarFilterValue(input.formapag),
     gatewayPaymentMethod: normalizePainelCompraScalarFilterValue(input.paymentmethodtype),
     gatewayStatus: normalizePainelCompraScalarFilterValue(input.status),
@@ -819,6 +825,22 @@ export function buildPainelPurchaseListWhere(
 
   if (normalizedFilters.ticketPaymentMethod) {
     clauses.push(buildTicketPaymentMethodClause(normalizedFilters.ticketPaymentMethod));
+  }
+
+  if (normalizedFilters.paymentMethod) {
+    if (normalizedFilters.paymentMethod.startsWith("gateway:")) {
+      clauses.push(
+        `pagpagseguro.paymentmethodtype = '${escapeSqlLiteral(
+          normalizedFilters.paymentMethod.slice("gateway:".length),
+        )}'`,
+      );
+    } else if (normalizedFilters.paymentMethod.startsWith("ticket:")) {
+      clauses.push(
+        buildTicketPaymentMethodClause(
+          normalizedFilters.paymentMethod.slice("ticket:".length),
+        ),
+      );
+    }
   }
 
   return {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PainelAgendaEditor } from "@/components/painel-agenda-editor";
 import { readEstanciaContent } from "@/lib/estancia-content-store";
 import { getPainelAgendaScreenData } from "@/lib/painel-agenda";
@@ -27,6 +28,11 @@ export default async function PainelAgendaAddPage({
 }) {
   const session = await requirePainelAccess("vis_agenda", "/painel/agenda/adicionar");
   const params = await searchParams;
+
+  if (params.tipo === "promo") {
+    redirect("/painel/site?createEvent=date");
+  }
+
   const data = await getPainelAgendaScreenData({
     month: params.mes,
     year: params.ano,
@@ -49,6 +55,9 @@ export default async function PainelAgendaAddPage({
           <span>/</span>
           <span>Adicionar</span>
         </div>
+        <p className="mt-3 text-sm text-[#5d7282]">
+          Use esta tela apenas para datas padrao da agenda. Datas promocionais e eventos ficam na area de Site.
+        </p>
       </header>
 
       <PainelAgendaEditor
@@ -59,7 +68,7 @@ export default async function PainelAgendaAddPage({
         }}
         mode="create"
         returnHref={returnHref}
-        initialType={params.tipo === "promo" ? "promo" : "padra"}
+        initialType="padra"
         products={content.products}
       />
     </div>

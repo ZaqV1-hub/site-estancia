@@ -32,7 +32,7 @@ npm run db:up
 npm run dev
 ```
 
-Abra [http://localhost:3000](http://localhost:3000).
+Abra [http://localhost:3002](http://localhost:3002).
 
 ### Banco local com Docker
 
@@ -320,7 +320,7 @@ O repositório agora inclui um chamador shell em
 pronto para cron Linux. Variaveis aceitas pelo script:
 
 - `OPS_JOBS_BASE_URL`, fallback para `SITE_BASE_URL`, `WP_SITE_BASE_URL` e
-  depois `http://127.0.0.1:3000`
+  depois `http://127.0.0.1:3002`
 - `INGRESSO_OPERATIONS_JOBS_TOKEN`
 - `OPS_DAILY_RUN_RECENT_DAYS`, padrao `7`
 - `OPS_DAILY_RUN_CANCEL_AFTER_DAYS`, padrao `5`

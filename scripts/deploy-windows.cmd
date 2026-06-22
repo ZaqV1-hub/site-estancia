@@ -7,7 +7,7 @@ if "%PORT%"=="" (
     if /I "%%A"=="PORT" set "PORT=%%B"
   )
 )
-if "%PORT%"=="" set "PORT=3001"
+if "%PORT%"=="" set "PORT=3002"
 
 cd /d "%~dp0.."
 

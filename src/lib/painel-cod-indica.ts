@@ -698,6 +698,20 @@ async function loadCashbackSummary(codigo: string) {
   };
 }
 
+async function loadCashbackAdminPassword() {
+  const pool = getIngressoDbPool();
+  const result = await pool.query<{ vlparametro: string | null }>(
+    `
+      SELECT vlparametro
+      FROM parametro
+      WHERE idparametro = 'codcashpass'
+      LIMIT 1
+    `,
+  );
+
+  return normalizeText(result.rows[0]?.vlparametro);
+}
+
 async function loadCashbackPayments(codigo: string) {
   const pool = getIngressoDbPool();
   const result = await pool
@@ -1142,7 +1156,17 @@ export async function payPainelCodIndicaCashback(
     );
   }
 
-  if (normalizeText(values.senha_admin) !== "251030") {
+  const adminPassword = await loadCashbackAdminPassword();
+
+  if (!adminPassword) {
+    throw new PainelCodIndicaError(
+      "cashback_admin_password_unconfigured",
+      "Senha administrativa de cashback nao configurada.",
+      409,
+    );
+  }
+
+  if (normalizeText(values.senha_admin) !== adminPassword) {
     throw new PainelCodIndicaError(
       "invalid_admin_password",
       "Senha administrativa invalida.",

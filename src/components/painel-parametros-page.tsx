@@ -140,17 +140,33 @@ export function PainelParametrosPage({
                                 dangerouslySetInnerHTML={{ __html: item.description }}
                               />
                               <td className="border border-[#d7d7d7] px-4 py-3 align-top">
-                                <textarea
-                                  className="min-h-[120px] w-full border border-[#d3dbe3] px-3 py-3"
-                                  onChange={(event) =>
-                                    setValues((current) => ({
-                                      ...current,
-                                      [key]: event.target.value,
-                                    }))
-                                  }
-                                  required={item.required}
-                                  value={values[key] ?? ""}
-                                />
+                                {item.input === "password" ? (
+                                  <input
+                                    autoComplete="new-password"
+                                    className="w-full border border-[#d3dbe3] px-3 py-3"
+                                    onChange={(event) =>
+                                      setValues((current) => ({
+                                        ...current,
+                                        [key]: event.target.value,
+                                      }))
+                                    }
+                                    required={item.required}
+                                    type="password"
+                                    value={values[key] ?? ""}
+                                  />
+                                ) : (
+                                  <textarea
+                                    className="min-h-[120px] w-full border border-[#d3dbe3] px-3 py-3"
+                                    onChange={(event) =>
+                                      setValues((current) => ({
+                                        ...current,
+                                        [key]: event.target.value,
+                                      }))
+                                    }
+                                    required={item.required}
+                                    value={values[key] ?? ""}
+                                  />
+                                )}
                               </td>
                             </tr>
                           );

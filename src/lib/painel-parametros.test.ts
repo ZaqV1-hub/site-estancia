@@ -14,6 +14,17 @@ vi.mock("@/lib/ops-admin-parameters", () => ({
       value: "valor atual",
       persisted: true,
     },
+    {
+      group: "segadm",
+      id: "codcashpass",
+      label: "Senha cashback",
+      description: "Senha administrativa usada para registrar pagamentos de cashback.",
+      defaultValue: "",
+      input: "password",
+      required: false,
+      value: "12345",
+      persisted: true,
+    },
   ]),
   updateOpsAdminParameters: vi.fn(),
   asOpsAdminParametersError: vi.fn((error: unknown) => error),
@@ -31,6 +42,16 @@ describe("painel-parametros", () => {
           expect.objectContaining({
             id: "codval",
             value: "valor atual",
+          }),
+        ],
+      },
+      {
+        key: "segadm",
+        label: "Seguranca Administrativa",
+        items: [
+          expect.objectContaining({
+            id: "codcashpass",
+            value: "12345",
           }),
         ],
       },

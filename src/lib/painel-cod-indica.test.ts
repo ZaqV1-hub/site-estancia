@@ -73,7 +73,7 @@ describe("painel-cod-indica", () => {
   it("bloqueia pagamento de cashback acima do disponivel", async () => {
     const values: PainelCodIndicaCashbackPaymentValues = {
       vlpagamento: "100,00",
-      senha_admin: "251030",
+      senha_admin: "12345",
       dsobservacao: "",
     };
 
@@ -97,6 +97,7 @@ describe("painel-cod-indica", () => {
           },
         ],
       })
+      .mockResolvedValueOnce({ rows: [{ vlparametro: "12345" }] })
       .mockResolvedValueOnce({ rows: [{ total: "10.00" }] })
       .mockResolvedValueOnce({ rows: [{ total: "0.00" }] });
 

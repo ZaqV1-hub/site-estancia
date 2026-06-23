@@ -34,7 +34,7 @@ describe("api/painel/cod-indica/[codigo]/cashback/pagar", () => {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          values: { vlpagamento: "10,00", senha_admin: "251030", dsobservacao: "Teste" },
+          values: { vlpagamento: "10,00", senha_admin: "12345", dsobservacao: "Teste" },
         }),
       }),
       { params: Promise.resolve({ codigo: "ABC123" }) },
@@ -43,7 +43,7 @@ describe("api/painel/cod-indica/[codigo]/cashback/pagar", () => {
     expect(response.status).toBe(200);
     expect(payPainelCodIndicaCashback).toHaveBeenCalledWith(
       "ABC123",
-      { vlpagamento: "10,00", senha_admin: "251030", dsobservacao: "Teste" },
+      { vlpagamento: "10,00", senha_admin: "12345", dsobservacao: "Teste" },
       {
         roleId: 1,
         cpf: "52998224725",

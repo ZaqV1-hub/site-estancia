@@ -8,13 +8,13 @@ export type PainelParametroItem = {
   id: string;
   label: string;
   description: string;
-  input: "textarea";
+  input: "textarea" | "password";
   required: boolean;
   value: string;
 };
 
 export type PainelParametroGroup = {
-  key: "msgper";
+  key: "msgper" | "segadm";
   label: string;
   items: PainelParametroItem[];
 };
@@ -34,6 +34,10 @@ export class PainelParametrosError extends Error {
 function groupLabel(group: string) {
   if (group === "msgper") {
     return "Mensagem Personalizada";
+  }
+
+  if (group === "segadm") {
+    return "Seguranca Administrativa";
   }
 
   return group;

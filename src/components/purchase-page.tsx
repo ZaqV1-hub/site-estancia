@@ -667,7 +667,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
                               type="button"
                               onClick={() => void handleApplyCodindica()}
                               disabled={isApplyingCodindica}
-                              className="rounded-[10px] bg-[#11883b] px-4 py-3 text-[13px] font-black text-white shadow-[0_8px_16px_rgba(17,136,59,0.15)] hover:bg-[#0c6e30] disabled:opacity-60"
+                              className="rounded-[10px] bg-[#11883b] px-4 py-3 text-[13px] font-black text-white shadow-[0_10px_20px_rgba(17,136,59,0.15)] transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-[#0c6e30] disabled:opacity-60"
                             >
                               {isApplyingCodindica ? "Aplicando..." : "Aplicar"}
                             </button>

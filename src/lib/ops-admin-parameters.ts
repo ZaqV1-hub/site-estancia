@@ -8,12 +8,12 @@ type ParameterActor = {
 };
 
 export type OpsAdminParameterDefinition = {
-  group: "msgper";
-  id: "codval" | "codven" | "codine";
+  group: "msgper" | "segadm";
+  id: "codval" | "codven" | "codine" | "codcashpass";
   label: string;
   description: string;
   defaultValue: string;
-  input: "textarea";
+  input: "textarea" | "password";
   required: boolean;
 };
 
@@ -74,6 +74,15 @@ const parameterDefinitions: OpsAdminParameterDefinition[] = [
     defaultValue: "N&atilde;o localizamos o c&oacute;digo de indica&ccedil;&atilde;o ##cod##",
     input: "textarea",
     required: true,
+  },
+  {
+    group: "segadm",
+    id: "codcashpass",
+    label: "Senha cashback",
+    description: "Senha administrativa usada para registrar pagamentos de cashback.",
+    defaultValue: "",
+    input: "password",
+    required: false,
   },
 ];
 

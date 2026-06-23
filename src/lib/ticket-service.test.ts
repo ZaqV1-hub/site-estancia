@@ -767,4 +767,96 @@ describe("ticket-service", () => {
       message: "Recuperacao de entrega executada para 1 compra(s).",
     });
   });
+
+  it("skips recovery when the confirmed purchase has no contact for delivery", async () => {
+    dbQuery.mockImplementation(async (sql: string, values?: unknown[]) => {
+      if (
+        sql.includes("COUNT(*)::text AS pending_vouchers") &&
+        sql.includes("GROUP BY compra.idcompra")
+      ) {
+        expect(values).toEqual([7, 50]);
+
+        return {
+          rows: [
+            {
+              purchase_id: 10,
+              pending_vouchers: "1",
+            },
+          ],
+        };
+      }
+
+      if (sql.includes("FROM compra")) {
+        return {
+          rows: [
+            {
+              idcompra: 10,
+              cpf: null,
+              tpcompra: "ponli",
+              dtcompra: "2026-06-22",
+              email: null,
+              nmusuario: null,
+              celular: null,
+            },
+          ],
+        };
+      }
+
+      if (sql.includes("FROM voucher")) {
+        return {
+          rows: [
+            {
+              idvoucher: 25,
+              numvoucher: "ARF92",
+              tpvoucher: "norma",
+              descricao: "Passaporte Explorador",
+              vlunicompra: "0.00",
+              stusado: "n",
+              voucherenviado: "n",
+              identificacao: null,
+              idagenda: null,
+              dtagenda: null,
+            },
+          ],
+        };
+      }
+
+      return { rows: [] };
+    });
+
+    await expect(
+      recoverPendingTicketDeliveries({
+        recentDays: 7,
+        limit: 50,
+      }),
+    ).resolves.toEqual({
+      action: "ticket_delivery_recovery",
+      candidates: 1,
+      processed: 1,
+      recovered: 0,
+      skipped: 1,
+      failed: 0,
+      items: [
+        {
+          purchaseId: 10,
+          pendingVouchers: 1,
+          result: "skipped",
+          sentVoucherIds: [],
+          note: "Entrega nao reenviada (contact_missing_for_delivery).",
+        },
+      ],
+      message: "Recuperacao de entrega executada para 1 compra(s).",
+    });
+
+    expect(registerTicketDeliveryAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        purchaseId: 10,
+        trigger: "delivery_recovery",
+        result: expect.objectContaining({
+          status: "skipped",
+          skippedReason: "contact_missing_for_delivery",
+        }),
+      }),
+    );
+  });
 });

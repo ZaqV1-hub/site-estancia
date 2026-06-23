@@ -617,6 +617,18 @@ export async function processConfirmedPurchaseTickets(
     };
   }
 
+  const normalizedPhone = digitsOnly(purchase.celular);
+  const normalizedEmail = String(purchase.email ?? "").trim();
+
+  if (purchase.tpcompra === "ponli" && !normalizedPhone && !normalizedEmail) {
+    return {
+      status: "skipped",
+      purchaseId,
+      sentVoucherIds: [],
+      skippedReason: "contact_missing_for_delivery",
+    };
+  }
+
   const vouchers = await loadPendingTicketVouchers(purchaseId);
 
   if (vouchers.length === 0) {

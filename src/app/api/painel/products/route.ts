@@ -59,6 +59,13 @@ export async function POST(request: Request) {
   const current = data.products.find((item) => item.id === id);
   const imageSrc = await saveUploadedSiteImage(formData.get("image"));
   const voucherType = type === "addon" ? "espec" : "norma";
+  const rawSitePrice = asText(formData.get("sitePrice")) || asText(formData.get("fixedPrice"));
+  const rawBoxOfficePrice = asText(formData.get("boxOfficePrice"));
+  const sitePrice = normalizePrice(rawSitePrice);
+  const boxOfficePrice =
+    type === "passport"
+      ? normalizePrice(rawBoxOfficePrice || rawSitePrice)
+      : sitePrice;
   const product: B2cProduct = {
     id,
     type,
@@ -66,7 +73,9 @@ export async function POST(request: Request) {
     subtitle: asText(formData.get("subtitle")) || current?.subtitle || "",
     description: asText(formData.get("description")) || current?.description || "",
     imageSrc: imageSrc ?? current?.imageSrc ?? "/photos/day-use.jpg",
-    fixedPrice: normalizePrice(formData.get("fixedPrice")),
+    sitePrice,
+    boxOfficePrice,
+    fixedPrice: sitePrice,
     voucherType,
     voucherPrefix: type === "addon" ? "E" : "A",
     active: asBool(formData.get("active")),

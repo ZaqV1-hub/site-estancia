@@ -265,6 +265,26 @@ function normalizeManagedEvent(item: ManagedEvent, fallback: ManagedEvent) {
   };
 }
 
+function normalizeManagedProduct(item: B2cProduct, fallback: B2cProduct) {
+  const sitePrice = normalizePrice(item.sitePrice ?? item.fixedPrice ?? fallback.sitePrice);
+  const boxOfficePrice = normalizePrice(
+    item.boxOfficePrice ?? item.sitePrice ?? item.fixedPrice ?? fallback.boxOfficePrice,
+  );
+
+  return {
+    ...item,
+    title: repairMojibakeText(item.title, fallback.title),
+    subtitle: repairMojibakeText(item.subtitle, fallback.subtitle),
+    description: repairMojibakeText(item.description, fallback.description),
+    imageSrc: normalizeManagedImageSrc(item.imageSrc, fallback.imageSrc),
+    sitePrice,
+    boxOfficePrice,
+    fixedPrice: sitePrice,
+    voucherType: item.voucherType === "infan" || item.voucherType === "espec" ? item.voucherType : fallback.voucherType,
+    voucherPrefix: item.voucherPrefix?.trim() || fallback.voucherPrefix,
+  };
+}
+
 function readManagedList<T extends { sortOrder?: number; title?: string }>(
   value: T[] | undefined,
   fallback: T[],
@@ -297,12 +317,20 @@ function normalizeEstanciaContent(parsed?: Partial<EstanciaContentData> | null) 
         ),
       )
     : undefined;
+  const parsedProducts = Array.isArray(parsed?.products)
+    ? parsed.products.map((item, index) =>
+        normalizeManagedProduct(
+          item,
+          defaultContent.products[index] ?? defaultContent.products[0],
+        ),
+      )
+    : undefined;
 
   return {
     homeImages: readManagedList(parsedHomeImages, defaultContent.homeImages),
     attractions: readManagedList(parsedAttractions, defaultContent.attractions),
     events: readManagedList(parsedEvents, defaultContent.events),
-    products: readManagedList(parsed?.products, defaultContent.products),
+    products: readManagedList(parsedProducts, defaultContent.products),
   } satisfies EstanciaContentData;
 }
 

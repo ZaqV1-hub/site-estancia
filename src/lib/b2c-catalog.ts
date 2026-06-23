@@ -5,6 +5,7 @@ import type {
   B2cProductType,
   B2cVoucherType,
 } from "@/lib/b2c-catalog-defaults";
+import { getB2cSitePrice } from "@/lib/b2c-catalog-defaults";
 
 export type {
   B2cProduct,
@@ -41,7 +42,7 @@ function parseMoney(value: string | null | undefined) {
 }
 
 function resolveUnitPrice(product: B2cProduct) {
-  return parseMoney(product.fixedPrice);
+  return parseMoney(getB2cSitePrice(product));
 }
 
 export async function getB2cProductUnitPrice(productId: string) {

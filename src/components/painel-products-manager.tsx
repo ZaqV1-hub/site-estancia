@@ -5,7 +5,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { PainelModal } from "@/components/painel-modal";
-import type { B2cProduct, B2cProductType } from "@/lib/b2c-catalog-defaults";
+import {
+  getB2cBoxOfficePrice,
+  getB2cSitePrice,
+  type B2cProduct,
+  type B2cProductType,
+} from "@/lib/b2c-catalog-defaults";
 
 type EditState = {
   type: B2cProductType;
@@ -190,15 +195,35 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
             ) : null}
             <ImageInput />
             <div className="grid gap-3 md:grid-cols-2">
-              <Field label="Valor">
+              <Field label="Valor no site">
                 <CurrencyInput
                   key={`product-price-${editing.product?.id ?? "new"}-${editing.type}`}
-                  name="fixedPrice"
-                  defaultValue={editing.product?.fixedPrice ?? ""}
+                  name="sitePrice"
+                  defaultValue={getB2cSitePrice(editing.product ?? { sitePrice: "", fixedPrice: "" })}
                   placeholder="100,00"
                   className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5"
                 />
               </Field>
+              {editing.type === "passport" ? (
+                <Field label="Valor na bilheteria">
+                  <CurrencyInput
+                    key={`product-box-office-${editing.product?.id ?? "new"}-${editing.type}`}
+                    name="boxOfficePrice"
+                    defaultValue={getB2cBoxOfficePrice(
+                      editing.product ?? { sitePrice: "", boxOfficePrice: "", fixedPrice: "" },
+                    )}
+                    placeholder="100,00"
+                    className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5"
+                  />
+                </Field>
+              ) : null}
+              {editing.type !== "passport" ? (
+                <input
+                  type="hidden"
+                  name="boxOfficePrice"
+                  value={getB2cSitePrice(editing.product ?? { sitePrice: "", fixedPrice: "" })}
+                />
+              ) : null}
               <Field label="Ordem">
                 <input
                   name="sortOrder"
@@ -331,9 +356,14 @@ function ProductSection({
                   </p>
                 </div>
                 <strong className="text-sm text-[#17351f]">
-                  {formatCurrency(product.fixedPrice)}
+                  {formatCurrency(getB2cSitePrice(product))}
                 </strong>
               </div>
+              {product.type === "passport" ? (
+                <p className="mt-2 text-xs font-semibold text-[#5f7564]">
+                  Bilheteria {formatCurrency(getB2cBoxOfficePrice(product))}
+                </p>
+              ) : null}
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => onEdit(product)}

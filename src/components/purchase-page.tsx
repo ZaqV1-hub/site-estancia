@@ -8,7 +8,10 @@ import {
   PrimaryFlowButton,
 } from "@/components/order-flow-ui";
 import type { AuthUser } from "@/lib/auth-contracts";
-import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
+import {
+  getB2cSitePrice,
+  type B2cProduct,
+} from "@/lib/b2c-catalog-defaults";
 import type {
   CreatePurchaseResponse,
   PurchaseAgendaDetail,
@@ -44,7 +47,7 @@ function buildClientCartSummary(
 ) {
   const lines = lineItems.map((item) => {
     const product = products.find((current) => current.id === item.productId);
-    const unitPrice = product ? Number(product.fixedPrice) : 0;
+    const unitPrice = product ? Number(getB2cSitePrice(product)) : 0;
 
     if (!product || !Number.isFinite(unitPrice)) {
       throw new Error("Produto indisponível para compra.");
@@ -147,7 +150,7 @@ function ProductCard({
             {product.subtitle}
           </p>
           <strong className="mt-1.5 block text-[15px] font-extrabold text-[#073f35] xl:mt-2 xl:text-[16px]">
-            {formatCurrency(product.fixedPrice)}
+            {formatCurrency(getB2cSitePrice(product))}
           </strong>
 
           <div className="mt-auto flex items-center gap-1.5 pt-2">

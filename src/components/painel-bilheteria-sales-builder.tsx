@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { PublicAgendaEvent } from "@/lib/agenda-contracts";
-import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
+import {
+  getB2cBoxOfficePrice,
+  type B2cProduct,
+} from "@/lib/b2c-catalog-defaults";
 import type { OpsCourtesyAuthor, OpsDiscount } from "@/lib/ops-reference-data";
 import {
   PAINEL_BILHETERIA_SALE_DRAFT_KEY,
@@ -135,16 +138,8 @@ function calculatePurchaseDiscount(
   return 0;
 }
 
-function readAgendaPrice(product: B2cProduct, agenda: PublicAgendaEvent | null) {
-  if (!agenda) {
-    return parseMoney(product.fixedPrice);
-  }
-
-  if (product.voucherType === "infan") {
-    return parseMoney(agenda.priceTable.gateChild ?? product.fixedPrice);
-  }
-
-  return parseMoney(agenda.priceTable.gateNormal ?? product.fixedPrice);
+function readAgendaPrice(product: B2cProduct) {
+  return parseMoney(getB2cBoxOfficePrice(product));
 }
 
 export function PainelBilheteriaSalesBuilder({
@@ -215,7 +210,7 @@ export function PainelBilheteriaSalesBuilder({
           return [];
         }
 
-        const basePrice = readAgendaPrice(product, selectedAgenda);
+        const basePrice = readAgendaPrice(product);
         const totalValue = money(basePrice * line.quantity);
 
         return [
@@ -393,7 +388,7 @@ export function PainelBilheteriaSalesBuilder({
                     ? products.find((product) => product.id === line.selection) ?? null
                     : null;
                 const lineBaseValue = lineProduct
-                  ? readAgendaPrice(lineProduct, selectedAgenda)
+                  ? readAgendaPrice(lineProduct)
                   : 0;
                 const lineSubtotal = lineProduct
                   ? money(lineBaseValue * line.quantity)

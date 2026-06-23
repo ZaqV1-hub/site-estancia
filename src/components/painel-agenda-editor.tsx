@@ -11,7 +11,11 @@ import {
   formatPainelAgendaDateLabel,
   getPainelAgendaTypeOptions,
 } from "@/lib/painel-agenda-ui";
-import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
+import {
+  getB2cBoxOfficePrice,
+  getB2cSitePrice,
+  type B2cProduct,
+} from "@/lib/b2c-catalog-defaults";
 
 type PainelAgendaEditorProps = {
   data: PainelAgendaScreenData;
@@ -445,7 +449,8 @@ export function PainelAgendaEditor({
                   {item.title}
                 </span>
                 <span className="mt-1.5 block text-xs text-[#5f7564]">
-                  R$ {item.fixedPrice.replace(".", ",")}
+                  Site R$ {getB2cSitePrice(item).replace(".", ",")} · Bilheteria R${" "}
+                  {getB2cBoxOfficePrice(item).replace(".", ",")}
                 </span>
               </label>
             ))}
@@ -492,7 +497,7 @@ export function PainelAgendaEditor({
                     {item.title}
                   </span>
                   <span className="text-xs text-[#5f7564]">
-                    R$ {item.fixedPrice.replace(".", ",")}
+                    R$ {getB2cSitePrice(item).replace(".", ",")}
                   </span>
                 </label>
               ))}

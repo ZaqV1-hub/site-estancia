@@ -18,12 +18,24 @@ export type B2cProduct = {
   subtitle: string;
   description: string;
   imageSrc: string;
-  fixedPrice: string;
+  sitePrice: string;
+  boxOfficePrice: string;
+  fixedPrice?: string;
   voucherType: B2cVoucherType;
   voucherPrefix: string;
   active: boolean;
   sortOrder?: number;
 };
+
+export function getB2cSitePrice(product: Pick<B2cProduct, "sitePrice" | "fixedPrice">) {
+  return String(product.sitePrice || product.fixedPrice || "0.00");
+}
+
+export function getB2cBoxOfficePrice(
+  product: Pick<B2cProduct, "sitePrice" | "boxOfficePrice" | "fixedPrice">,
+) {
+  return String(product.boxOfficePrice || product.sitePrice || product.fixedPrice || "0.00");
+}
 
 export const DEFAULT_B2C_PRODUCTS: B2cProduct[] = [
   {
@@ -33,6 +45,8 @@ export const DEFAULT_B2C_PRODUCTS: B2cProduct[] = [
     subtitle: "Dia de natureza e lazer",
     description: "Acesso principal para aproveitar o parque no dia escolhido.",
     imageSrc: "/photos/day-use.jpg",
+    sitePrice: "100.00",
+    boxOfficePrice: "100.00",
     fixedPrice: "100.00",
     voucherType: "norma",
     voucherPrefix: "A",
@@ -46,6 +60,8 @@ export const DEFAULT_B2C_PRODUCTS: B2cProduct[] = [
     subtitle: "Experiência completa",
     description: "Passaporte para curtir as atrações do parque.",
     imageSrc: "/photos/estrutura-galeria.jpg",
+    sitePrice: "100.00",
+    boxOfficePrice: "100.00",
     fixedPrice: "100.00",
     voucherType: "norma",
     voucherPrefix: "A",
@@ -59,6 +75,8 @@ export const DEFAULT_B2C_PRODUCTS: B2cProduct[] = [
     subtitle: "Passaporte infantil de 3 a 12 anos",
     description: "Passaporte infantil para a data selecionada.",
     imageSrc: "/photos/escola.jpg",
+    sitePrice: "70.00",
+    boxOfficePrice: "70.00",
     fixedPrice: "70.00",
     voucherType: "infan",
     voucherPrefix: "C",
@@ -72,6 +90,8 @@ export const DEFAULT_B2C_PRODUCTS: B2cProduct[] = [
     subtitle: "Refeição no parque",
     description: "Adicional de almoço para completar o dia.",
     imageSrc: "/photos/confraternizacao.jpg",
+    sitePrice: "65.00",
+    boxOfficePrice: "65.00",
     fixedPrice: "65.00",
     voucherType: "espec",
     voucherPrefix: "E",
@@ -85,6 +105,8 @@ export const DEFAULT_B2C_PRODUCTS: B2cProduct[] = [
     subtitle: "Para começar cedo",
     description: "Adicional de café da manhã para o visitante.",
     imageSrc: "/photos/day-use.jpg",
+    sitePrice: "25.00",
+    boxOfficePrice: "25.00",
     fixedPrice: "25.00",
     voucherType: "espec",
     voucherPrefix: "E",
@@ -98,6 +120,8 @@ export const DEFAULT_B2C_PRODUCTS: B2cProduct[] = [
     subtitle: "Lembrança útil do passeio",
     description: "Ecobag personalizada para retirar no parque.",
     imageSrc: "/photos/estrutura-piscina.jpg",
+    sitePrice: "35.00",
+    boxOfficePrice: "35.00",
     fixedPrice: "35.00",
     voucherType: "espec",
     voucherPrefix: "E",
@@ -111,6 +135,8 @@ export const DEFAULT_B2C_PRODUCTS: B2cProduct[] = [
     subtitle: "4 unidades",
     description: "Kit com bebidas para consumo durante a visita.",
     imageSrc: "/photos/quem-somos.jpg",
+    sitePrice: "32.00",
+    boxOfficePrice: "32.00",
     fixedPrice: "32.00",
     voucherType: "espec",
     voucherPrefix: "E",

@@ -105,14 +105,14 @@ function HeroBannerImage({
         active ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
-      <picture className="block h-full w-full bg-[#0b1110]">
+      <picture className="block h-full w-full">
         {mobileSrc !== image.desktopSrc ? (
           <source media="(max-width: 767px)" srcSet={mobileSrc} />
         ) : null}
         <img
           src={image.desktopSrc}
           alt={image.alt}
-          className="block h-full w-full object-contain"
+          className="block h-full w-full object-cover object-center"
           loading={preload ? "eager" : "lazy"}
           fetchPriority={preload ? "high" : "auto"}
           draggable={false}

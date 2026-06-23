@@ -712,6 +712,25 @@ async function loadCashbackAdminPassword() {
   return normalizeText(result.rows[0]?.vlparametro);
 }
 
+async function ensureCashbackPaymentTable() {
+  const pool = getIngressoDbPool();
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS codindica_cashback_pagamento (
+      idpagamento BIGSERIAL PRIMARY KEY,
+      codindica VARCHAR(6) NOT NULL,
+      nmrepresentante VARCHAR(255),
+      email VARCHAR(255),
+      vlpagamento NUMERIC(12,2) NOT NULL DEFAULT 0,
+      dsobservacao VARCHAR(255),
+      cpfgerente VARCHAR(20),
+      nmgerente VARCHAR(255),
+      dtpagamento DATE NOT NULL DEFAULT CURRENT_DATE,
+      hrpagamento TIME NOT NULL DEFAULT CURRENT_TIME
+    )
+  `);
+}
+
 async function loadCashbackPayments(codigo: string) {
   const pool = getIngressoDbPool();
   const result = await pool
@@ -1184,6 +1203,7 @@ export async function payPainelCodIndicaCashback(
   }
 
   const pool = getIngressoDbPool();
+  await ensureCashbackPaymentTable();
   await pool.query(
     `
       INSERT INTO codindica_cashback_pagamento (

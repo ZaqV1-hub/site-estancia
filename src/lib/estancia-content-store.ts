@@ -503,10 +503,26 @@ export function makeContentId(value: string) {
 }
 
 export function normalizePrice(value: FormDataEntryValue | null) {
-  const normalized = String(value ?? "0")
-    .replace(/\./g, "")
-    .replace(",", ".")
-    .replace(/[^\d.]/g, "");
+  const raw = String(value ?? "0").trim();
+
+  if (!raw) {
+    return "0.00";
+  }
+
+  let normalized = raw.replace(/[^\d.,-]/g, "");
+
+  if (normalized.includes(",") && normalized.includes(".")) {
+    normalized = normalized.replace(/\./g, "").replace(",", ".");
+  } else if (normalized.includes(",")) {
+    normalized = normalized.replace(",", ".");
+  } else if (normalized.includes(".")) {
+    const decimalMatch = normalized.match(/\.(\d{1,2})$/);
+
+    if (!decimalMatch) {
+      normalized = normalized.replace(/\./g, "");
+    }
+  }
+
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed.toFixed(2) : "0.00";
 }

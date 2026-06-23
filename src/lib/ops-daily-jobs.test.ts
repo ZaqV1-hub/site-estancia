@@ -3,16 +3,22 @@ import { runOperationalDailyJobs } from "@/lib/ops-daily-jobs";
 
 const {
   syncOperationalPaymentStatuses,
+  recoverPendingTicketDeliveries,
   autoCloseOperationalCashClosures,
   runMembershipMaintenance,
 } = vi.hoisted(() => ({
   syncOperationalPaymentStatuses: vi.fn(),
+  recoverPendingTicketDeliveries: vi.fn(),
   autoCloseOperationalCashClosures: vi.fn(),
   runMembershipMaintenance: vi.fn(),
 }));
 
 vi.mock("@/lib/ops-payment-sync", () => ({
   syncOperationalPaymentStatuses,
+}));
+
+vi.mock("@/lib/ticket-service", () => ({
+  recoverPendingTicketDeliveries,
 }));
 
 vi.mock("@/lib/ops-cash-closures", () => ({
@@ -67,6 +73,24 @@ describe("ops-daily-jobs", () => {
       auditLogIds: [901],
       message: "1 periodo(s) anterior(es) fechados automaticamente.",
     });
+    recoverPendingTicketDeliveries.mockResolvedValue({
+      action: "ticket_delivery_recovery",
+      candidates: 1,
+      processed: 1,
+      recovered: 1,
+      skipped: 0,
+      failed: 0,
+      items: [
+        {
+          purchaseId: 321,
+          pendingVouchers: 1,
+          result: "sent",
+          sentVoucherIds: [9001],
+          note: "Entrega recuperada com sucesso.",
+        },
+      ],
+      message: "Recuperacao de entrega executada para 1 compra(s).",
+    });
     runMembershipMaintenance.mockResolvedValue({
       action: "membership_maintenance",
       processed: 4,
@@ -96,6 +120,10 @@ describe("ops-daily-jobs", () => {
       action: "payment_sync",
       status: "success",
     });
+    expect(result.steps.ticketDeliveryRecovery).toMatchObject({
+      action: "ticket_delivery_recovery",
+      status: "success",
+    });
     expect(result.steps.cashAutoClose).toMatchObject({
       action: "cash_auto_close",
       status: "success",
@@ -109,6 +137,7 @@ describe("ops-daily-jobs", () => {
       cancelAfterDays: 5,
       limit: 50,
     });
+    expect(recoverPendingTicketDeliveries).toHaveBeenCalledWith();
     expect(autoCloseOperationalCashClosures).toHaveBeenCalledWith({
       reason: "Virada diaria",
       actor: {
@@ -119,6 +148,16 @@ describe("ops-daily-jobs", () => {
 
   it("keeps the run partial when one step fails", async () => {
     syncOperationalPaymentStatuses.mockRejectedValue(new Error("gateway offline"));
+    recoverPendingTicketDeliveries.mockResolvedValue({
+      action: "ticket_delivery_recovery",
+      candidates: 0,
+      processed: 0,
+      recovered: 0,
+      skipped: 0,
+      failed: 0,
+      items: [],
+      message: "Nenhuma compra elegivel para recuperacao de entrega.",
+    });
     autoCloseOperationalCashClosures.mockResolvedValue({
       action: "auto_close",
       closedCount: 0,

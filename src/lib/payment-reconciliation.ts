@@ -5,6 +5,7 @@ import {
 import type { PoolClient } from "pg";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 import { queuePurchaseConfirmationEmail } from "@/lib/purchase-confirmation-email";
+import { registerTicketDeliveryAudit } from "@/lib/ticket-delivery-audit";
 import { processConfirmedPurchaseTickets } from "@/lib/ticket-service";
 
 export type GatewayPurchaseStatus = "conc" | "pend" | "canc" | "unknown";
@@ -628,9 +629,36 @@ export async function reconcilePaymentFromGatewayPayload(
     await client.query("COMMIT");
 
     if (result.purchaseStatus === "conc") {
-      await processConfirmedPurchaseTickets(result.purchaseId).catch((error) => {
-        console.error("confirmed-purchase-ticket-processing-failed", error);
-      });
+      await processConfirmedPurchaseTickets(result.purchaseId)
+        .then(async (ticketResult) => {
+          console.info("confirmed-purchase-ticket-processing-result", {
+            purchaseId: result.purchaseId,
+            status: ticketResult.status,
+            sentVoucherIds: ticketResult.sentVoucherIds,
+            skippedReason: ticketResult.skippedReason ?? null,
+          });
+          await registerTicketDeliveryAudit({
+            purchaseId: result.purchaseId,
+            trigger: "payment_reconciliation",
+            gatewayPaymentId: result.gatewayPaymentId,
+            gatewayStatus: result.gatewayStatus,
+            result: ticketResult,
+          }).catch((error) => {
+            console.error("confirmed-purchase-ticket-audit-failed", error);
+          });
+        })
+        .catch(async (error) => {
+          console.error("confirmed-purchase-ticket-processing-failed", error);
+          await registerTicketDeliveryAudit({
+            purchaseId: result.purchaseId,
+            trigger: "payment_reconciliation",
+            gatewayPaymentId: result.gatewayPaymentId,
+            gatewayStatus: result.gatewayStatus,
+            error,
+          }).catch((auditError) => {
+            console.error("confirmed-purchase-ticket-audit-failed", auditError);
+          });
+        });
       await queuePurchaseConfirmationEmail(result.purchaseId).catch((error) => {
         console.error("confirmed-purchase-email-queue-failed", error);
       });

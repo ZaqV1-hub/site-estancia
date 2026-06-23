@@ -10,6 +10,10 @@ import {
   syncOperationalPaymentStatuses,
   type SyncOperationalPaymentStatusesSuccess,
 } from "@/lib/ops-payment-sync";
+import {
+  recoverPendingTicketDeliveries,
+  type PendingTicketDeliveryRecoveryResult,
+} from "@/lib/ticket-service";
 
 type DailyJobsActor = {
   name?: string | null;
@@ -40,6 +44,14 @@ type PaymentSyncStep =
   | DailyJobsStepSuccess<"payment_sync", SyncOperationalPaymentStatusesSuccess>
   | DailyJobsStepSkipped<"payment_sync">
   | DailyJobsStepFailure<"payment_sync">;
+
+type TicketDeliveryRecoveryStep =
+  | DailyJobsStepSuccess<
+      "ticket_delivery_recovery",
+      PendingTicketDeliveryRecoveryResult
+    >
+  | DailyJobsStepSkipped<"ticket_delivery_recovery">
+  | DailyJobsStepFailure<"ticket_delivery_recovery">;
 
 type CashAutoCloseStep =
   | DailyJobsStepSuccess<"cash_auto_close", AutoCloseOperationalCashClosuresSuccess>
@@ -72,6 +84,7 @@ export type RunOperationalDailyJobsSuccess = {
   finishedAt: string;
   steps: {
     paymentSync: PaymentSyncStep;
+    ticketDeliveryRecovery: TicketDeliveryRecoveryStep;
     cashAutoClose: CashAutoCloseStep;
     membershipMaintenance: MembershipStep;
   };
@@ -152,6 +165,11 @@ export async function runOperationalDailyJobs(
     status: "skipped",
     message: "Etapa desabilitada.",
   };
+  let ticketDeliveryRecovery: TicketDeliveryRecoveryStep = {
+    action: "ticket_delivery_recovery",
+    status: "skipped",
+    message: "Etapa desabilitada.",
+  };
   let membershipMaintenance: MembershipStep = {
     action: "membership_maintenance",
     status: "skipped",
@@ -176,6 +194,24 @@ export async function runOperationalDailyJobs(
         error: errorMessage(error),
       };
     }
+  }
+
+  try {
+    const data = await runWithRetry(
+      () => recoverPendingTicketDeliveries(),
+      retriesPerStep,
+    );
+    ticketDeliveryRecovery = {
+      action: "ticket_delivery_recovery",
+      status: "success",
+      data,
+    };
+  } catch (error) {
+    ticketDeliveryRecovery = {
+      action: "ticket_delivery_recovery",
+      status: "failed",
+      error: errorMessage(error),
+    };
   }
 
   if (includeCashAutoClose) {
@@ -226,6 +262,7 @@ export async function runOperationalDailyJobs(
 
   const stepStatuses: StepStatus[] = [
     paymentSync.status,
+    ticketDeliveryRecovery.status,
     cashAutoClose.status,
     membershipMaintenance.status,
   ];
@@ -239,6 +276,7 @@ export async function runOperationalDailyJobs(
     finishedAt,
     steps: {
       paymentSync,
+      ticketDeliveryRecovery,
       cashAutoClose,
       membershipMaintenance,
     },

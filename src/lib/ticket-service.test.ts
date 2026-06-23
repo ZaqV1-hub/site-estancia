@@ -2,17 +2,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   isTicketServiceConfigured,
   processConfirmedPurchaseTickets,
+  recoverPendingTicketDeliveries,
   syncTicketValidation,
   sendPurchaseTicketsWhatsApp,
 } from "@/lib/ticket-service";
 
 const dbQuery = vi.fn();
+const { registerTicketDeliveryAudit } = vi.hoisted(() => ({
+  registerTicketDeliveryAudit: vi.fn(),
+}));
 const originalEnv = process.env;
 
 vi.mock("@/lib/ingresso-db", () => ({
   getIngressoDbPool: () => ({
     query: dbQuery,
   }),
+}));
+
+vi.mock("@/lib/ticket-delivery-audit", () => ({
+  registerTicketDeliveryAudit,
 }));
 
 describe("ticket-service", () => {
@@ -24,6 +32,7 @@ describe("ticket-service", () => {
       INGRESSO_TICKET_API_PASSWORD: "ticket-pass",
     };
     vi.clearAllMocks();
+    registerTicketDeliveryAudit.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -670,6 +679,92 @@ describe("ticket-service", () => {
       action: "validate",
       pairs: ["456-9001"],
       skippedReason: "ticket_service_unreachable",
+    });
+  });
+
+  it("recovers confirmed purchases with pending ticket delivery", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ token: "ticket-token" }))
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+    dbQuery.mockImplementation(async (sql: string, values?: unknown[]) => {
+      if (
+        sql.includes("COUNT(*)::text AS pending_vouchers") &&
+        sql.includes("GROUP BY compra.idcompra")
+      ) {
+        expect(values).toEqual([7, 50]);
+
+        return {
+          rows: [
+            {
+              purchase_id: 456,
+              pending_vouchers: "1",
+            },
+          ],
+        };
+      }
+
+      if (sql.includes("FROM compra")) {
+        return {
+          rows: [
+            {
+              idcompra: 456,
+              cpf: "52998224725",
+              tpcompra: "ponli",
+              dtcompra: "2026-04-23",
+              email: "cliente@example.com",
+              nmusuario: "Cliente Teste",
+              celular: "51999999999",
+            },
+          ],
+        };
+      }
+
+      if (sql.includes("FROM voucher")) {
+        return {
+          rows: [
+            {
+              idvoucher: 9001,
+              numvoucher: "123456",
+              tpvoucher: "norma",
+              descricao: "Passaporte teste",
+              vlunicompra: "129.90",
+              stusado: "n",
+              voucherenviado: "n",
+              identificacao: null,
+              idagenda: 10,
+              dtagenda: "2026-05-01",
+            },
+          ],
+        };
+      }
+
+      return { rows: [] };
+    });
+
+    await expect(
+      recoverPendingTicketDeliveries({
+        recentDays: 7,
+        limit: 50,
+      }),
+    ).resolves.toEqual({
+      action: "ticket_delivery_recovery",
+      candidates: 1,
+      processed: 1,
+      recovered: 1,
+      skipped: 0,
+      failed: 0,
+      items: [
+        {
+          purchaseId: 456,
+          pendingVouchers: 1,
+          result: "sent",
+          sentVoucherIds: [9001],
+          note: "Entrega recuperada com sucesso.",
+        },
+      ],
+      message: "Recuperacao de entrega executada para 1 compra(s).",
     });
   });
 });

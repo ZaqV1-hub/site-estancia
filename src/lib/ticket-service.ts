@@ -3,6 +3,7 @@ import {
   buildTicketsApiHeaders,
   getTicketsApiBaseUrl,
 } from "@/lib/ticket-api";
+import { registerTicketDeliveryAudit } from "@/lib/ticket-delivery-audit";
 import { resolveVoucherTypeLabel } from "@/lib/voucher-type-label";
 
 type TicketServiceConfig = {
@@ -52,6 +53,11 @@ type TicketSendResult = {
   skippedReason?: string;
 };
 
+type PendingTicketDeliveryPurchaseRow = {
+  purchase_id: number;
+  pending_vouchers: string;
+};
+
 type TicketWhatsappSendResult = {
   status: "sent" | "skipped";
   purchaseId: number;
@@ -85,6 +91,25 @@ type TicketValidationSyncResult = {
   action: TicketValidationAction;
   pairs: string[];
   skippedReason?: string;
+};
+
+type PendingTicketDeliveryRecoveryItem = {
+  purchaseId: number;
+  pendingVouchers: number;
+  result: "sent" | "skipped" | "error";
+  sentVoucherIds: number[];
+  note: string;
+};
+
+export type PendingTicketDeliveryRecoveryResult = {
+  action: "ticket_delivery_recovery";
+  candidates: number;
+  processed: number;
+  recovered: number;
+  skipped: number;
+  failed: number;
+  items: PendingTicketDeliveryRecoveryItem[];
+  message: string;
 };
 
 function getConfig(): TicketServiceConfig | null {
@@ -443,13 +468,49 @@ async function loadPendingTicketVouchers(purchaseId: number) {
       LEFT JOIN agenda ON agenda.idagenda = voucher.idagenda
       WHERE voucher.idcompra = $1
         AND voucher.stusado NOT IN ('s', 'inv')
-        AND voucher.voucherenviado <> 's'
+        AND COALESCE(voucher.voucherenviado, 'n') <> 's'
       ORDER BY voucher.idvoucher ASC
     `,
     [purchaseId],
   );
 
   return vouchers.rows;
+}
+
+async function listPendingTicketDeliveryPurchases(
+  recentDays: number,
+  limit: number,
+) {
+  const pool = getIngressoDbPool();
+  const result = await pool.query<PendingTicketDeliveryPurchaseRow>(
+    `
+      SELECT
+        compra.idcompra AS purchase_id,
+        COUNT(*)::text AS pending_vouchers
+      FROM compra
+      JOIN voucher ON voucher.idcompra = compra.idcompra
+      WHERE compra.stcompra = 'conc'
+        AND voucher.stusado NOT IN ('s', 'inv')
+        AND COALESCE(voucher.voucherenviado, 'n') <> 's'
+        AND COALESCE(compra.dtpagamento, compra.dtcompra) >= CURRENT_DATE - $1::integer
+      GROUP BY compra.idcompra
+      ORDER BY compra.idcompra ASC
+      LIMIT $2
+    `,
+    [recentDays, limit],
+  );
+
+  return result.rows;
+}
+
+function toValidInteger(value: unknown, fallback: number, min: number, max: number) {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed)) {
+    return fallback;
+  }
+
+  return Math.min(Math.max(parsed, min), max);
 }
 
 async function loadSelectedTicketVouchers(
@@ -656,6 +717,90 @@ export async function processConfirmedPurchaseTickets(
     status: "sent",
     purchaseId,
     sentVoucherIds,
+  };
+}
+
+export async function recoverPendingTicketDeliveries(input?: {
+  recentDays?: number;
+  limit?: number;
+}): Promise<PendingTicketDeliveryRecoveryResult> {
+  const recentDays = toValidInteger(input?.recentDays, 7, 1, 90);
+  const limit = toValidInteger(input?.limit, 50, 1, 200);
+  const candidates = await listPendingTicketDeliveryPurchases(recentDays, limit);
+  const items: PendingTicketDeliveryRecoveryItem[] = [];
+  let recovered = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const candidate of candidates) {
+    const purchaseId = candidate.purchase_id;
+    const pendingVouchers = Number(candidate.pending_vouchers) || 0;
+
+    try {
+      const result = await processConfirmedPurchaseTickets(purchaseId);
+
+      await registerTicketDeliveryAudit({
+        purchaseId,
+        trigger: "delivery_recovery",
+        result,
+      }).catch((error) => {
+        console.error("ticket-delivery-recovery-audit-failed", error);
+      });
+
+      if (result.status === "sent") {
+        recovered += 1;
+        items.push({
+          purchaseId,
+          pendingVouchers,
+          result: "sent",
+          sentVoucherIds: result.sentVoucherIds,
+          note: "Entrega recuperada com sucesso.",
+        });
+        continue;
+      }
+
+      skipped += 1;
+      items.push({
+        purchaseId,
+        pendingVouchers,
+        result: "skipped",
+        sentVoucherIds: [],
+        note: `Entrega nao reenviada (${result.skippedReason ?? "skipped"}).`,
+      });
+    } catch (error) {
+      failed += 1;
+      await registerTicketDeliveryAudit({
+        purchaseId,
+        trigger: "delivery_recovery",
+        error,
+      }).catch((auditError) => {
+        console.error("ticket-delivery-recovery-audit-failed", auditError);
+      });
+      items.push({
+        purchaseId,
+        pendingVouchers,
+        result: "error",
+        sentVoucherIds: [],
+        note:
+          error instanceof Error ?
+            error.message :
+            "Falha inesperada ao recuperar a entrega.",
+      });
+    }
+  }
+
+  return {
+    action: "ticket_delivery_recovery",
+    candidates: candidates.length,
+    processed: items.length,
+    recovered,
+    skipped,
+    failed,
+    items,
+    message:
+      items.length > 0 ?
+        `Recuperacao de entrega executada para ${items.length} compra(s).` :
+        "Nenhuma compra elegivel para recuperacao de entrega.",
   };
 }
 

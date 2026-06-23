@@ -168,6 +168,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
   const addons = products.filter((product) => product.type === "addon");
   const [step, setStep] = useState<PurchaseStep>("passports");
   const [quantities, setQuantities] = useState<Quantities>({});
+  const [codindica, setCodindica] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeCarouselPage, setActiveCarouselPage] = useState(0);
@@ -258,6 +259,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
         },
         body: JSON.stringify({
           agendaId: agenda.id,
+          codindica: codindica.trim().toUpperCase() || undefined,
           lineItems,
         }),
       });
@@ -589,6 +591,35 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
                         redirecionado para a próxima etapa para concluir o
                         pagamento.
                       </p>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="mt-3 rounded-[12px] border border-[#dfe8dc] bg-white p-4 shadow-[0_10px_24px_rgba(18,52,45,0.055)]">
+                  <div className="flex items-start gap-3">
+                    <IconBubble name="lock" className="h-10 w-10" />
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-[18px] font-black text-[#073f35]">
+                        Codigo de indicacao
+                      </h2>
+                      <p className="mt-2 text-[13px] leading-5 text-[#626469]">
+                        Se voce tiver um codigo de funcionario, informe abaixo para
+                        aplicar o desconto na finalizacao.
+                      </p>
+                      <input
+                        value={codindica}
+                        onChange={(event) =>
+                          setCodindica(
+                            event.target.value
+                              .toUpperCase()
+                              .replace(/[^A-Z0-9]/g, "")
+                              .slice(0, 6),
+                          )
+                        }
+                        maxLength={6}
+                        placeholder="ABC123"
+                        className="mt-3 w-full rounded-[10px] border border-[#dfe8dc] px-4 py-3 text-[14px] font-semibold text-[#073f35]"
+                      />
                     </div>
                   </div>
                 </section>

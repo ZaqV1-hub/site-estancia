@@ -1,7 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type FormEvent,
+  type SetStateAction,
+} from "react";
 import { PainelModal } from "@/components/painel-modal";
 import type {
   EstanciaContentData,
@@ -23,13 +30,22 @@ type DeleteTarget = {
 
 type EventMode = "date" | "link";
 
+type EventDatePayload = {
+  agenda?: {
+    priceTableId?: number | null;
+    informationId?: number | null;
+  } | null;
+  selectedPassportIds?: string[];
+  selectedAddonIds?: string[];
+};
+
 function itemTitle(item: EditableItem) {
   if (item.section === "home") {
     return item.item ? "Editar imagem da home" : "Adicionar imagem da home";
   }
 
   if (item.section === "attraction") {
-    return item.item ? "Editar atração" : "Adicionar atração";
+    return item.item ? "Editar atracao" : "Adicionar atracao";
   }
 
   return item.item ? "Editar evento" : "Adicionar evento";
@@ -61,7 +77,7 @@ function ImagePicker({ name, label }: { name: string; label: string }) {
       <span className="text-xs font-medium text-[#6a806e]">
         Clique em escolher arquivo para enviar a imagem.
         {name === "mobileImage"
-          ? " Se não enviar a versão mobile, a imagem desktop será usada no celular."
+          ? " Se nao enviar a versao mobile, a imagem desktop sera usada no celular."
           : ""}
       </span>
     </label>
@@ -89,8 +105,8 @@ function CurrentImagePreview({
         />
       </div>
       <p className="text-xs font-medium text-[#6a806e]">
-        O navegador não reabre esse campo com um arquivo já selecionado. Para
-        trocar a imagem, escolha um novo arquivo abaixo.
+        O navegador nao reabre esse campo com um arquivo ja selecionado. Para trocar
+        a imagem, escolha um novo arquivo abaixo.
       </p>
     </div>
   );
@@ -110,13 +126,33 @@ function SubmitButton({ pending }: { pending: boolean }) {
 export function PainelSiteManager({
   content,
   initialEditEventId = null,
-  initialCreateEventMode = null,
+  initialOpenCreateEvent = false,
+  defaultPriceTableId,
+  defaultInformationId,
 }: {
   content: EstanciaContentData;
   initialEditEventId?: string | null;
-  initialCreateEventMode?: EventMode | null;
+  initialOpenCreateEvent?: boolean;
+  defaultPriceTableId?: number | null;
+  defaultInformationId?: number | null;
 }) {
   const router = useRouter();
+  const passports = useMemo(
+    () => content.products.filter((product) => product.type === "passport"),
+    [content.products],
+  );
+  const addons = useMemo(
+    () => content.products.filter((product) => product.type === "addon"),
+    [content.products],
+  );
+  const defaultPassportIds = useMemo(
+    () => passports.map((product) => product.id),
+    [passports],
+  );
+  const defaultAddonIds = useMemo(
+    () => addons.map((product) => product.id),
+    [addons],
+  );
   const [editing, setEditing] = useState<EditableItem | null>(() => {
     if (initialEditEventId) {
       const item = content.events.find((event) => event.id === initialEditEventId) ?? null;
@@ -126,7 +162,7 @@ export function PainelSiteManager({
       }
     }
 
-    if (initialCreateEventMode) {
+    if (initialOpenCreateEvent) {
       return { section: "event", item: null };
     }
 
@@ -135,27 +171,141 @@ export function PainelSiteManager({
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [eventMode, setEventMode] = useState<EventMode>(() => {
-    if (initialEditEventId) {
-      const item = content.events.find((event) => event.id === initialEditEventId) ?? null;
-      return resolveEventMode(item);
-    }
-
-    return initialCreateEventMode ?? "date";
-  });
+  const [eventMode, setEventMode] = useState<EventMode>("date");
+  const [eventDateValue, setEventDateValue] = useState("");
+  const [eventHrefValue, setEventHrefValue] = useState("");
+  const [selectedPassportIds, setSelectedPassportIds] = useState<string[]>(defaultPassportIds);
+  const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>(defaultAddonIds);
+  const [eventPriceTableId, setEventPriceTableId] = useState<number | null>(
+    defaultPriceTableId ?? null,
+  );
+  const [eventInformationId, setEventInformationId] = useState<number | null>(
+    defaultInformationId ?? null,
+  );
+  const [eventAvailabilityLoading, setEventAvailabilityLoading] = useState(false);
   const currentEvent =
     editing?.section === "event" ? (editing.item as ManagedEvent | null) : null;
 
-  function openCreateEvent(nextMode: EventMode) {
-    setEventMode(nextMode);
+  useEffect(() => {
+    if (editing?.section !== "event") {
+      return;
+    }
+
+    const nextMode = resolveEventMode(currentEvent);
+    setEventMode(currentEvent ? nextMode : "date");
+    setEventDateValue(resolveEventDate(currentEvent));
+    setEventHrefValue(
+      currentEvent && nextMode === "link" ? currentEvent.href ?? "" : "",
+    );
+    setSelectedPassportIds(defaultPassportIds);
+    setSelectedAddonIds(defaultAddonIds);
+    setEventPriceTableId(defaultPriceTableId ?? null);
+    setEventInformationId(defaultInformationId ?? null);
+  }, [
+    currentEvent,
+    defaultAddonIds,
+    defaultInformationId,
+    defaultPassportIds,
+    defaultPriceTableId,
+    editing,
+  ]);
+
+  useEffect(() => {
+    if (editing?.section !== "event" || eventMode !== "date" || !eventDateValue) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    async function loadEventDateDetails() {
+      setEventAvailabilityLoading(true);
+
+      try {
+        const response = await fetch(
+          `/api/painel/agenda?date=${encodeURIComponent(eventDateValue)}`,
+          {
+            signal: controller.signal,
+          },
+        );
+        const payload = (await response.json().catch(() => null)) as
+          | { ok?: boolean; data?: EventDatePayload; error?: { message?: string } }
+          | null;
+
+        if (!response.ok || !payload?.ok) {
+          throw new Error(payload?.error?.message || "Nao foi possivel carregar a data.");
+        }
+
+        setSelectedPassportIds(
+          payload.data?.selectedPassportIds?.length
+            ? payload.data.selectedPassportIds
+            : defaultPassportIds,
+        );
+        setSelectedAddonIds(
+          payload.data?.selectedAddonIds?.length
+            ? payload.data.selectedAddonIds
+            : defaultAddonIds,
+        );
+        setEventPriceTableId(
+          payload.data?.agenda?.priceTableId ?? defaultPriceTableId ?? null,
+        );
+        setEventInformationId(
+          payload.data?.agenda?.informationId ?? defaultInformationId ?? null,
+        );
+      } catch (loadError) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        setSelectedPassportIds(defaultPassportIds);
+        setSelectedAddonIds(defaultAddonIds);
+        setEventPriceTableId(defaultPriceTableId ?? null);
+        setEventInformationId(defaultInformationId ?? null);
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Nao foi possivel carregar a data do evento.",
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setEventAvailabilityLoading(false);
+        }
+      }
+    }
+
+    void loadEventDateDetails();
+
+    return () => controller.abort();
+  }, [
+    defaultAddonIds,
+    defaultInformationId,
+    defaultPassportIds,
+    defaultPriceTableId,
+    editing,
+    eventDateValue,
+    eventMode,
+  ]);
+
+  function openCreateEvent() {
     setEditing({ section: "event", item: null });
+    setEventMode("date");
     setError(null);
   }
 
   function openEditEvent(item: ManagedEvent) {
-    setEventMode(resolveEventMode(item));
     setEditing({ section: "event", item });
     setError(null);
+  }
+
+  function toggleSelection(
+    value: string,
+    selectedValues: string[],
+    setSelectedValues: Dispatch<SetStateAction<string[]>>,
+  ) {
+    setSelectedValues(
+      selectedValues.includes(value)
+        ? selectedValues.filter((item) => item !== value)
+        : [...selectedValues, value],
+    );
   }
 
   async function submitForm(event: FormEvent<HTMLFormElement>) {
@@ -164,9 +314,35 @@ export function PainelSiteManager({
     setError(null);
 
     try {
+      const formData = new FormData(event.currentTarget);
+
+      if (editing?.section === "event") {
+        formData.set("eventMode", eventMode);
+        formData.set("eventDate", eventDateValue);
+        formData.set("href", eventHrefValue);
+        formData.delete("passportIds");
+        formData.delete("addonIds");
+
+        for (const id of selectedPassportIds) {
+          formData.append("passportIds", id);
+        }
+
+        for (const id of selectedAddonIds) {
+          formData.append("addonIds", id);
+        }
+
+        if (eventPriceTableId) {
+          formData.set("priceTableId", String(eventPriceTableId));
+        }
+
+        if (eventInformationId) {
+          formData.set("informationId", String(eventInformationId));
+        }
+      }
+
       const response = await fetch("/api/painel/site-content", {
         method: "POST",
-        body: new FormData(event.currentTarget),
+        body: formData,
       });
       const payload = (await response.json().catch(() => null)) as {
         ok?: boolean;
@@ -174,7 +350,7 @@ export function PainelSiteManager({
       } | null;
 
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error?.message || "Não foi possível salvar.");
+        throw new Error(payload?.error?.message || "Nao foi possivel salvar.");
       }
 
       setEditing(null);
@@ -182,9 +358,7 @@ export function PainelSiteManager({
       router.refresh();
     } catch (saveError) {
       setError(
-        saveError instanceof Error
-          ? saveError.message
-          : "Não foi possível salvar.",
+        saveError instanceof Error ? saveError.message : "Nao foi possivel salvar.",
       );
     } finally {
       setPending(false);
@@ -211,7 +385,7 @@ export function PainelSiteManager({
       } | null;
 
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error?.message || "Não foi possível excluir.");
+        throw new Error(payload?.error?.message || "Nao foi possivel excluir.");
       }
 
       setDeleteTarget(null);
@@ -220,7 +394,7 @@ export function PainelSiteManager({
       setError(
         deleteError instanceof Error
           ? deleteError.message
-          : "Não foi possível excluir.",
+          : "Nao foi possivel excluir.",
       );
     } finally {
       setPending(false);
@@ -232,9 +406,7 @@ export function PainelSiteManager({
       <section className="panel-section p-5">
         <p className="panel-eyebrow">Imagens da home</p>
         <div className="mt-4 flex items-center justify-between gap-3">
-          <h3 className="text-[24px] font-black text-[#17351f]">
-            Banners publicados
-          </h3>
+          <h3 className="text-[24px] font-black text-[#17351f]">Banners publicados</h3>
           <button
             type="button"
             onClick={() => setEditing({ section: "home", item: null })}
@@ -257,20 +429,18 @@ export function PainelSiteManager({
                   loading="lazy"
                 />
               </div>
-              <h4 className="mt-3 text-lg font-black text-[#17351f]">
-                {item.alt}
-              </h4>
-              <p className="text-sm text-[#5f7564]">
-                {item.active ? "Publicado" : "Oculto"}
-              </p>
+              <h4 className="mt-3 text-lg font-black text-[#17351f]">{item.alt}</h4>
+              <p className="text-sm text-[#5f7564]">{item.active ? "Publicado" : "Oculto"}</p>
               <div className="mt-4 flex gap-2">
                 <button
+                  type="button"
                   onClick={() => setEditing({ section: "home", item })}
                   className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]"
                 >
                   Editar
                 </button>
                 <button
+                  type="button"
                   onClick={() =>
                     setDeleteTarget({
                       section: "home",
@@ -290,8 +460,8 @@ export function PainelSiteManager({
 
       <section className="grid gap-5 xl:grid-cols-2">
         <ContentList
-          title="Atrações"
-          buttonLabel="Adicionar atração"
+          title="Atracoes"
+          buttonLabel="Adicionar atracao"
           items={content.attractions}
           onEdit={(item) => setEditing({ section: "attraction", item })}
           onCreate={() => setEditing({ section: "attraction", item: null })}
@@ -305,26 +475,10 @@ export function PainelSiteManager({
         />
         <ContentList
           title="Eventos"
-          buttonLabel={null}
-          extraActions={
-            <>
-              <button
-                onClick={() => openCreateEvent("date")}
-                className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white"
-              >
-                Evento com data
-              </button>
-              <button
-                onClick={() => openCreateEvent("link")}
-                className="rounded-full border border-[#dbe7d7] bg-white px-5 py-3 text-sm font-black text-[#17351f]"
-              >
-                Evento com link
-              </button>
-            </>
-          }
+          buttonLabel="Adicionar evento"
           items={content.events}
           onEdit={openEditEvent}
-          onCreate={() => openCreateEvent("date")}
+          onCreate={openCreateEvent}
           onDelete={(item) =>
             setDeleteTarget({ section: "event", id: item.id, title: item.title })
           }
@@ -339,9 +493,7 @@ export function PainelSiteManager({
         {editing ? (
           <form onSubmit={submitForm} className="grid gap-4">
             <input type="hidden" name="section" value={editing.section} />
-            {editing.item ? (
-              <input type="hidden" name="id" value={editing.item.id} />
-            ) : null}
+            {editing.item ? <input type="hidden" name="id" value={editing.item.id} /> : null}
             {editing.section === "home" ? (
               <>
                 <Field label="Texto da imagem">
@@ -370,14 +522,51 @@ export function PainelSiteManager({
               </>
             ) : (
               <>
-                <Field label="Título">
+                {editing.section === "event" ? (
+                  <div className="grid gap-3 rounded-[10px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
+                    <div>
+                      <p className="text-sm font-black text-[#17351f]">Tipo do evento</p>
+                      <p className="mt-1 text-xs leading-5 text-[#5f7564]">
+                        Escolha se o botao vai abrir uma data promocional da agenda ou um
+                        link externo.
+                      </p>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={() => setEventMode("date")}
+                        className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
+                          eventMode === "date"
+                            ? "border-[#17342d] bg-[#17342d] text-white"
+                            : "border-[#dbe7d7] bg-white text-[#17351f]"
+                        }`}
+                      >
+                        Data
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEventMode("link")}
+                        className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
+                          eventMode === "link"
+                            ? "border-[#17342d] bg-[#17342d] text-white"
+                            : "border-[#dbe7d7] bg-white text-[#17351f]"
+                        }`}
+                      >
+                        Link externo
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                <Field label="Titulo">
                   <input
                     name="title"
                     defaultValue={editing.item?.title ?? ""}
                     className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
                   />
                 </Field>
-                <Field label="Descrição">
+
+                <Field label="Descricao">
                   <textarea
                     name="description"
                     defaultValue={editing.item?.description ?? ""}
@@ -385,63 +574,79 @@ export function PainelSiteManager({
                     className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
                   />
                 </Field>
+
                 {editing.section === "event" ? (
                   <>
-                    <fieldset className="grid gap-3 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
-                      <legend className="px-1 text-sm font-black text-[#17351f]">
-                        Esse evento tem data?
-                      </legend>
-                      <label className="flex items-center gap-2 text-sm font-bold text-[#17351f]">
-                        <input
-                          name="eventMode"
-                          type="radio"
-                          value="date"
-                          checked={eventMode === "date"}
-                          onChange={() => setEventMode("date")}
-                        />
-                        Sim, criar como data promocional
-                      </label>
-                      <label className="flex items-center gap-2 text-sm font-bold text-[#17351f]">
-                        <input
-                          name="eventMode"
-                          type="radio"
-                          value="link"
-                          checked={eventMode === "link"}
-                          onChange={() => setEventMode("link")}
-                        />
-                        Não, usar link manual no botão
-                      </label>
-                    </fieldset>
                     {eventMode === "date" ? (
-                      <Field label="Data do evento">
-                        <input
-                          name="eventDate"
-                          type="date"
-                          defaultValue={resolveEventDate(currentEvent)}
-                          className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                      <>
+                        <Field label="Data do evento">
+                          <input
+                            name="eventDateVisible"
+                            type="date"
+                            value={eventDateValue}
+                            onChange={(event) => setEventDateValue(event.target.value)}
+                            className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                          />
+                        </Field>
+
+                        <MultiSelectGrid
+                          title="Tipo de passaportes"
+                          description="Escolha quais passaportes ficam disponiveis para esta data promocional."
+                          items={passports.map((product) => ({
+                            id: product.id,
+                            title: product.title,
+                            subtitle: product.subtitle,
+                          }))}
+                          loading={eventAvailabilityLoading}
+                          selectedIds={selectedPassportIds}
+                          onToggle={(id) =>
+                            toggleSelection(
+                              id,
+                              selectedPassportIds,
+                              setSelectedPassportIds,
+                            )
+                          }
+                          onSelectAll={() => setSelectedPassportIds(defaultPassportIds)}
                         />
-                      </Field>
+
+                        <MultiSelectGrid
+                          title="Adicionais"
+                          description="Escolha os adicionais liberados para a data promocional."
+                          items={addons.map((product) => ({
+                            id: product.id,
+                            title: product.title,
+                            subtitle: product.subtitle,
+                          }))}
+                          loading={eventAvailabilityLoading}
+                          selectedIds={selectedAddonIds}
+                          onToggle={(id) =>
+                            toggleSelection(id, selectedAddonIds, setSelectedAddonIds)
+                          }
+                          onSelectAll={() => setSelectedAddonIds(defaultAddonIds)}
+                        />
+                      </>
                     ) : (
-                      <Field label="Link do botão">
+                      <Field label="Link externo">
                         <input
-                          name="href"
-                          defaultValue={currentEvent?.href ?? ""}
+                          name="hrefVisible"
+                          value={eventHrefValue}
+                          onChange={(event) => setEventHrefValue(event.target.value)}
                           placeholder="https://site.com.br ou /agenda"
                           className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
                         />
                       </Field>
                     )}
-                    <Field label="Texto do botão">
+
+                    <Field label="Texto do botao">
                       <input
                         name="buttonLabel"
-                        defaultValue={
-                          currentEvent?.buttonLabel ?? "Compre seu ingresso!"
-                        }
+                        defaultValue={currentEvent?.buttonLabel ?? "Compre seu ingresso!"}
                         className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
                       />
                     </Field>
                   </>
                 ) : null}
+
                 {editing.item?.imageSrc ? (
                   <CurrentImagePreview
                     label="Imagem atual"
@@ -452,6 +657,7 @@ export function PainelSiteManager({
                 <ImagePicker name="image" label="Imagem" />
               </>
             )}
+
             <Field label="Ordem">
               <input
                 name="sortOrder"
@@ -461,6 +667,7 @@ export function PainelSiteManager({
                 className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
               />
             </Field>
+
             <label className="flex items-center gap-2 text-sm font-black text-[#17351f]">
               <input
                 name="active"
@@ -469,6 +676,7 @@ export function PainelSiteManager({
               />{" "}
               Publicar
             </label>
+
             {error ? (
               <p className="rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
                 {error}
@@ -480,7 +688,7 @@ export function PainelSiteManager({
       </PainelModal>
 
       <PainelModal
-        title="Confirmar exclusão"
+        title="Confirmar exclusao"
         open={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
       >
@@ -494,6 +702,7 @@ export function PainelSiteManager({
         ) : null}
         <div className="mt-5 flex gap-3">
           <button
+            type="button"
             onClick={confirmDelete}
             disabled={pending}
             className="rounded-full bg-[#b24239] px-5 py-3 text-sm font-black text-white disabled:opacity-60"
@@ -501,6 +710,7 @@ export function PainelSiteManager({
             {pending ? "Excluindo..." : "Excluir"}
           </button>
           <button
+            type="button"
             onClick={() => setDeleteTarget(null)}
             className="rounded-full border border-[#dbe7d7] px-5 py-3 text-sm font-black text-[#17351f]"
           >
@@ -521,11 +731,83 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function MultiSelectGrid({
+  title,
+  description,
+  items,
+  loading,
+  selectedIds,
+  onToggle,
+  onSelectAll,
+}: {
+  title: string;
+  description: string;
+  items: Array<{ id: string; title: string; subtitle?: string | null }>;
+  loading: boolean;
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+  onSelectAll: () => void;
+}) {
+  return (
+    <section className="grid gap-3 rounded-[10px] border border-[#dbe7d7] bg-white p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-black text-[#17351f]">{title}</p>
+          <p className="mt-1 text-xs leading-5 text-[#5f7564]">{description}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onSelectAll}
+          className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-xs font-semibold text-[#17351f]"
+        >
+          Marcar todos
+        </button>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-[#5f7564]">Carregando configuracao desta data...</p>
+      ) : null}
+
+      <div className="grid gap-2 md:grid-cols-2">
+        {items.map((item) => {
+          const checked = selectedIds.includes(item.id);
+
+          return (
+            <label
+              key={item.id}
+              className={`rounded-[8px] border px-3 py-3 text-sm ${
+                checked
+                  ? "border-[#17342d] bg-[#f4faf2] text-[#17351f]"
+                  : "border-[#dbe7d7] bg-white text-[#17351f]"
+              }`}
+            >
+              <span className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => onToggle(item.id)}
+                />
+                <span className="min-w-0">
+                  <span className="block font-black">{item.title}</span>
+                  {item.subtitle ? (
+                    <span className="mt-1 block text-xs leading-5 text-[#5f7564]">
+                      {item.subtitle}
+                    </span>
+                  ) : null}
+                </span>
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function ContentList<T extends ManagedAttraction | ManagedEvent>({
   title,
   buttonLabel,
   items,
-  extraActions,
   onEdit,
   onCreate,
   onDelete,
@@ -533,7 +815,6 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
   title: string;
   buttonLabel: string | null;
   items: T[];
-  extraActions?: React.ReactNode;
   onEdit: (item: T) => void;
   onCreate: () => void;
   onDelete: (item: T) => void;
@@ -542,46 +823,48 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
     <article className="panel-section p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="panel-eyebrow">{title}</p>
-        <div className="flex flex-wrap justify-end gap-2">
-          {extraActions}
-          {buttonLabel ? (
-            <button
-              onClick={onCreate}
-              className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white"
-            >
-              {buttonLabel}
-            </button>
-          ) : null}
-        </div>
+        {buttonLabel ? (
+          <button
+            type="button"
+            onClick={onCreate}
+            className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white"
+          >
+            {buttonLabel}
+          </button>
+        ) : null}
       </div>
       <div className="mt-5 grid max-h-[520px] gap-3 overflow-y-auto pr-2">
         {items.map((item) => (
           <div
             key={item.id}
-            className="rounded-[8px] border border-[#dbe7d7] bg-white p-4"
+            className="rounded-[10px] border border-[#dbe7d7] bg-white p-4"
           >
-            <div className="h-32 overflow-hidden rounded-[8px] bg-[#eef3e8]">
-              <img
-                src={item.imageSrc}
-                alt={item.title}
-                className="block h-full w-full object-cover"
-                loading="lazy"
-              />
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-lg font-black text-[#17351f]">{item.title}</p>
+                <p className="mt-2 text-sm leading-6 text-[#5f7564]">{item.description}</p>
+              </div>
+              <span className="rounded-full bg-[#eef5eb] px-3 py-1 text-xs font-black text-[#2d6b37]">
+                #{item.sortOrder}
+              </span>
             </div>
-            <h3 className="mt-3 text-lg font-black text-[#17351f]">
-              {item.title}
-            </h3>
-            <p className="mt-1 line-clamp-3 text-sm leading-6 text-[#5f7564]">
-              {item.description}
-            </p>
+            {"buttonLabel" in item ? (
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-[#17351f]">
+                <span className="rounded-full border border-[#dbe7d7] px-3 py-1">
+                  Botao: {item.buttonLabel}
+                </span>
+              </div>
+            ) : null}
             <div className="mt-4 flex gap-2">
               <button
+                type="button"
                 onClick={() => onEdit(item)}
                 className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]"
               >
                 Editar
               </button>
               <button
+                type="button"
                 onClick={() => onDelete(item)}
                 className="rounded-full border border-[#f0c3bc] px-4 py-2 text-xs font-black text-[#a33b31]"
               >

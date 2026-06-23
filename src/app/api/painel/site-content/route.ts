@@ -2,6 +2,13 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { authorizePainelApiAccess } from "@/lib/painel-api-auth";
 import {
+  deletePainelAgenda,
+  getPainelAgendaDay,
+  listPainelAgendaInformationOptions,
+  listPainelAgendaPriceTables,
+  upsertPainelAgendaRange,
+} from "@/lib/painel-agenda";
+import {
   makeContentId,
   readEstanciaContent,
   saveUploadedSiteImage,
@@ -42,6 +49,29 @@ async function authorize(request: Request) {
 function revalidateSite() {
   revalidatePath("/");
   revalidatePath("/painel/site");
+  revalidatePath("/painel/eventos");
+  revalidatePath("/painel/agenda");
+}
+
+function resolveEventDateFromHref(href: string | undefined) {
+  const normalized = String(href ?? "").trim();
+  const match = normalized.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/);
+
+  return match?.[1] ?? null;
+}
+
+async function deletePromotionalAgendaByDate(date: string | null, reason: string) {
+  if (!date) {
+    return;
+  }
+
+  const agendaDay = await getPainelAgendaDay(date);
+
+  if (agendaDay.agenda?.type !== "promo") {
+    return;
+  }
+
+  await deletePainelAgenda(agendaDay.agenda.id, { reason });
 }
 
 export async function POST(request: Request) {
@@ -130,6 +160,35 @@ export async function POST(request: Request) {
     const imageUpload = await saveUploadedSiteImage(formData.get("image"));
     const hasDate = asText(formData.get("eventMode")) === "date";
     const eventDate = asText(formData.get("eventDate"));
+    const passportIds = formData
+      .getAll("passportIds")
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+    const addonIds = formData
+      .getAll("addonIds")
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+    const [priceTables, informationOptions] = await Promise.all([
+      listPainelAgendaPriceTables(),
+      listPainelAgendaInformationOptions(),
+    ]);
+    const currentEventDate = resolveEventDateFromHref(current?.href);
+    const currentAgendaDay = currentEventDate
+      ? await getPainelAgendaDay(currentEventDate)
+      : null;
+    const targetAgendaDay = hasDate && eventDate ? await getPainelAgendaDay(eventDate) : null;
+    const priceTableId =
+      Number(formData.get("priceTableId")) ||
+      targetAgendaDay?.agenda?.priceTableId ||
+      currentAgendaDay?.agenda?.priceTableId ||
+      priceTables[0]?.id ||
+      0;
+    const informationId =
+      Number(formData.get("informationId")) ||
+      targetAgendaDay?.agenda?.informationId ||
+      currentAgendaDay?.agenda?.informationId ||
+      informationOptions[0]?.id ||
+      0;
 
     if (hasDate && !eventDate) {
       return errorResponse("Informe a data promocional do evento.");
@@ -143,6 +202,37 @@ export async function POST(request: Request) {
       hasDate && eventDate
         ? `/agenda?mes=${Number(eventDate.slice(5, 7))}&ano=${eventDate.slice(0, 4)}&date=${eventDate}`
         : "";
+
+    if (hasDate) {
+      if (currentEventDate && currentEventDate !== eventDate) {
+        await deletePromotionalAgendaByDate(
+          currentEventDate,
+          "Evento do site movido para outra data promocional.",
+        );
+      }
+
+      await upsertPainelAgendaRange({
+        agendaId: targetAgendaDay?.agenda?.id ?? null,
+        startDate: eventDate,
+        endDate: eventDate,
+        priceTableId,
+        informationId,
+        type: "promo",
+        status: targetAgendaDay?.agenda?.status ?? "abe",
+        promotionName: title || current?.title || "Novo evento",
+        promotionDescription:
+          asText(formData.get("description")) || current?.description || "",
+        passportIds,
+        addonIds,
+        confirmOverwrite: true,
+        reason: "Evento do site atualizado pelo painel",
+      });
+    } else if (currentEventDate) {
+      await deletePromotionalAgendaByDate(
+        currentEventDate,
+        "Evento do site alterado para link externo.",
+      );
+    }
 
     await writeEstanciaContent({
       ...data,
@@ -205,6 +295,13 @@ export async function DELETE(request: Request) {
       attractions: data.attractions.filter((item) => item.id !== payload.id),
     });
   } else if (payload.section === "event") {
+    const current = data.events.find((item) => item.id === payload.id);
+
+    await deletePromotionalAgendaByDate(
+      resolveEventDateFromHref(current?.href),
+      "Evento do site removido pelo painel.",
+    );
+
     await writeEstanciaContent({
       ...data,
       events: data.events.filter((item) => item.id !== payload.id),

@@ -9,12 +9,16 @@ type RawCodIndicaRow = {
   stcodindica: string | null;
   vlvendanormal: string | null;
   vlvendainfant: string | null;
+  vldescnormal: string | null;
+  vldescinfant: string | null;
+  vlcashback: string | null;
   vlcashbacknormal: string | null;
   vlcashbackinfant: string | null;
   flpromocional: string | null;
   vldescpromonormal: string | null;
   vlcashbackpromonormal: string | null;
   vlcashbackpromoinfant: string | null;
+  percomissao: string | null;
 };
 
 type RawCashbackPaymentRow = {
@@ -88,14 +92,8 @@ export type PainelCodIndicaFormValues = {
   codindica: string;
   nmrepresentante: string;
   validade: string;
-  vlvendanormal: string;
-  vlvendainfant: string;
-  vlcashbacknormal: string;
-  vlcashbackinfant: string;
-  flpromocional: boolean;
-  vldescpromo: string;
-  vlcashbackpromonormal: string;
-  vlcashbackpromoinfant: string;
+  discountValue: string;
+  cashbackPercent: string;
   stcodindica: string;
   email: string;
 };
@@ -491,6 +489,8 @@ function normalizeFormPayload(values: PainelCodIndicaFormValues, mode: "create" 
   const validade = normalizeDateInput(values.validade);
   const today = new Date();
   const todayIso = today.toISOString().slice(0, 10);
+  const discountValue = toDbMoney(values.discountValue);
+  const cashbackPercent = toDbMoney(values.cashbackPercent);
 
   assertValidCode(codigo);
 
@@ -519,26 +519,22 @@ function normalizeFormPayload(values: PainelCodIndicaFormValues, mode: "create" 
     nmrepresentante: normalizeText(values.nmrepresentante),
     validade,
     tpdesconto: "fixo",
-    vldescnormal: "0.00",
-    vldescinfant: "0.00",
-    tpcashback: "fixo",
-    vlcashback: toDbMoney(values.vlcashbacknormal),
-    percomissao: "0.00",
-    vlvendanormal: toDbMoney(values.vlvendanormal),
-    vlvendainfant: toDbMoney(values.vlvendainfant),
-    vlcashbackpadrao: toDbMoney(values.vlcashbacknormal),
-    vlcashbacknormal: toDbMoney(values.vlcashbacknormal),
-    vlcashbackinfant: toDbMoney(values.vlcashbackinfant),
-    flpromocional: values.flpromocional ? "s" : "n",
-    vldescpromonormal: values.flpromocional ? toDbMoney(values.vldescpromo) : "0.00",
-    vldescpromoinfant: values.flpromocional ? toDbMoney(values.vldescpromo) : "0.00",
-    vlcashbackpromo: values.flpromocional ? toDbMoney(values.vlcashbackpromonormal) : "0.00",
-    vlcashbackpromonormal: values.flpromocional
-      ? toDbMoney(values.vlcashbackpromonormal)
-      : "0.00",
-    vlcashbackpromoinfant: values.flpromocional
-      ? toDbMoney(values.vlcashbackpromoinfant)
-      : "0.00",
+    vldescnormal: discountValue,
+    vldescinfant: discountValue,
+    tpcashback: "percentual",
+    vlcashback: cashbackPercent,
+    percomissao: cashbackPercent,
+    vlvendanormal: "0.00",
+    vlvendainfant: "0.00",
+    vlcashbackpadrao: "0.00",
+    vlcashbacknormal: "0.00",
+    vlcashbackinfant: "0.00",
+    flpromocional: "n",
+    vldescpromonormal: "0.00",
+    vldescpromoinfant: "0.00",
+    vlcashbackpromo: "0.00",
+    vlcashbackpromonormal: "0.00",
+    vlcashbackpromoinfant: "0.00",
     stcodindica: normalizeStatus(values.stcodindica),
     email: normalizeText(values.email),
   };
@@ -878,14 +874,8 @@ export function mapPainelCodIndicaToFormValues(
     codindica: row.codindica,
     nmrepresentante: row.nmrepresentante ?? "",
     validade: normalizeDateInput(row.validade),
-    vlvendanormal: toDbMoney(row.vlvendanormal),
-    vlvendainfant: toDbMoney(row.vlvendainfant),
-    vlcashbacknormal: toDbMoney(row.vlcashbacknormal),
-    vlcashbackinfant: toDbMoney(row.vlcashbackinfant),
-    flpromocional: normalizeText(row.flpromocional) === "s",
-    vldescpromo: toDbMoney(row.vldescpromonormal),
-    vlcashbackpromonormal: toDbMoney(row.vlcashbackpromonormal),
-    vlcashbackpromoinfant: toDbMoney(row.vlcashbackpromoinfant),
+    discountValue: toDbMoney(row.vldescnormal),
+    cashbackPercent: toDbMoney(row.vlcashback ?? row.percomissao),
     stcodindica: normalizeStatus(row.stcodindica),
     email: row.email ?? "",
   };

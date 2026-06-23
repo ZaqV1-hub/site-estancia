@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { PainelSiteManager } from "@/components/painel-site-manager";
 import { readEstanciaContent } from "@/lib/estancia-content-store";
+import {
+  listPainelAgendaInformationOptions,
+  listPainelAgendaPriceTables,
+} from "@/lib/painel-agenda";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
@@ -23,13 +27,11 @@ export default async function PainelSiteRoute({
 }) {
   await requirePainelAccess(["vis_info", "vis_param"], "/painel/site");
   const params = await searchParams;
-  const content = await readEstanciaContent();
-  const initialCreateEventMode =
-    params.createEvent === "link"
-      ? "link"
-      : params.createEvent === "date"
-        ? "date"
-        : null;
+  const [content, priceTables, informationOptions] = await Promise.all([
+    readEstanciaContent(),
+    listPainelAgendaPriceTables(),
+    listPainelAgendaInformationOptions(),
+  ]);
 
   return (
     <div className="space-y-5">
@@ -46,7 +48,9 @@ export default async function PainelSiteRoute({
       <PainelSiteManager
         content={content}
         initialEditEventId={params.editEvent ?? null}
-        initialCreateEventMode={initialCreateEventMode}
+        initialOpenCreateEvent={Boolean(params.createEvent)}
+        defaultPriceTableId={priceTables[0]?.id ?? null}
+        defaultInformationId={informationOptions[0]?.id ?? null}
       />
     </div>
   );

@@ -25,14 +25,8 @@ export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) 
       codindica: String(formData.get("codindica") ?? ""),
       nmrepresentante: String(formData.get("nmrepresentante") ?? ""),
       validade: String(formData.get("validade") ?? ""),
-      vlvendanormal: String(formData.get("vlvendanormal") ?? ""),
-      vlvendainfant: String(formData.get("vlvendainfant") ?? ""),
-      vlcashbacknormal: String(formData.get("vlcashbacknormal") ?? ""),
-      vlcashbackinfant: String(formData.get("vlcashbackinfant") ?? ""),
-      flpromocional: String(formData.get("flpromocional") ?? "") === "s",
-      vldescpromo: String(formData.get("vldescpromo") ?? ""),
-      vlcashbackpromonormal: String(formData.get("vlcashbackpromonormal") ?? ""),
-      vlcashbackpromoinfant: String(formData.get("vlcashbackpromoinfant") ?? ""),
+      discountValue: String(formData.get("discountValue") ?? ""),
+      cashbackPercent: String(formData.get("cashbackPercent") ?? ""),
       stcodindica: String(formData.get("stcodindica") ?? ""),
       email: String(formData.get("email") ?? ""),
     } satisfies PainelCodIndicaFormValues;
@@ -147,20 +141,20 @@ export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) 
             />
           </label>
           <label className="block text-sm font-semibold text-[#5a5a5a]">
-            Valor Passaporte
+            Valor de Desconto
             <input
               className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
-              defaultValue={initialValues.vlvendanormal}
-              name="vlvendanormal"
+              defaultValue={initialValues.discountValue}
+              name="discountValue"
               type="text"
             />
           </label>
           <label className="block text-sm font-semibold text-[#5a5a5a]">
-            Valor Passaporte Infantil
+            CashBack (% por venda)
             <input
               className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
-              defaultValue={initialValues.vlvendainfant}
-              name="vlvendainfant"
+              defaultValue={initialValues.cashbackPercent}
+              name="cashbackPercent"
               type="text"
             />
           </label>
@@ -177,65 +171,10 @@ export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) 
           </label>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-4">
-          <label className="block text-sm font-semibold text-[#5a5a5a]">
-            Cashback Passaporte
-            <input
-              className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
-              defaultValue={initialValues.vlcashbacknormal}
-              name="vlcashbacknormal"
-              type="text"
-            />
-          </label>
-          <label className="block text-sm font-semibold text-[#5a5a5a]">
-            Cashback Passaporte Infantil
-            <input
-              className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
-              defaultValue={initialValues.vlcashbackinfant}
-              name="vlcashbackinfant"
-              type="text"
-            />
-          </label>
-          <label className="flex items-center gap-3 pt-7 text-sm font-semibold text-[#5a5a5a]">
-            <input
-              defaultChecked={initialValues.flpromocional}
-              name="flpromocional"
-              type="checkbox"
-              value="s"
-            />
-            Promocional
-          </label>
-        </div>
-
-        <div className="grid gap-5 lg:grid-cols-3">
-          <label className="block text-sm font-semibold text-[#5a5a5a]">
-            Desconto Promocional
-            <input
-              className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
-              defaultValue={initialValues.vldescpromo}
-              name="vldescpromo"
-              type="text"
-            />
-          </label>
-          <label className="block text-sm font-semibold text-[#5a5a5a]">
-            Cashback Promo Passaporte
-            <input
-              className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
-              defaultValue={initialValues.vlcashbackpromonormal}
-              name="vlcashbackpromonormal"
-              type="text"
-            />
-          </label>
-          <label className="block text-sm font-semibold text-[#5a5a5a]">
-            Cashback Promo Passaporte Infantil
-            <input
-              className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
-              defaultValue={initialValues.vlcashbackpromoinfant}
-              name="vlcashbackpromoinfant"
-              type="text"
-            />
-          </label>
-        </div>
+        <p className="text-sm leading-6 text-[#666]">
+          O desconto informado sera aplicado na etapa final da compra quando o cliente
+          usar este codigo. O cashback sera calculado como percentual sobre o valor da venda.
+        </p>
 
         <div className="flex flex-wrap gap-3">
           <button

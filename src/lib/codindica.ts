@@ -44,6 +44,13 @@ export type CodindicaCalculation = {
   child: TicketTotals;
 };
 
+export type CodindicaCartCalculation = {
+  code: string;
+  discountAmount: number;
+  totalGross: number;
+  totalPaid: number;
+};
+
 export class CodindicaValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -125,6 +132,43 @@ function isExpired(validityDate: string) {
   const expiration = new Date(`${validityDate}T12:00:00`);
 
   return today.getTime() > expiration.getTime();
+}
+
+function assertRecordIsUsable(
+  input: Pick<CodindicaCalculationInput, "code" | "record" | "parameters">,
+) {
+  if (!input.record) {
+    const notFoundMessage = resolveParameterMessage(
+      input.parameters,
+      "codine",
+      {
+        "##rep##": "",
+        "##cod##": input.code,
+      },
+      `Codigo inexistente. ${input.code}`,
+    );
+    throw new CodindicaValidationError(
+      `${notFoundMessage}${notFoundMessage.endsWith(input.code) ? "" : input.code}`,
+    );
+  }
+
+  if (input.record.stcodindica === "ina") {
+    throw new CodindicaValidationError("Codigo inexistente.");
+  }
+
+  if (input.record.validade && isExpired(input.record.validade)) {
+    throw new CodindicaValidationError(
+      resolveParameterMessage(
+        input.parameters,
+        "codven",
+        {
+          "##rep##": input.record.nmrepresentante ?? "",
+          "##cod##": input.record.codindica,
+        },
+        "Codigo expirado.",
+      ),
+    );
+  }
 }
 
 function calculateDiscountedTicketTotals(
@@ -225,62 +269,27 @@ export function calculateCodindicaTotals(
     );
   }
 
-  if (!input.record) {
-    const notFoundMessage = resolveParameterMessage(
-      input.parameters,
-      "codine",
-      {
-        "##rep##": "",
-        "##cod##": input.code,
-      },
-      `Codigo inexistente. ${input.code}`,
-    );
-    throw new CodindicaValidationError(
-      `${notFoundMessage}${notFoundMessage.endsWith(input.code) ? "" : input.code}`,
-    );
-  }
+  assertRecordIsUsable(input);
+  const record = input.record as CodindicaRow;
 
-  if (
-    isPromotionalAgenda(input.agendaType) &&
-    !canUseOnPromotionalAgenda(input.record)
-  ) {
+  if (isPromotionalAgenda(input.agendaType) && !canUseOnPromotionalAgenda(record)) {
     throw new CodindicaValidationError(
       "Codigo de indicacao/cupom nao pode ser aplicado em data promocional.",
     );
   }
 
-  if (input.record.stcodindica === "ina") {
-    throw new CodindicaValidationError("Codigo inexistente.");
-  }
-
-  if (input.record.validade) {
-    if (isExpired(input.record.validade)) {
-      throw new CodindicaValidationError(
-        resolveParameterMessage(
-          input.parameters,
-          "codven",
-          {
-            "##rep##": input.record.nmrepresentante ?? "",
-            "##cod##": input.record.codindica,
-          },
-          "Codigo expirado.",
-        ),
-      );
-    }
-  }
-
-  if (usesNewRule(input.record)) {
+  if (usesNewRule(record)) {
     if (isPromotionalAgenda(input.agendaType)) {
       const normal = calculateDiscountedTicketTotals(
         input.normalUnitPrice,
         input.normalQuantity,
-        readMoney(input.record.vldescpromonormal),
+        readMoney(record.vldescpromonormal),
         "fixo",
       );
       const child = calculateDiscountedTicketTotals(
         input.childUnitPrice,
         input.childQuantity,
-        readMoney(input.record.vldescpromoinfant),
+        readMoney(record.vldescpromoinfant),
         "fixo",
       );
 
@@ -301,12 +310,12 @@ export function calculateCodindicaTotals(
     const normal = calculateFixedPriceTicketTotals(
       input.normalUnitPrice,
       input.normalQuantity,
-      readMoney(input.record.vlvendanormal),
+      readMoney(record.vlvendanormal),
     );
     const child = calculateFixedPriceTicketTotals(
       input.childUnitPrice,
       input.childQuantity,
-      readMoney(input.record.vlvendainfant),
+      readMoney(record.vlvendainfant),
     );
 
     return {
@@ -321,17 +330,17 @@ export function calculateCodindicaTotals(
     };
   }
 
-  const discountKind = normalizeDiscountKind(input.record.tpdesconto);
+  const discountKind = normalizeDiscountKind(record.tpdesconto);
   const normal = calculateDiscountedTicketTotals(
     input.normalUnitPrice,
     input.normalQuantity,
-    readMoney(input.record.vldescnormal),
+    readMoney(record.vldescnormal),
     discountKind,
   );
   const child = calculateDiscountedTicketTotals(
     input.childUnitPrice,
     input.childQuantity,
-    readMoney(input.record.vldescinfant),
+    readMoney(record.vldescinfant),
     discountKind,
   );
 
@@ -347,4 +356,32 @@ export function calculateCodindicaTotals(
     normal,
     child,
   };
+}
+
+export function calculateCodindicaCartTotals(input: {
+  code: string;
+  record: CodindicaRow | null;
+  parameters: CodindicaParametroRow[];
+  totalValue: number;
+}) {
+  const totalGross = normalizeMoney(input.totalValue);
+
+  if (totalGross <= 0) {
+    throw new CodindicaValidationError(
+      "Selecione pelo menos um ingresso pago para continuar.",
+    );
+  }
+
+  assertRecordIsUsable(input);
+  const record = input.record as CodindicaRow;
+
+  const configuredDiscount = readMoney(record.vldescnormal ?? record.vlvendanormal);
+  const discountAmount = Math.min(normalizeMoney(configuredDiscount), totalGross);
+
+  return {
+    code: input.code,
+    discountAmount,
+    totalGross,
+    totalPaid: normalizeMoney(totalGross - discountAmount),
+  } satisfies CodindicaCartCalculation;
 }

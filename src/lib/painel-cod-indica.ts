@@ -704,7 +704,7 @@ async function loadCashbackAdminPassword() {
     `
       SELECT vlparametro
       FROM parametro
-      WHERE idparametro = 'codcashpass'
+      WHERE idparametro = 'codcash'
       LIMIT 1
     `,
   );

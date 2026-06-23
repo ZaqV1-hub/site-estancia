@@ -16,13 +16,13 @@ vi.mock("@/lib/ops-admin-parameters", () => ({
     },
     {
       group: "segadm",
-      id: "codcashpass",
+      id: "codcash",
       label: "Senha cashback",
       description: "Senha administrativa usada para registrar pagamentos de cashback.",
       defaultValue: "",
       input: "password",
       required: false,
-      value: "12345",
+      value: "597924",
       persisted: true,
     },
   ]),
@@ -50,8 +50,8 @@ describe("painel-parametros", () => {
         label: "Seguranca Administrativa",
         items: [
           expect.objectContaining({
-            id: "codcashpass",
-            value: "12345",
+            id: "codcash",
+            value: "597924",
           }),
         ],
       },

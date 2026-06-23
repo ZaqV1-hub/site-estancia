@@ -9,7 +9,7 @@ type ParameterActor = {
 
 export type OpsAdminParameterDefinition = {
   group: "msgper" | "segadm";
-  id: "codval" | "codven" | "codine" | "codcashpass";
+  id: "codval" | "codven" | "codine" | "codcash";
   label: string;
   description: string;
   defaultValue: string;
@@ -77,7 +77,7 @@ const parameterDefinitions: OpsAdminParameterDefinition[] = [
   },
   {
     group: "segadm",
-    id: "codcashpass",
+    id: "codcash",
     label: "Senha cashback",
     description: "Senha administrativa usada para registrar pagamentos de cashback.",
     defaultValue: "",

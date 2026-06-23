@@ -1,8 +1,9 @@
 "use client";
 
+import { CurrencyInput, parseCurrencyInput } from "@/components/currency-input";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import type { PainelCodIndicaDetail } from "@/lib/painel-cod-indica";
 
 type Props = {
@@ -24,10 +25,24 @@ export function PainelCodIndicaDetailPage({
     tone: "success" | "error";
     message: string;
   } | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("0,00");
   const [isPending, startTransition] = useTransition();
+  const availableCashback = Number(detail.cashbackSummary.disponivel);
+
+  const handleAmountChange = useCallback((value: string) => {
+    setPaymentAmount(value);
+  }, []);
 
   async function handleCashbackPayment(formData: FormData) {
     setFeedback(null);
+
+    if (parseCurrencyInput(paymentAmount) > availableCashback) {
+      setFeedback({
+        tone: "error",
+        message: "O valor informado e maior que o cashback disponivel.",
+      });
+      return;
+    }
 
     const values = {
       vlpagamento: String(formData.get("vlpagamento") ?? ""),
@@ -220,19 +235,26 @@ export function PainelCodIndicaDetailPage({
 
         <h2 className="mt-8 text-[28px] font-semibold text-[#205a7f]">Pagamentos de cashback</h2>
         {isManager ? (
-          <form action={handleCashbackPayment} className="mt-4 space-y-4 border border-[#d7d7d7] bg-[#f8fbfd] p-4">
+          <form
+            action={handleCashbackPayment}
+            autoComplete="off"
+            className="mt-4 space-y-4 border border-[#d7d7d7] bg-[#f8fbfd] p-4"
+          >
             <div className="grid gap-4 md:grid-cols-3">
               <label className="block text-sm font-semibold text-[#5a5a5a]">
                 Valor pagamento
-                <input
+                <CurrencyInput
+                  autoComplete="off"
                   className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
+                  defaultValue="0,00"
                   name="vlpagamento"
-                  type="text"
+                  onValueChange={handleAmountChange}
                 />
               </label>
               <label className="block text-sm font-semibold text-[#5a5a5a]">
                 Senha administrativa
                 <input
+                  autoComplete="new-password"
                   className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
                   name="senha_admin"
                   type="password"
@@ -241,12 +263,16 @@ export function PainelCodIndicaDetailPage({
               <label className="block text-sm font-semibold text-[#5a5a5a]">
                 Observacao
                 <input
+                  autoComplete="off"
                   className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
                   name="dsobservacao"
                   type="text"
                 />
               </label>
             </div>
+            <p className="text-sm text-[#5a5a5a]">
+              Disponivel para pagamento: <strong>R$ {detail.indicators.cashbackDisponivelLabel}</strong>
+            </p>
             <button
               className="inline-flex items-center justify-center bg-[#4aa329] px-6 py-3 text-sm font-semibold text-white hover:bg-[#3c8721] disabled:opacity-60"
               disabled={isPending}

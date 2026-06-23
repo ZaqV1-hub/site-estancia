@@ -1,5 +1,6 @@
 "use client";
 
+import { CurrencyInput } from "@/components/currency-input";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -190,7 +191,8 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
             <ImageInput />
             <div className="grid gap-3 md:grid-cols-2">
               <Field label="Valor">
-                <input
+                <CurrencyInput
+                  key={`product-price-${editing.product?.id ?? "new"}-${editing.type}`}
                   name="fixedPrice"
                   defaultValue={editing.product?.fixedPrice ?? ""}
                   placeholder="100,00"

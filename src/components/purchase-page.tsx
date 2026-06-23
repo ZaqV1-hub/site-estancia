@@ -88,6 +88,23 @@ async function readResponseBody<T>(response: Response) {
   }
 }
 
+type CodindicaPreviewResponse =
+  | {
+      ok: true;
+      data: {
+        codindica: string;
+        subtotal: string;
+        discountAmount: string;
+        totalValue: string;
+      };
+    }
+  | {
+      ok: false;
+      error: {
+        message: string;
+      };
+    };
+
 function ProductCard({
   product,
   quantity,
@@ -169,6 +186,13 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
   const [step, setStep] = useState<PurchaseStep>("passports");
   const [quantities, setQuantities] = useState<Quantities>({});
   const [codindica, setCodindica] = useState("");
+  const [appliedCodindica, setAppliedCodindica] = useState<string | null>(null);
+  const [appliedDiscount, setAppliedDiscount] = useState("0.00");
+  const [isApplyingCodindica, setIsApplyingCodindica] = useState(false);
+  const [codindicaFeedback, setCodindicaFeedback] = useState<{
+    tone: "success" | "error";
+    message: string;
+  } | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeCarouselPage, setActiveCarouselPage] = useState(0);
@@ -198,6 +222,9 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
   const totalQuantity =
     cart?.lines.reduce((total, line) => total + line.quantity, 0) ?? 0;
   const totalValue = cart?.totalValue ?? "0.00";
+  const totalValueWithDiscount = appliedCodindica
+    ? Math.max(Number(totalValue) - Number(appliedDiscount), 0).toFixed(2)
+    : totalValue;
   const desktopDotCount = step === "passports" ? 3 : 1;
 
   useEffect(() => {
@@ -228,6 +255,9 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
       ...current,
       [productId]: Math.max((current[productId] ?? 0) + delta, 0),
     }));
+    setAppliedCodindica(null);
+    setAppliedDiscount("0.00");
+    setCodindicaFeedback(null);
   }
 
   function goTo(nextStep: PurchaseStep) {
@@ -259,7 +289,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
         },
         body: JSON.stringify({
           agendaId: agenda.id,
-          codindica: codindica.trim().toUpperCase() || undefined,
+          codindica: appliedCodindica || undefined,
           lineItems,
         }),
       });
@@ -295,6 +325,74 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
       setError("Não foi possível iniciar a compra agora.");
     } finally {
       setPending(false);
+    }
+  }
+
+  async function handleApplyCodindica() {
+    if (!cart || passportQuantity <= 0) {
+      setCodindicaFeedback({
+        tone: "error",
+        message: "Selecione pelo menos um passaporte antes de aplicar o codigo.",
+      });
+      return;
+    }
+
+    const normalizedCode = codindica.trim().toUpperCase();
+
+    if (normalizedCode.length !== 6) {
+      setAppliedCodindica(null);
+      setAppliedDiscount("0.00");
+      setCodindicaFeedback({
+        tone: "error",
+        message: "Informe um codigo de indicacao valido.",
+      });
+      return;
+    }
+
+    setIsApplyingCodindica(true);
+    setCodindicaFeedback(null);
+
+    try {
+      const response = await fetch("/api/me/purchases/codindica", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          agendaId: agenda.id,
+          codindica: normalizedCode,
+          lineItems,
+        }),
+      });
+      const payload = await readResponseBody<CodindicaPreviewResponse>(response);
+
+      if (!response.ok || !payload?.ok) {
+        throw new Error(
+          payload && !payload.ok
+            ? payload.error.message
+            : "Nao foi possivel validar o codigo agora.",
+        );
+      }
+
+      setAppliedCodindica(payload.data.codindica);
+      setAppliedDiscount(payload.data.discountAmount);
+      setCodindica(payload.data.codindica);
+      setCodindicaFeedback({
+        tone: "success",
+        message: `Codigo ${payload.data.codindica} aplicado com sucesso.`,
+      });
+    } catch (applyError) {
+      setAppliedCodindica(null);
+      setAppliedDiscount("0.00");
+      setCodindicaFeedback({
+        tone: "error",
+        message:
+          applyError instanceof Error
+            ? applyError.message
+            : "Nao foi possivel validar o codigo agora.",
+      });
+    } finally {
+      setIsApplyingCodindica(false);
     }
   }
 
@@ -441,6 +539,14 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
             {formatCurrency(totalValue)}
           </strong>
         </div>
+        {appliedCodindica ? (
+          <div className="mt-3 flex items-center justify-between text-[#11883b]">
+            <span className="text-[14px] font-black sm:text-[15px]">Desconto</span>
+            <strong className="text-[15px] font-black sm:text-[16px]">
+              - {formatCurrency(appliedDiscount)}
+            </strong>
+          </div>
+        ) : null}
       </>
     );
   }
@@ -534,12 +640,56 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
                           Seu carrinho
                         </h2>
                         {renderCartSummary(true)}
+                        <div className="mt-4 border-t border-[#dfe8dc] pt-4">
+                          <p className="text-[13px] font-bold text-[#626469]">
+                            Codigo de indicacao
+                          </p>
+                          <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                            <input
+                              value={codindica}
+                              onChange={(event) => {
+                                const nextValue = event.target.value
+                                  .toUpperCase()
+                                  .replace(/[^A-Z0-9]/g, "")
+                                  .slice(0, 6);
+                                setCodindica(nextValue);
+                                if (appliedCodindica && nextValue !== appliedCodindica) {
+                                  setAppliedCodindica(null);
+                                  setAppliedDiscount("0.00");
+                                }
+                                setCodindicaFeedback(null);
+                              }}
+                              maxLength={6}
+                              placeholder="ABC123"
+                              className="w-full rounded-[10px] border border-[#dfe8dc] px-4 py-3 text-[14px] font-semibold text-[#073f35]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => void handleApplyCodindica()}
+                              disabled={isApplyingCodindica}
+                              className="rounded-[10px] bg-[#11883b] px-4 py-3 text-[13px] font-black text-white shadow-[0_8px_16px_rgba(17,136,59,0.15)] hover:bg-[#0c6e30] disabled:opacity-60"
+                            >
+                              {isApplyingCodindica ? "Aplicando..." : "Aplicar"}
+                            </button>
+                          </div>
+                          {codindicaFeedback ? (
+                            <div
+                              className={`mt-3 rounded-[10px] border px-3 py-2 text-[12px] font-semibold ${
+                                codindicaFeedback.tone === "success"
+                                  ? "border-[#b7dfc0] bg-[#edf8f0] text-[#245336]"
+                                  : "border-[#efc3c3] bg-[#fff3f1] text-[#9f3f36]"
+                              }`}
+                            >
+                              {codindicaFeedback.message}
+                            </div>
+                          ) : null}
+                        </div>
                         <div className="mt-4 flex items-center justify-between border-t border-[#dfe8dc] pt-4">
                           <span className="text-[16px] font-black text-[#073f35]">
                             Total
                           </span>
                           <strong className="text-[20px] font-black text-[#073f35]">
-                            {formatCurrency(totalValue)}
+                            {formatCurrency(totalValueWithDiscount)}
                           </strong>
                         </div>
                       </div>
@@ -594,35 +744,6 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
                     </div>
                   </div>
                 </section>
-
-                <section className="mt-3 rounded-[12px] border border-[#dfe8dc] bg-white p-4 shadow-[0_10px_24px_rgba(18,52,45,0.055)]">
-                  <div className="flex items-start gap-3">
-                    <IconBubble name="lock" className="h-10 w-10" />
-                    <div className="min-w-0 flex-1">
-                      <h2 className="text-[18px] font-black text-[#073f35]">
-                        Codigo de indicacao
-                      </h2>
-                      <p className="mt-2 text-[13px] leading-5 text-[#626469]">
-                        Se voce tiver um codigo de funcionario, informe abaixo para
-                        aplicar o desconto na finalizacao.
-                      </p>
-                      <input
-                        value={codindica}
-                        onChange={(event) =>
-                          setCodindica(
-                            event.target.value
-                              .toUpperCase()
-                              .replace(/[^A-Z0-9]/g, "")
-                              .slice(0, 6),
-                          )
-                        }
-                        maxLength={6}
-                        placeholder="ABC123"
-                        className="mt-3 w-full rounded-[10px] border border-[#dfe8dc] px-4 py-3 text-[14px] font-semibold text-[#073f35]"
-                      />
-                    </div>
-                  </div>
-                </section>
               </section>
 
               <aside className="hidden h-fit rounded-[12px] border border-[#dfe8dc] bg-white p-4 text-left shadow-[0_12px_28px_rgba(18,52,45,0.055)] xl:block">
@@ -635,7 +756,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
                     Total
                   </span>
                   <strong className="text-[22px] font-black text-[#073f35]">
-                    {formatCurrency(totalValue)}
+                    {formatCurrency(totalValueWithDiscount)}
                   </strong>
                 </div>
                 <PrimaryFlowButton
@@ -663,7 +784,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
                     Total da compra
                   </p>
                   <strong className="mt-1 block truncate text-[18px] font-black text-[#073f35] sm:text-[22px]">
-                    {formatCurrency(totalValue)}
+                    {formatCurrency(totalValueWithDiscount)}
                   </strong>
                 </div>
                 <PrimaryFlowButton

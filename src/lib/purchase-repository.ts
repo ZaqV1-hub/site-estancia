@@ -815,3 +815,109 @@ export async function createOnlinePurchase(
     client.release();
   }
 }
+
+export async function previewOnlinePurchaseCodindica(
+  agendaId: number,
+  selection: { lineItems: NonNullable<CreatePurchaseRequest["lineItems"]> },
+  codindicaInput: string,
+) {
+  const agenda = await getPublicAgendaReservationById(agendaId);
+
+  if (!agenda) {
+    throw new PurchaseCreationError(
+      "agenda_not_found",
+      "Data de visita indisponivel para compra online.",
+      404,
+    );
+  }
+
+  if (isAgendaDateExpired(agenda.date)) {
+    throw new PurchaseCreationError(
+      "agenda_expired",
+      "Esta data nao esta mais disponivel.",
+      409,
+    );
+  }
+
+  const cart = await buildB2cCartSummary(selection.lineItems);
+  const availability = await getAgendaProductAvailability(agenda.date);
+  const pool = getIngressoDbPool();
+  const codindica = normalizeCodindica(codindicaInput);
+
+  if (!codindica) {
+    throw new PurchaseCreationError(
+      "invalid_codindica",
+      "Informe um codigo de indicacao valido.",
+      409,
+    );
+  }
+
+  for (const line of cart.lines) {
+    const allowedIds =
+      line.type === "passport" ? availability.passportIds : availability.addonIds;
+
+    if (!allowedIds.includes(line.productId)) {
+      throw new PurchaseCreationError(
+        "product_unavailable_for_date",
+        "Um ou mais itens selecionados nao estao disponiveis para esta data.",
+        409,
+      );
+    }
+  }
+
+  const [codindicaResult, parametroResult] = await Promise.all([
+    pool.query<CodindicaQueryRow>(
+      `
+        SELECT
+          codindica,
+          stcodindica,
+          validade::text AS validade,
+          nmrepresentante,
+          tpdesconto,
+          flpromocional,
+          vldescnormal::text AS vldescnormal,
+          vldescinfant::text AS vldescinfant,
+          vldescpromonormal::text AS vldescpromonormal,
+          vldescpromoinfant::text AS vldescpromoinfant,
+          vlvendanormal::text AS vlvendanormal,
+          vlvendainfant::text AS vlvendainfant,
+          vlcashback::text AS vlcashback,
+          vlcashbacknormal::text AS vlcashbacknormal,
+          vlcashbackinfant::text AS vlcashbackinfant
+        FROM codindica
+        WHERE codindica = $1
+        LIMIT 1
+      `,
+      [codindica],
+    ),
+    pool.query<CodindicaParametroRow>(
+      `
+        SELECT idparametro, vlparametro
+        FROM parametro
+        WHERE idparametro IN ('codine', 'codven', 'codval')
+      `,
+    ),
+  ]);
+
+  try {
+    const totals = calculateCodindicaCartTotals({
+      code: codindica,
+      record: codindicaResult.rows[0] ?? null,
+      parameters: parametroResult.rows,
+      totalValue: Number(cart.totalValue),
+    });
+
+    return {
+      codindica: totals.code,
+      subtotal: normalizeMoney(totals.totalGross),
+      discountAmount: normalizeMoney(totals.discountAmount),
+      totalValue: normalizeMoney(totals.totalPaid),
+    };
+  } catch (error) {
+    if (error instanceof CodindicaValidationError) {
+      throw new PurchaseCreationError("invalid_codindica", error.message, 409);
+    }
+
+    throw error;
+  }
+}

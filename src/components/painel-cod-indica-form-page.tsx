@@ -1,5 +1,6 @@
 "use client";
 
+import { CurrencyInput } from "@/components/currency-input";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -142,11 +143,10 @@ export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) 
           </label>
           <label className="block text-sm font-semibold text-[#5a5a5a]">
             Valor de Desconto
-            <input
+            <CurrencyInput
               className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
               defaultValue={initialValues.discountValue}
               name="discountValue"
-              type="text"
             />
           </label>
           <label className="block text-sm font-semibold text-[#5a5a5a]">

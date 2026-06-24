@@ -23,7 +23,10 @@ export async function POST(request: Request) {
         csenha: typeof payload?.csenha === "string" ? payload.csenha : "",
         nmusuario: typeof payload?.nmusuario === "string" ? payload.nmusuario : "",
         email: typeof payload?.email === "string" ? payload.email : "",
-        idpapel: typeof payload?.idpapel === "string" ? payload.idpapel : "",
+        idpapel:
+          typeof payload?.idpapel === "string" || typeof payload?.idpapel === "number"
+            ? String(payload.idpapel)
+            : "",
       }),
     mapError: asPainelUsuariosError,
     logTag: "painel-usuario-create-bff-failed",

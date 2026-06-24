@@ -109,6 +109,10 @@ function formatSelectedDate(event: PublicAgendaEvent) {
   return selectedDateFormatter.format(new Date(`${event.date}T12:00:00`));
 }
 
+function isPromotionalEvent(event: PublicAgendaEvent | null | undefined) {
+  return event?.type === "promo";
+}
+
 function updateUrl(
   month: number,
   year: number,
@@ -282,6 +286,17 @@ export function PublicAgenda({
               Ecológico das Águas.
             </p>
 
+            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#cae6c5] bg-[#eef8ec] px-3 py-1 text-[#087842]">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#18ac26]" />
+                Data regular
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#f3c699] bg-[#fff3e8] px-3 py-1 text-[#b85c12]">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#ef8d32]" />
+                Data promocional
+              </span>
+            </div>
+
             {selectedEvent ? (
               <div className="mt-3 flex max-w-[320px] items-center gap-2.5 rounded-[10px] border border-[#dce8d8] bg-white p-2.5 shadow-[0_8px_16px_rgba(18,52,45,0.035)]">
                 <IconBubble name="calendar" className="h-8 w-8 sm:h-9 sm:w-9" />
@@ -292,6 +307,11 @@ export function PublicAgenda({
                   <strong className="mt-0.5 block text-[14px] font-extrabold text-[#073f35] sm:text-[15px]">
                     {selectedDateLabel}
                   </strong>
+                  {isPromotionalEvent(selectedEvent) ? (
+                    <span className="mt-1 inline-flex rounded-full bg-[#fff3e8] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-[#b85c12]">
+                      Promocional
+                    </span>
+                  ) : null}
                 </div>
               </div>
             ) : null}
@@ -340,6 +360,7 @@ export function PublicAgenda({
                     day.inMonth &&
                     isSameMonth(period.month, period.year, now) &&
                     day.day === now.getDate();
+                  const isPromotional = isPromotionalEvent(event);
 
                   if (!event || event.status === "lot") {
                     return (
@@ -367,8 +388,12 @@ export function PublicAgenda({
                       onClick={() => setSelectedEventId(event.id)}
                       className={`flex h-[32px] items-center justify-center rounded-[7px] border text-[10px] font-bold transition sm:h-[40px] sm:text-[12px] lg:h-[42px] ${
                         isSelected
-                          ? "border-[#18ac26] bg-[#073f35] text-white shadow-[0_10px_22px_rgba(7,63,53,0.2)]"
-                          : "border-transparent bg-[#f4f2ed] text-[#073f35] hover:border-[#18ac26]"
+                          ? isPromotional
+                            ? "border-[#ef8d32] bg-[#b85c12] text-white shadow-[0_10px_22px_rgba(184,92,18,0.2)]"
+                            : "border-[#18ac26] bg-[#073f35] text-white shadow-[0_10px_22px_rgba(7,63,53,0.2)]"
+                          : isPromotional
+                            ? "border-[#f3c699] bg-[#fff3e8] text-[#b85c12] hover:border-[#ef8d32]"
+                            : "border-[#cae6c5] bg-[#eef8ec] text-[#087842] hover:border-[#18ac26]"
                       } ${isToday ? "ring-2 ring-[#7fcf72]" : ""}`}
                     >
                       {day.day}
@@ -421,8 +446,29 @@ export function PublicAgenda({
                     <strong className="mt-1 block text-[16px] font-extrabold leading-tight text-[#073f35]">
                       {selectedDateLabel}
                     </strong>
+                    {isPromotionalEvent(selectedEvent) ? (
+                      <span className="mt-2 inline-flex rounded-full bg-[#fff3e8] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#b85c12]">
+                        Data promocional
+                      </span>
+                    ) : null}
                   </div>
                 </div>
+
+                {selectedEvent.promotional.name ? (
+                  <div className="mt-4 rounded-[10px] border border-[#f3c699] bg-[#fff8ef] px-3 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#b85c12]">
+                      Evento promocional
+                    </p>
+                    <h3 className="mt-1 text-[15px] font-extrabold leading-tight text-[#7a4213]">
+                      {selectedEvent.promotional.name}
+                    </h3>
+                    {selectedEvent.promotional.description ? (
+                      <p className="mt-2 text-[12px] leading-5 text-[#8a5a34]">
+                        {selectedEvent.promotional.description}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 <PrimaryFlowButton
                   href={buildPublicAgendaPurchaseHref(selectedEvent)}
@@ -455,6 +501,11 @@ export function PublicAgenda({
               <strong className="block text-[14px] font-black text-[#073f35]">
                 {selectedDateLabel}
               </strong>
+              {isPromotionalEvent(selectedEvent) ? (
+                <span className="mt-1 inline-flex rounded-full bg-[#fff3e8] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-[#b85c12]">
+                  Promocional
+                </span>
+              ) : null}
             </div>
           </div>
           <PrimaryFlowButton

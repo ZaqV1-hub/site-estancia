@@ -88,7 +88,7 @@ export function SiteShell({
           >
             <ul className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-center lg:gap-[34px]">
               {[
-                ["In\u00edcio", "/"],
+                ["In\u00edcio", "/#inicio"],
                 ["Atra\u00e7\u00f5es", "/#atracoes"],
                 ["Eventos", "/#eventos"],
                 ["Minha conta", customerMenuHref],
@@ -126,7 +126,7 @@ export function SiteShell({
           </div>
 
           <nav className="flex flex-wrap gap-5 text-[0.96rem] font-bold text-[#17342d]">
-            <Link href="/">{"In\u00edcio"}</Link>
+            <Link href="/#inicio">{"In\u00edcio"}</Link>
             <Link href="/#atracoes">{"Atra\u00e7\u00f5es"}</Link>
             <Link href="/#eventos">Eventos</Link>
             <Link href={customerMenuHref}>Minha conta</Link>

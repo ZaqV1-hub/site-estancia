@@ -239,7 +239,7 @@ export function EstanciaHomePage({
         onPointerCancel={() => {
           heroDragRef.current = null;
         }}
-        className="relative h-[76svh] min-h-[520px] cursor-grab select-none overflow-hidden bg-[#0b1110] [touch-action:pan-y] active:cursor-grabbing"
+        className="relative h-[76svh] min-h-[520px] scroll-mt-[76px] cursor-grab select-none overflow-hidden bg-[#0b1110] [touch-action:pan-y] active:cursor-grabbing lg:scroll-mt-[108px]"
       >
         <div className="absolute inset-0">
           {heroImages.map((image, index) => (
@@ -268,7 +268,10 @@ export function EstanciaHomePage({
       </section>
 
       <main>
-        <section id="atracoes" className="px-5 py-14 md:py-20">
+        <section
+          id="atracoes"
+          className="scroll-mt-[96px] px-5 py-14 md:py-20 lg:scroll-mt-[132px]"
+        >
           <div className="mx-auto w-full max-w-[1240px]">
             <div className="mb-9 text-center">
               <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.18em] text-[#1f6b36]">
@@ -347,7 +350,10 @@ export function EstanciaHomePage({
           </div>
         </section>
 
-        <section id="eventos" className="px-5 py-14 md:py-20">
+        <section
+          id="eventos"
+          className="scroll-mt-[96px] px-5 py-14 md:py-20 lg:scroll-mt-[132px]"
+        >
           <div className="mx-auto w-full max-w-[1240px]">
             <h2 className="mb-9 text-center text-[clamp(2rem,4vw,3.4rem)] font-black leading-none text-[#7a7a7a]">
               Eventos

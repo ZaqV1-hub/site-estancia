@@ -24,7 +24,10 @@ export async function PATCH(
         csenha: "",
         nmusuario: typeof payload?.nmusuario === "string" ? payload.nmusuario : "",
         email: typeof payload?.email === "string" ? payload.email : "",
-        idpapel: typeof payload?.idpapel === "string" ? payload.idpapel : "",
+        idpapel:
+          typeof payload?.idpapel === "string" || typeof payload?.idpapel === "number"
+            ? String(payload.idpapel)
+            : "",
         stusuario: typeof payload?.stusuario === "string" ? payload.stusuario : "",
       }),
     mapError: asPainelUsuariosError,

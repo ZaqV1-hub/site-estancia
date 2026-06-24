@@ -52,6 +52,12 @@ type AdminActor = {
   cpf?: string | null;
 };
 
+const INTERNAL_USER_ROLE_CATALOG = [
+  { id: 1, name: "Gerente" },
+  { id: 2, name: "Funcionario" },
+  { id: 3, name: "Bilheteria" },
+] as const;
+
 export type OpsAdminMasterDataIdentifier = number | string;
 
 export type OpsAdminMasterDataResource =
@@ -780,6 +786,7 @@ async function createInternalUser(
   config: AdminResourceConfig,
   payload: Record<string, string | number | null>,
 ) {
+  await ensureInternalUserRoles(client);
   const cpf = String(payload.cpf ?? "");
   const existingResult = await client.query<Record<string, unknown>>(
     `
@@ -837,6 +844,20 @@ async function createInternalUser(
   );
 
   return result.rows[0]?.id ?? null;
+}
+
+async function ensureInternalUserRoles(client: PoolClient) {
+  for (const role of INTERNAL_USER_ROLE_CATALOG) {
+    await client.query(
+      `
+        INSERT INTO papel (idpapel, nmpapel)
+        VALUES ($1, $2)
+        ON CONFLICT (idpapel)
+        DO UPDATE SET nmpapel = EXCLUDED.nmpapel
+      `,
+      [role.id, role.name],
+    );
+  }
 }
 
 export async function listOpsAdminMasterData(resource: string) {
@@ -949,6 +970,11 @@ export async function updateOpsAdminMasterData(
 
   try {
     await client.query("BEGIN");
+
+    if (config.resource === "internal-users") {
+      await ensureInternalUserRoles(client);
+    }
+
     await assertItemExists(client, config, id);
 
     await client.query(

@@ -21,27 +21,15 @@ type QuickLink = {
 
 const quickLinks: QuickLink[] = [
   {
-    href: "/painel/site",
-    label: "Site",
-    resources: ["vis_info", "vis_param"],
-    roles: [1, 2],
-  },
-  {
-    href: "/painel/agenda",
-    label: "Agenda",
-    resources: ["vis_agenda"],
-    roles: [1],
-  },
-  {
     href: "/painel/bilheteria",
     label: "Bilheteria",
     resources: ["vis_bilhet"],
     roles: [1, 2, 3],
   },
   {
-    href: "/painel/passaportes-itens",
-    label: "Passaportes e itens",
-    resources: ["vis_agenda", "vis_tabpre"],
+    href: "/painel/agenda",
+    label: "Agenda",
+    resources: ["vis_agenda"],
     roles: [1, 2],
   },
   {

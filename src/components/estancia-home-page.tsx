@@ -251,7 +251,6 @@ export function EstanciaHomePage({
             />
           ))}
         </div>
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.68)_0%,rgba(0,0,0,0.36)_30%,rgba(16,43,37,0.1)_58%,rgba(0,0,0,0.38)_100%)]" />
 
         <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-2">
           {heroImages.map((image, index) => (

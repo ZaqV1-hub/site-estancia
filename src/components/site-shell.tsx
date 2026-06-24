@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { EstanciaLogo } from "@/components/estancia-logo";
 import { contact } from "@/lib/site-content";
 
@@ -16,7 +16,6 @@ export function SiteShell({
   customerMenuHref: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const isHome = pathname === "/";
 
@@ -34,23 +33,9 @@ export function SiteShell({
     pathname === "/minha-conta" ||
     pathname.startsWith("/minha-conta/");
 
-  useEffect(() => {
-    if (usesStandaloneShell || !isHome) {
-      return;
-    }
-
-    const handleScroll = () => setScrolled(window.scrollY > 16);
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isHome, usesStandaloneShell]);
-
   if (usesStandaloneShell) {
     return <>{children}</>;
   }
-
-  const headerIsSolid = !isHome || scrolled || menuOpen;
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-[#17351f]">
@@ -78,17 +63,12 @@ export function SiteShell({
       </a>
 
       <header
-        className={`fixed inset-x-0 top-0 z-40 transition-all duration-200 ${
-          headerIsSolid
-            ? "border-b border-[rgba(35,73,63,0.08)] bg-white/95 shadow-[0_10px_30px_rgba(21,48,42,0.06)] backdrop-blur-md"
-            : "bg-transparent"
-        }`}
+        className="fixed inset-x-0 top-0 z-40 border-b border-[rgba(35,73,63,0.08)] bg-white shadow-[0_10px_30px_rgba(21,48,42,0.06)]"
       >
         <div className="mx-auto grid min-h-[76px] w-[min(1240px,calc(100%-28px))] grid-cols-[auto_1fr] items-center gap-3 py-2 sm:w-[min(1240px,calc(100%-40px))] lg:min-h-[108px] lg:grid-cols-[220px_1fr_220px] lg:gap-5">
           <EstanciaLogo
             href="/"
             compact
-            light={!headerIsSolid}
             className="h-[40px] max-w-[170px] sm:h-[48px] sm:max-w-[210px] lg:h-[62px] lg:max-w-[260px]"
           />
 
@@ -96,11 +76,7 @@ export function SiteShell({
             type="button"
             aria-label="Abrir menu"
             onClick={() => setMenuOpen((current) => !current)}
-            className={`flex h-[46px] w-[46px] items-center justify-center justify-self-end rounded-[8px] border text-[22px] font-black lg:hidden ${
-              headerIsSolid
-                ? "border-[#d8e0d4] bg-white text-[#17342d] shadow-[0_12px_28px_rgba(22,47,41,0.1)]"
-                : "border-white/20 bg-white/10 text-white"
-            }`}
+            className="flex h-[46px] w-[46px] items-center justify-center justify-self-end rounded-[8px] border border-[#d8e0d4] bg-white text-[22px] font-black text-[#17342d] shadow-[0_12px_28px_rgba(22,47,41,0.1)] lg:hidden"
           >
             =
           </button>
@@ -121,9 +97,7 @@ export function SiteShell({
                 <li key={href}>
                   <Link
                     href={href}
-                    className={`relative py-1 text-[1rem] font-medium transition after:absolute after:bottom-[-4px] after:left-0 after:right-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-current after:transition hover:after:scale-x-100 ${
-                      headerIsSolid ? "text-[#17342d]" : "text-white"
-                    } ${headerIsSolid ? "" : "drop-shadow-[0_2px_8px_rgba(0,0,0,0.75)]"}`}
+                    className="relative py-1 text-[1rem] font-medium text-[#17342d] transition after:absolute after:bottom-[-4px] after:left-0 after:right-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-current after:transition hover:after:scale-x-100"
                     onClick={() => setMenuOpen(false)}
                   >
                     {label}
@@ -136,7 +110,7 @@ export function SiteShell({
         </div>
       </header>
 
-      <main>{children}</main>
+      <main className={isHome ? "pt-[76px] lg:pt-[108px]" : ""}>{children}</main>
 
       <footer className="border-t border-[rgba(22,47,41,0.08)] bg-[linear-gradient(180deg,rgba(23,52,45,0.04),rgba(23,52,45,0.08))] px-5 py-10 text-left">
         <div className="mx-auto grid max-w-[1240px] gap-7 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center">

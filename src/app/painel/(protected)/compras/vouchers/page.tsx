@@ -18,7 +18,7 @@ export default async function PainelCompraVouchersPageRoute({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  await requirePainelAccess(["vis_compra", "vis_bilhet"], "/painel/compras/vouchers");
+  await requirePainelAccess("vis_compra", "/painel/compras/vouchers");
   const query = await searchParams;
   const result = await listPainelPurchaseVouchers({
     page: Array.isArray(query.page) ? query.page[0] : query.page,

@@ -9,4 +9,8 @@ describe("painel-access", () => {
   it("routes operator sessions to the painel home by default", () => {
     expect(getDefaultPainelPath(2)).toBe("/painel");
   });
+
+  it("routes box office sessions to bilheteria by default", () => {
+    expect(getDefaultPainelPath(3)).toBe("/painel/bilheteria");
+  });
 });

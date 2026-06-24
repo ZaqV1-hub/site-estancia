@@ -18,7 +18,7 @@ export default async function PainelCompraDetailRoute({
 }: {
   params: Promise<{ purchaseId: string }>;
 }) {
-  const session = await requirePainelAccess(["vis_compra", "vis_bilhet"], "/painel/compras");
+  const session = await requirePainelAccess("vis_compra", "/painel/compras");
   const routeParams = await params;
   const detail = await getPainelPurchaseDetail(Number(routeParams.purchaseId));
 

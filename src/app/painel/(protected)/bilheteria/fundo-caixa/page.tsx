@@ -14,10 +14,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function PainelBilheteriaFundoCaixaPage() {
-  const session = await requirePainelAccess(
-    ["vis_bilhet", "vis_compra"],
-    "/painel/bilheteria/fundo-caixa",
-  );
+  const session = await requirePainelAccess("vis_bilhet", "/painel/bilheteria/fundo-caixa");
   const summary = await getBilheteriaCashFundSummary();
 
   return (

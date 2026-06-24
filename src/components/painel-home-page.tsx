@@ -1,15 +1,61 @@
 import Link from "next/link";
+import {
+  hasLegacyPanelResource,
+  type LegacyPanelResource,
+  type LegacyPanelRoleId,
+} from "@/lib/painel-access";
 import type { PainelHomePageData } from "@/lib/painel-home";
 
 type PainelHomePageProps = {
   data: PainelHomePageData;
+  legacyResources: readonly string[];
+  legacyRoleId: LegacyPanelRoleId | null;
 };
 
-const quickLinks = [
-  { href: "/painel/agenda", label: "Agenda" },
-  { href: "/painel/bilheteria", label: "Bilheteria" },
-  { href: "/painel/passaportes-itens", label: "Passaportes e itens" },
-  { href: "/painel/administrativo", label: "Administrativo" },
+type QuickLink = {
+  href: string;
+  label: string;
+  resources: LegacyPanelResource[];
+  roles: LegacyPanelRoleId[];
+};
+
+const quickLinks: QuickLink[] = [
+  {
+    href: "/painel/site",
+    label: "Site",
+    resources: ["vis_info", "vis_param"],
+    roles: [1, 2],
+  },
+  {
+    href: "/painel/agenda",
+    label: "Agenda",
+    resources: ["vis_agenda"],
+    roles: [1],
+  },
+  {
+    href: "/painel/bilheteria",
+    label: "Bilheteria",
+    resources: ["vis_bilhet"],
+    roles: [1, 2, 3],
+  },
+  {
+    href: "/painel/passaportes-itens",
+    label: "Passaportes e itens",
+    resources: ["vis_agenda", "vis_tabpre"],
+    roles: [1, 2],
+  },
+  {
+    href: "/painel/compras",
+    label: "Compras",
+    resources: ["vis_compra"],
+    roles: [1, 2],
+  },
+  {
+    href: "/painel/administrativo",
+    label: "Administrativo",
+    resources: ["vis_usu", "vis_situsu"],
+    roles: [1],
+  },
 ];
 
 function formatCurrency(value: number) {
@@ -19,11 +65,23 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-export function PainelHomePage({ data }: PainelHomePageProps) {
+export function PainelHomePage({
+  data,
+  legacyResources,
+  legacyRoleId,
+}: PainelHomePageProps) {
+  const visibleQuickLinks = quickLinks.filter((item) => {
+    if (!legacyRoleId || !item.roles.includes(legacyRoleId)) {
+      return false;
+    }
+
+    return hasLegacyPanelResource(legacyResources, item.resources);
+  });
+
   return (
     <div className="space-y-6 text-[#35503b]">
       <section className="panel-section px-5 py-5">
-        <p className="panel-eyebrow">Visão geral</p>
+        <p className="panel-eyebrow">Visao geral</p>
         <div className="mt-3 grid gap-5 xl:grid-cols-[1fr_0.85fr]">
           <div>
             <h2 className="text-[30px] font-black leading-tight text-[#17351f]">
@@ -64,9 +122,9 @@ export function PainelHomePage({ data }: PainelHomePageProps) {
       </section>
 
       <section className="panel-section p-5">
-        <p className="panel-eyebrow">Acesso rápido</p>
+        <p className="panel-eyebrow">Acesso rapido</p>
         <div className="mt-4 grid gap-3 md:grid-cols-4">
-          {quickLinks.map((item) => (
+          {visibleQuickLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -78,40 +136,42 @@ export function PainelHomePage({ data }: PainelHomePageProps) {
         </div>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-2">
-        <article className="panel-section p-5">
-          <p className="panel-eyebrow">Eventos</p>
-          <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
-            Eventos
-          </h3>
-          <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
-            Publique eventos na home e leve o visitante direto para a data de compra.
-          </p>
-          <Link
-            href="/painel/site#eventos"
-            className="mt-5 inline-flex min-h-11 items-center rounded-[8px] bg-[#17342d] px-5 text-sm font-black text-white"
-          >
-            Configurar eventos
-          </Link>
-        </article>
+      {hasLegacyPanelResource(legacyResources, ["vis_info", "vis_param"]) ? (
+        <section className="grid gap-5 xl:grid-cols-2">
+          <article className="panel-section p-5">
+            <p className="panel-eyebrow">Eventos</p>
+            <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
+              Eventos
+            </h3>
+            <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
+              Publique eventos na home e leve o visitante direto para a data de compra.
+            </p>
+            <Link
+              href="/painel/site#eventos"
+              className="mt-5 inline-flex min-h-11 items-center rounded-[8px] bg-[#17342d] px-5 text-sm font-black text-white"
+            >
+              Configurar eventos
+            </Link>
+          </article>
 
-        <article className="panel-section p-5">
-          <p className="panel-eyebrow">Site</p>
-          <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
-            Imagens e atrações
-          </h3>
-          <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
-            Organize imagens da home, versões mobile e desktop,
-            atrações e chamadas do site.
-          </p>
-          <Link
-            href="/painel/site"
-            className="mt-5 inline-flex min-h-11 items-center rounded-[8px] bg-[#17342d] px-5 text-sm font-black text-white"
-          >
-            Configurar site
-          </Link>
-        </article>
-      </section>
+          <article className="panel-section p-5">
+            <p className="panel-eyebrow">Site</p>
+            <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
+              Imagens e atracoes
+            </h3>
+            <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
+              Organize imagens da home, versoes mobile e desktop, atracoes e chamadas
+              do site.
+            </p>
+            <Link
+              href="/painel/site"
+              className="mt-5 inline-flex min-h-11 items-center rounded-[8px] bg-[#17342d] px-5 text-sm font-black text-white"
+            >
+              Configurar site
+            </Link>
+          </article>
+        </section>
+      ) : null}
     </div>
   );
 }

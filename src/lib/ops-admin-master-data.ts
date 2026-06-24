@@ -261,7 +261,7 @@ const resourceConfigs: Record<OpsAdminMasterDataResource, AdminResourceConfig> =
         column: "idpapel",
         type: "integer",
         required: true,
-        allowedIntegers: [1, 2],
+        allowedIntegers: [1, 2, 3],
       },
       { name: "status", column: "stusuario", type: "status", allowed: ["ati", "ina"] },
     ],

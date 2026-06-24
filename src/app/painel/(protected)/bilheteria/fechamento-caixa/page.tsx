@@ -20,10 +20,7 @@ export default async function PainelBilheteriaFechamentoCaixaPage({
     fechamento_id?: string;
   }>;
 }) {
-  const session = await requirePainelAccess(
-    ["vis_bilhet", "vis_compra"],
-    "/painel/bilheteria/fechamento-caixa",
-  );
+  const session = await requirePainelAccess("vis_bilhet", "/painel/bilheteria/fechamento-caixa");
   const params = await searchParams;
   const closureId = Number(params.fechamento_id ?? 0);
   const data = await getBilheteriaCashClosureReport(

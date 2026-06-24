@@ -31,63 +31,78 @@ type PainelNavItem = {
   href: string;
   label: string;
   icon: string;
+  roles?: LegacyPanelRoleId[];
   resources?: LegacyPanelResource[];
 };
 
 const navItems: PainelNavItem[] = [
-  { href: "/painel", label: "Vis\u00e3o geral", icon: "overview" },
+  {
+    href: "/painel",
+    label: "Vis\u00e3o geral",
+    icon: "overview",
+    roles: [1, 2],
+  },
   {
     href: "/painel/site",
     label: "Site",
     icon: "site",
+    roles: [1, 2],
     resources: ["vis_info", "vis_param"],
   },
   {
     href: "/painel/agenda",
     label: "Agenda",
     icon: "calendar",
+    roles: [1],
     resources: ["vis_agenda"],
   },
   {
     href: "/painel/passaportes-itens",
     label: "Passaportes e itens",
     icon: "products",
+    roles: [1, 2],
     resources: ["vis_agenda", "vis_tabpre"],
   },
   {
     href: "/painel/bilheteria",
     label: "Bilheteria",
     icon: "ticket",
-    resources: ["vis_bilhet", "vis_compra"],
+    roles: [1, 2, 3],
+    resources: ["vis_bilhet"],
   },
   {
     href: "/painel/compras",
     label: "Compras",
     icon: "cart",
+    roles: [1, 2],
     resources: ["vis_compra"],
   },
   {
     href: "/painel/descontos",
     label: "Descontos",
     icon: "discount",
+    roles: [1],
     resources: ["vis_desc"],
   },
   {
     href: "/painel/cortesias",
     label: "Cortesias",
     icon: "gift",
+    roles: [1],
     resources: ["vis_cort"],
   },
   {
     href: "/painel/cod-indica",
     label: "C\u00f3digos de indica\u00e7\u00e3o",
     icon: "share",
+    roles: [1],
     resources: ["vis_indica"],
   },
   {
     href: "/painel/administrativo",
     label: "Administrativo",
     icon: "admin",
+    roles: [1],
     resources: [
       "vis_usu",
       "vis_situsu",
@@ -217,6 +232,7 @@ export function PainelShell({
   actorName,
   actorCpf,
   role,
+  legacyRoleId,
   legacyRoleName,
   legacyResources = [],
   children,
@@ -229,12 +245,16 @@ export function PainelShell({
 
   const visibleItems = useMemo(
     () =>
-      navItems.filter((item) =>
-        item.resources
+      navItems.filter((item) => {
+        if (item.roles && (!legacyRoleId || !item.roles.includes(legacyRoleId))) {
+          return false;
+        }
+
+        return item.resources
           ? hasLegacyPanelResource(legacyResources, item.resources)
-          : true,
-      ),
-    [legacyResources],
+          : true;
+      }),
+    [legacyResources, legacyRoleId],
   );
 
   async function handleLogout() {

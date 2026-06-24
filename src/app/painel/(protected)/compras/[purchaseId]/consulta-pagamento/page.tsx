@@ -21,7 +21,7 @@ export default async function PainelCompraGatewayStatusRoute({
 }: {
   params: Promise<{ purchaseId: string }>;
 }) {
-  await requirePainelAccess(["vis_compra", "vis_bilhet"], "/painel/compras");
+  await requirePainelAccess("vis_compra", "/painel/compras");
   const routeParams = await params;
   const purchaseId = Number(routeParams.purchaseId);
   const [detail, consult] = await Promise.all([

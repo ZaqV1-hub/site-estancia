@@ -35,6 +35,11 @@ describe("/painel root route", () => {
     });
     loadPainelHomePageData.mockResolvedValue({
       emailErrorCount: 9,
+      revenue: {
+        total: 100,
+        site: 40,
+        boxOffice: 60,
+      },
       urls: [],
     });
 
@@ -45,7 +50,25 @@ describe("/painel root route", () => {
     expect(requirePainelSession).toHaveBeenCalledWith("/painel");
     expect(loadPainelHomePageData).toHaveBeenCalled();
     expect(redirect).not.toHaveBeenCalled();
-    expect(html).toContain("Home");
-    expect(html).toContain("9 e-mail(s) com erro de envio");
+    expect(html).toContain("Visao geral");
+    expect(html).toContain("Valor arrecadado no dia");
+  });
+
+  it("redirects box office users directly to the bilheteria module", async () => {
+    requirePainelSession.mockResolvedValue({
+      actorName: "Caixa Teste",
+      actorCpf: "52998224725",
+      role: "operator",
+      permissions: ["ops.read", "ops.vouchers", "ops.purchases", "ops.cash"],
+      legacyRoleId: 3,
+      legacyRoleName: "Bilheteria",
+      legacyResources: ["vis_bilhet"],
+    });
+
+    const page = (await import("@/app/painel/(protected)/page")).default;
+    await page();
+
+    expect(redirect).toHaveBeenCalledWith("/painel/bilheteria");
+    expect(loadPainelHomePageData).not.toHaveBeenCalled();
   });
 });

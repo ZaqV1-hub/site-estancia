@@ -22,10 +22,7 @@ export default async function PainelBilheteriaPagarReservaPage({
     purchaseId: string;
   }>;
 }) {
-  const session = await requirePainelAccess(
-    ["vis_bilhet", "vis_compra"],
-    "/painel/bilheteria/pagar-reserva",
-  );
+  const session = await requirePainelAccess("vis_bilhet", "/painel/bilheteria/pagar-reserva");
   const { purchaseId } = await params;
   const detail = await getPainelBilheteriaPurchaseDetail(Number(purchaseId));
 

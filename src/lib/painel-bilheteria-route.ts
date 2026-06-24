@@ -6,7 +6,7 @@ import {
 } from "@/lib/ops-route-utils";
 import { requirePainelApiAccess } from "@/lib/painel-api-auth";
 
-const PAINEL_BILHETERIA_PERMISSIONS = ["vis_compra", "vis_bilhet"] as const;
+const PAINEL_BILHETERIA_PERMISSIONS = ["vis_bilhet"] as const;
 
 type PainelBilheteriaRouteParams = Record<string, string>;
 

@@ -33,10 +33,7 @@ export default async function PainelBilheteriaPage({
     ingresso?: string;
   }>;
 }) {
-  const session = await requirePainelAccess(
-    ["vis_bilhet", "vis_compra"],
-    "/painel/bilheteria",
-  );
+  const session = await requirePainelAccess("vis_bilhet", "/painel/bilheteria");
   const params = await searchParams;
   const today = getSaoPauloToday();
   const [year, month] = today.split("-").map(Number);

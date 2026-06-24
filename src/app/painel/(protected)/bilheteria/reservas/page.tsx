@@ -26,10 +26,7 @@ export default async function PainelBilheteriaReservasPage({
     page?: string;
   }>;
 }) {
-  const session = await requirePainelAccess(
-    ["vis_bilhet", "vis_compra"],
-    "/painel/bilheteria/reservas",
-  );
+  const session = await requirePainelAccess("vis_bilhet", "/painel/bilheteria/reservas");
   const params = await searchParams;
   const history = await listPainelBilheteriaHistory({
     cpf: params.cpf,

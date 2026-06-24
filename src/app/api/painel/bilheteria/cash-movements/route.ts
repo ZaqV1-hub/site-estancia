@@ -28,7 +28,7 @@ function readMovementValue(value: unknown) {
 }
 
 async function authorize(request: Request) {
-  return requirePainelApiAccess(request, ["vis_compra", "vis_bilhet"]);
+  return requirePainelApiAccess(request, "vis_bilhet");
 }
 
 export async function POST(request: Request) {

@@ -4,7 +4,7 @@ import { requirePainelAccess } from "@/lib/painel-session";
 
 export async function requirePainelBilheteriaHistorySession() {
   const session = await requirePainelAccess(
-    ["vis_bilhet", "vis_compra"],
+    "vis_bilhet",
     "/painel/bilheteria/historico",
   );
 

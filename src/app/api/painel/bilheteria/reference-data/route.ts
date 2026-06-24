@@ -8,10 +8,7 @@ import {
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const access = await requirePainelApiAccess(request, [
-    "vis_compra",
-    "vis_bilhet",
-  ]);
+  const access = await requirePainelApiAccess(request, "vis_bilhet");
 
   if (!access.ok) {
     return access.response;

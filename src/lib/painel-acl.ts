@@ -32,7 +32,7 @@ export async function listLegacyPanelResourcesForRole(
     ),
   );
 
-  if (dynamicResources.length === 0 && roleId === 2) {
+  if (dynamicResources.length === 0) {
     return getLegacyPanelResources(roleId);
   }
 

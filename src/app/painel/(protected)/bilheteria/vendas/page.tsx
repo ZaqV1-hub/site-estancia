@@ -23,10 +23,7 @@ function getSaoPauloToday() {
 }
 
 export default async function PainelBilheteriaVendasPage() {
-  const session = await requirePainelAccess(
-    ["vis_bilhet", "vis_compra"],
-    "/painel/bilheteria/vendas",
-  );
+  const session = await requirePainelAccess("vis_bilhet", "/painel/bilheteria/vendas");
   const products = await getManagedB2cProducts("passport");
   const today = getSaoPauloToday();
   const [year, month] = today.split("-").map(Number);

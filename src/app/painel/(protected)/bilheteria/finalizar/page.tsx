@@ -14,10 +14,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function PainelBilheteriaFinalizePage() {
-  const session = await requirePainelAccess(
-    ["vis_bilhet", "vis_compra"],
-    "/painel/bilheteria/finalizar",
-  );
+  const session = await requirePainelAccess("vis_bilhet", "/painel/bilheteria/finalizar");
 
   return (
     <div className="grid gap-5">

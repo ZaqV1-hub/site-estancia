@@ -30,7 +30,7 @@ export default async function PainelBilheteriaIndicadoresPage({
     data?: string;
   }>;
 }) {
-  const session = await requirePainelAccess(["vis_bilhet", "vis_compra"], "/painel/bilheteria/indicadores");
+  const session = await requirePainelAccess("vis_bilhet", "/painel/bilheteria/indicadores");
   const params = await searchParams;
   const indicators = await getPainelBilheteriaIndicators(params.data);
 

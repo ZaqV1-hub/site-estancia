@@ -15,10 +15,7 @@ export async function GET(
     }>;
   },
 ) {
-  const access = await requirePainelApiAccess(request, [
-    "vis_compra",
-    "vis_bilhet",
-  ]);
+  const access = await requirePainelApiAccess(request, "vis_compra");
 
   if (!access.ok) {
     return access.response;

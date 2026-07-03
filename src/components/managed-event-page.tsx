@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ManagedEvent } from "@/lib/estancia-content-store";
 import { resolveManagedEventPageTitle } from "@/lib/estancia-event-pages";
@@ -73,7 +72,7 @@ export function ManagedEventPage({ event }: { event: ManagedEvent }) {
   return (
     <section className="w-full bg-[#f5f8f2]">
       <div className="bg-[linear-gradient(135deg,#17342d_0%,#1f4a3f_100%)]">
-        <div className="mx-auto grid w-full max-w-[1240px] gap-10 px-5 py-16 text-left text-white md:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center lg:py-20">
+        <div className="mx-auto w-full max-w-[1240px] px-5 py-16 text-left text-white md:px-8 lg:py-20">
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.24em] text-[#c8dfcf]">
               Agenda
@@ -86,18 +85,6 @@ export function ManagedEventPage({ event }: { event: ManagedEvent }) {
                 {summary}
               </p>
             ) : null}
-          </div>
-
-          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-white/10 shadow-[0_24px_60px_rgba(4,19,15,0.28)]">
-            <div className="relative aspect-[4/3]">
-              <Image
-                src={event.imageSrc}
-                alt={pageTitle}
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 420px"
-              />
-            </div>
           </div>
         </div>
       </div>

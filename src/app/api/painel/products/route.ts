@@ -44,6 +44,14 @@ function revalidateProducts() {
   revalidatePath("/comprar/[id]", "page");
 }
 
+function getNextSortOrder(products: B2cProduct[], type: B2cProduct["type"]) {
+  return (
+    products
+      .filter((item) => item.type === type)
+      .reduce((highest, item) => Math.max(highest, Number(item.sortOrder) || 0), 0) + 1
+  );
+}
+
 export async function POST(request: Request) {
   const authResponse = await authorize(request);
 
@@ -79,10 +87,7 @@ export async function POST(request: Request) {
     voucherType,
     voucherPrefix: type === "addon" ? "E" : "A",
     active: asBool(formData.get("active")),
-    sortOrder:
-      Number(formData.get("sortOrder")) ||
-      current?.sortOrder ||
-      data.products.length + 1,
+    sortOrder: current?.sortOrder || getNextSortOrder(data.products, type),
   };
 
   await writeEstanciaContent({

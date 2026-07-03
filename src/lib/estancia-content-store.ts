@@ -13,6 +13,7 @@ export type ManagedHomeImage = {
   desktopSrc: string;
   mobileSrc: string;
   alt: string;
+  href: string;
   active: boolean;
   sortOrder: number;
 };
@@ -85,6 +86,7 @@ const defaultContent: EstanciaContentData = {
       desktopSrc: "/hero/current/banner-site-oficial-1.jpg",
       mobileSrc: "/hero/current/banner-site-oficial-1.jpg",
       alt: "Piscina e área verde da Estância",
+      href: "",
       active: true,
       sortOrder: 1,
     },
@@ -93,6 +95,7 @@ const defaultContent: EstanciaContentData = {
       desktopSrc: "/hero/current/banner-onda.jpg",
       mobileSrc: "/hero/current/banner-onda.jpg",
       alt: "Piscina de ondas da Estância",
+      href: "",
       active: true,
       sortOrder: 2,
     },
@@ -101,6 +104,7 @@ const defaultContent: EstanciaContentData = {
       desktopSrc: "/hero/current/banner-14-06-2026.jpg",
       mobileSrc: "/hero/current/banner-14-06-2026.jpg",
       alt: "Evento na Estância",
+      href: "",
       active: true,
       sortOrder: 3,
     },
@@ -239,6 +243,7 @@ function normalizeManagedHomeImage(item: ManagedHomeImage, fallback: ManagedHome
     alt: repairMojibakeText(item.alt, fallback.alt),
     desktopSrc,
     mobileSrc,
+    href: item.href?.trim() || "",
   };
 }
 

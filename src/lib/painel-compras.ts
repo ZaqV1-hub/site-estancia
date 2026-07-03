@@ -22,6 +22,8 @@ export type PainelPurchaseListFilters = {
   userName: string | null;
   dateFrom: string | null;
   dateTo: string | null;
+  visitDateFrom: string | null;
+  visitDateTo: string | null;
 };
 
 export type PainelPurchaseListItem = {
@@ -29,6 +31,7 @@ export type PainelPurchaseListItem = {
   purchaseDate: string | null;
   paymentDate: string | null;
   paymentTime: string | null;
+  visitDate: string | null;
   type: string;
   typeLabel: string;
   status: string;
@@ -228,6 +231,7 @@ type PainelPurchaseListWhereInput = Partial<PainelPurchaseListFilters>;
 type PainelPurchaseListRow = {
   idcompra: number;
   dtcompra: string | null;
+  dtagenda: string | null;
   tpcompra: string | null;
   stcompra: string | null;
   formapag: string | null;
@@ -464,6 +468,8 @@ function normalizeWhereFilters(
     userName: normalizePainelCompraScalarFilterValue(filters.userName),
     dateFrom: normalizePainelCompraDateFilterValue(filters.dateFrom),
     dateTo: normalizePainelCompraDateFilterValue(filters.dateTo),
+    visitDateFrom: normalizePainelCompraDateFilterValue(filters.visitDateFrom),
+    visitDateTo: normalizePainelCompraDateFilterValue(filters.visitDateTo),
   };
 }
 
@@ -695,6 +701,7 @@ function buildPurchaseListItem(row: PainelPurchaseListRow): PainelPurchaseListIt
     purchaseDate: formatDateLabel(row.dtcompra),
     paymentDate: formatDateLabel(row.dtpagamento),
     paymentTime: row.hrpagamento ? String(row.hrpagamento).slice(0, 8) : null,
+    visitDate: formatDateLabel(row.dtagenda),
     type,
     typeLabel: formatPurchaseTypeLabel(type),
     status,
@@ -724,6 +731,8 @@ export function normalizePainelPurchaseListFilters(
     userName: normalizePainelCompraScalarFilterValue(input.nmusuario),
     dateFrom: resolveDateRangeValue(input, "de"),
     dateTo: resolveDateRangeValue(input, "ate"),
+    visitDateFrom: resolveVoucherDateRangeValue(input, "dtagenda", "de"),
+    visitDateTo: resolveVoucherDateRangeValue(input, "dtagenda", "ate"),
   };
 }
 

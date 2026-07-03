@@ -1,6 +1,5 @@
 "use client";
 
-import { CurrencyInput } from "@/components/currency-input";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -142,11 +141,14 @@ export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) 
             />
           </label>
           <label className="block text-sm font-semibold text-[#5a5a5a]">
-            Valor de Desconto
-            <CurrencyInput
+            Desconto (%)
+            <input
               className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
               defaultValue={initialValues.discountValue}
               name="discountValue"
+              inputMode="decimal"
+              placeholder="10,00"
+              type="text"
             />
           </label>
           <label className="block text-sm font-semibold text-[#5a5a5a]">
@@ -172,7 +174,7 @@ export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) 
         </div>
 
         <p className="text-sm leading-6 text-[#666]">
-          O desconto informado sera aplicado na etapa final da compra quando o cliente
+          O percentual informado sera aplicado no valor final da compra quando o cliente
           usar este codigo. O cashback sera calculado como percentual sobre o valor da venda.
         </p>
 

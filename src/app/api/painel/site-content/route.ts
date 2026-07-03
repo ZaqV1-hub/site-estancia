@@ -9,12 +9,18 @@ import {
   upsertPainelAgendaRange,
 } from "@/lib/painel-agenda";
 import {
+  moveOrderedItem,
+  removeOrderedItem,
+  upsertOrderedItem,
+} from "@/lib/managed-content-order";
+import { authenticateOperationsRequest } from "@/lib/ops-auth";
+import {
+  type EstanciaContentData,
   makeContentId,
   readEstanciaContent,
   saveUploadedSiteImage,
   writeEstanciaContent,
 } from "@/lib/estancia-content-store";
-import { authenticateOperationsRequest } from "@/lib/ops-auth";
 
 export const runtime = "nodejs";
 
@@ -60,7 +66,7 @@ function resolveEventDateFromHref(href: string | undefined) {
   return match?.[1] ?? null;
 }
 
-async function deletePromotionalAgendaByDate(date: string | null, reason: string) {
+async function cleanupPromotionalAgendaByDate(date: string | null, reason: string) {
   if (!date) {
     return;
   }
@@ -71,7 +77,40 @@ async function deletePromotionalAgendaByDate(date: string | null, reason: string
     return;
   }
 
-  await deletePainelAgenda(agendaDay.agenda.id, { reason });
+  try {
+    await deletePainelAgenda(agendaDay.agenda.id, { reason });
+  } catch {
+    const [priceTables, informationOptions] = await Promise.all([
+      listPainelAgendaPriceTables(),
+      listPainelAgendaInformationOptions(),
+    ]);
+
+    await upsertPainelAgendaRange({
+      agendaId: agendaDay.agenda.id,
+      startDate: date,
+      endDate: date,
+      priceTableId: agendaDay.agenda.priceTableId ?? priceTables[0]?.id ?? 0,
+      informationId:
+        agendaDay.agenda.informationId ?? informationOptions[0]?.id ?? 0,
+      type: "padra",
+      status: agendaDay.agenda.status,
+      promotionName: null,
+      promotionDescription: null,
+      passportIds: agendaDay.selectedPassportIds,
+      addonIds: agendaDay.selectedAddonIds,
+      confirmOverwrite: true,
+      reason,
+    });
+  }
+}
+
+function collectManagedImageSources(data: EstanciaContentData) {
+  return [
+    ...data.homeImages.flatMap((item) => [item.desktopSrc, item.mobileSrc]),
+    ...data.attractions.map((item) => item.imageSrc),
+    ...data.events.map((item) => item.imageSrc),
+    ...data.products.map((item) => item.imageSrc),
+  ].filter(Boolean);
 }
 
 export async function POST(request: Request) {
@@ -90,36 +129,35 @@ export async function POST(request: Request) {
     const current = data.homeImages.find((item) => item.id === id);
     const desktopUpload = await saveUploadedSiteImage(formData.get("desktopImage"));
     const mobileUpload = await saveUploadedSiteImage(formData.get("mobileImage"));
-    const fallbackImage = "/hero/current/banner-site-oficial-1.jpg";
+
+    if (!desktopUpload && !mobileUpload && !current?.desktopSrc && !current?.mobileSrc) {
+      return errorResponse("Envie pelo menos uma imagem para o banner da hero.");
+    }
+
     const desktopSrc =
       desktopUpload ??
       current?.desktopSrc ??
       mobileUpload ??
       current?.mobileSrc ??
-      fallbackImage;
+      "";
     const mobileSrc =
       mobileUpload ??
       current?.mobileSrc ??
       desktopUpload ??
       current?.desktopSrc ??
-      fallbackImage;
+      "";
 
     await writeEstanciaContent({
       ...data,
-      homeImages: [
-        ...data.homeImages.filter((item) => item.id !== id),
-        {
-          id,
-          desktopSrc,
-          mobileSrc,
-          alt: asText(formData.get("alt")) || current?.alt || "Imagem da home",
-          active: asBool(formData.get("active")),
-          sortOrder:
-            Number(formData.get("sortOrder")) ||
-            current?.sortOrder ||
-            data.homeImages.length + 1,
-        },
-      ],
+      homeImages: upsertOrderedItem(data.homeImages, {
+        id,
+        desktopSrc,
+        mobileSrc,
+        alt: asText(formData.get("alt")) || current?.alt || "Imagem da hero",
+        href: asText(formData.get("href")) || "",
+        active: asBool(formData.get("active")),
+        sortOrder: current?.sortOrder ?? data.homeImages.length + 1,
+      }),
     });
     revalidateSite();
     return NextResponse.json({ ok: true });
@@ -131,23 +169,21 @@ export async function POST(request: Request) {
     const current = data.attractions.find((item) => item.id === id);
     const imageUpload = await saveUploadedSiteImage(formData.get("image"));
 
+    if (!imageUpload && !current?.imageSrc) {
+      return errorResponse("Envie uma imagem para a atração.");
+    }
+
     await writeEstanciaContent({
       ...data,
-      attractions: [
-        ...data.attractions.filter((item) => item.id !== id),
-        {
-          id,
-          title: title || current?.title || "Nova atração",
-          description:
-            asText(formData.get("description")) || current?.description || "",
-          imageSrc: imageUpload ?? current?.imageSrc ?? "/photos/day-use.jpg",
-          active: asBool(formData.get("active")),
-          sortOrder:
-            Number(formData.get("sortOrder")) ||
-            current?.sortOrder ||
-            data.attractions.length + 1,
-        },
-      ],
+      attractions: upsertOrderedItem(data.attractions, {
+        id,
+        title: title || current?.title || "Nova atração",
+        description:
+          asText(formData.get("description")) || current?.description || "",
+        imageSrc: imageUpload ?? current?.imageSrc ?? "",
+        active: asBool(formData.get("active")),
+        sortOrder: current?.sortOrder ?? data.attractions.length + 1,
+      }),
     });
     revalidateSite();
     return NextResponse.json({ ok: true });
@@ -198,6 +234,10 @@ export async function POST(request: Request) {
       return errorResponse("Informe o link manual do botao.");
     }
 
+    if (!imageUpload && !current?.imageSrc) {
+      return errorResponse("Envie uma imagem para o evento.");
+    }
+
     const derivedHref =
       hasDate && eventDate
         ? `/agenda?mes=${Number(eventDate.slice(5, 7))}&ano=${eventDate.slice(0, 4)}&date=${eventDate}`
@@ -205,7 +245,7 @@ export async function POST(request: Request) {
 
     if (hasDate) {
       if (currentEventDate && currentEventDate !== eventDate) {
-        await deletePromotionalAgendaByDate(
+        await cleanupPromotionalAgendaByDate(
           currentEventDate,
           "Evento do site movido para outra data promocional.",
         );
@@ -228,7 +268,7 @@ export async function POST(request: Request) {
         reason: "Evento do site atualizado pelo painel",
       });
     } else if (currentEventDate) {
-      await deletePromotionalAgendaByDate(
+      await cleanupPromotionalAgendaByDate(
         currentEventDate,
         "Evento do site alterado para link externo.",
       );
@@ -236,29 +276,20 @@ export async function POST(request: Request) {
 
     await writeEstanciaContent({
       ...data,
-      events: [
-        ...data.events.filter((item) => item.id !== id),
-        {
-          id,
-          title: title || current?.title || "Novo evento",
-          description:
-            asText(formData.get("description")) || current?.description || "",
-          imageSrc:
-            imageUpload ??
-            current?.imageSrc ??
-            "/hero/current/banner-14-06-2026.jpg",
-          href: derivedHref || asText(formData.get("href")) || current?.href || "/agenda",
-          buttonLabel:
-            asText(formData.get("buttonLabel")) ||
-            current?.buttonLabel ||
-            "Compre seu ingresso!",
-          active: asBool(formData.get("active")),
-          sortOrder:
-            Number(formData.get("sortOrder")) ||
-            current?.sortOrder ||
-            data.events.length + 1,
-        },
-      ],
+      events: upsertOrderedItem(data.events, {
+        id,
+        title: title || current?.title || "Novo evento",
+        description:
+          asText(formData.get("description")) || current?.description || "",
+        imageSrc: imageUpload ?? current?.imageSrc ?? "",
+        href: derivedHref || asText(formData.get("href")) || current?.href || "/agenda",
+        buttonLabel:
+          asText(formData.get("buttonLabel")) ||
+          current?.buttonLabel ||
+          "Compre seu ingresso!",
+        active: asBool(formData.get("active")),
+        sortOrder: current?.sortOrder ?? data.events.length + 1,
+      }),
     });
     revalidateSite();
     return NextResponse.json({ ok: true });
@@ -287,24 +318,65 @@ export async function DELETE(request: Request) {
   if (payload.section === "home") {
     await writeEstanciaContent({
       ...data,
-      homeImages: data.homeImages.filter((item) => item.id !== payload.id),
+      homeImages: removeOrderedItem(data.homeImages, payload.id),
     });
   } else if (payload.section === "attraction") {
     await writeEstanciaContent({
       ...data,
-      attractions: data.attractions.filter((item) => item.id !== payload.id),
+      attractions: removeOrderedItem(data.attractions, payload.id),
     });
   } else if (payload.section === "event") {
     const current = data.events.find((item) => item.id === payload.id);
 
-    await deletePromotionalAgendaByDate(
+    await cleanupPromotionalAgendaByDate(
       resolveEventDateFromHref(current?.href),
       "Evento do site removido pelo painel.",
     );
 
     await writeEstanciaContent({
       ...data,
-      events: data.events.filter((item) => item.id !== payload.id),
+      events: removeOrderedItem(data.events, payload.id),
+    });
+  } else {
+    return errorResponse("Tipo de conteúdo inválido.");
+  }
+
+  revalidateSite();
+  return NextResponse.json({ ok: true });
+}
+
+export async function PATCH(request: Request) {
+  const authResponse = await authorize(request);
+
+  if (authResponse) {
+    return authResponse;
+  }
+
+  const payload = (await request.json().catch(() => null)) as {
+    section?: string;
+    id?: string;
+    direction?: "up" | "down";
+  } | null;
+  const data = await readEstanciaContent();
+
+  if (!payload?.id || (payload.direction !== "up" && payload.direction !== "down")) {
+    return errorResponse("Movimentação inválida.");
+  }
+
+  if (payload.section === "home") {
+    await writeEstanciaContent({
+      ...data,
+      homeImages: moveOrderedItem(data.homeImages, payload.id, payload.direction),
+    });
+  } else if (payload.section === "attraction") {
+    await writeEstanciaContent({
+      ...data,
+      attractions: moveOrderedItem(data.attractions, payload.id, payload.direction),
+    });
+  } else if (payload.section === "event") {
+    await writeEstanciaContent({
+      ...data,
+      events: moveOrderedItem(data.events, payload.id, payload.direction),
     });
   } else {
     return errorResponse("Tipo de conteúdo inválido.");

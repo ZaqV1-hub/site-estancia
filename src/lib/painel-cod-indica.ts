@@ -518,7 +518,7 @@ function normalizeFormPayload(values: PainelCodIndicaFormValues, mode: "create" 
     codindica: codigo,
     nmrepresentante: normalizeText(values.nmrepresentante),
     validade,
-    tpdesconto: "fixo",
+    tpdesconto: "percentual",
     vldescnormal: discountValue,
     vldescinfant: discountValue,
     tpcashback: "percentual",

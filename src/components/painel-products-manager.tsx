@@ -224,15 +224,6 @@ export function PainelProductsManager({ products }: { products: B2cProduct[] }) 
                   value={getB2cSitePrice(editing.product ?? { sitePrice: "", fixedPrice: "" })}
                 />
               ) : null}
-              <Field label="Ordem">
-                <input
-                  name="sortOrder"
-                  type="number"
-                  min="1"
-                  defaultValue={editing.product?.sortOrder ?? ""}
-                  className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5"
-                />
-              </Field>
             </div>
             <label className="flex items-center gap-2 text-sm font-semibold text-[#17351f]">
               <input

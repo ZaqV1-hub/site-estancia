@@ -112,6 +112,26 @@ export function PainelAgendaEditor({
   const allAddonsSelected =
     addons.length > 0 && selectedAddonIds.length === addons.length;
 
+  useEffect(() => {
+    setForm(buildDefaultForm(data, initialType));
+  }, [data, initialType]);
+
+  useEffect(() => {
+    setSelectedPassportIds(
+      data.selectedDay?.selectedPassportIds?.length
+        ? data.selectedDay.selectedPassportIds
+        : passports.map((item) => item.id),
+    );
+  }, [data.selectedDay, passports]);
+
+  useEffect(() => {
+    setSelectedAddonIds(
+      data.selectedDay?.selectedAddonIds?.length
+        ? data.selectedDay.selectedAddonIds
+        : addons.map((item) => item.id),
+    );
+  }, [addons, data.selectedDay]);
+
   function togglePassportSelection(passportId: string) {
     setSelectedPassportIds((current) =>
       current.includes(passportId)

@@ -67,9 +67,9 @@ export type InfoPage = {
 export const contact = {
   email: "contato@estancia.local",
   whatsapp: "https://wa.me/5511947040718",
-  instagram: "#",
+  instagram: "https://www.instagram.com/estanciaecodasaguas/",
   tiktok: "#",
-  facebook: "#",
+  facebook: "https://www.facebook.com/estanciaecodasaguas/?locale=pt_BR",
   map: "https://goo.gl/maps/hK5JdJb6nM92",
   address: "Av. do Jaceguava, 2.222 - Jardim Casa Grande - São Paulo - SP",
   cep: "04870-425",

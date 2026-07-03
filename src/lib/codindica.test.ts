@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculateCodindicaCartTotals,
   calculateCodindicaTotals,
   CodindicaValidationError,
 } from "@/lib/codindica";
@@ -103,5 +104,34 @@ describe("codindica", () => {
         childQuantity: 0,
       }),
     ).toThrowError(CodindicaValidationError);
+  });
+
+  it("applies percentage discount on the final cart total", () => {
+    const result = calculateCodindicaCartTotals({
+      code: "ABC123",
+      record: {
+        codindica: "ABC123",
+        stcodindica: "ati",
+        validade: "2099-12-31",
+        nmrepresentante: "Equipe",
+        tpdesconto: "percentual",
+        flpromocional: "n",
+        vldescnormal: "10.00",
+        vldescinfant: "10.00",
+        vldescpromonormal: "0.00",
+        vldescpromoinfant: "0.00",
+        vlvendanormal: "0.00",
+        vlvendainfant: "0.00",
+        vlcashback: "0.00",
+        vlcashbacknormal: "0.00",
+        vlcashbackinfant: "0.00",
+      },
+      parameters: [],
+      totalValue: 250,
+    });
+
+    expect(result.totalGross).toBe(250);
+    expect(result.discountAmount).toBe(25);
+    expect(result.totalPaid).toBe(225);
   });
 });

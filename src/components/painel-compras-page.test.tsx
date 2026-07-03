@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { PainelComprasPage } from "@/components/painel-compras-page";
 
 describe("PainelComprasPage", () => {
-  it("renderiza a lista principal com colunas e sidebar do legado", () => {
+  it("renderiza filtros e coluna de data agendada", () => {
     const html = renderToStaticMarkup(
       React.createElement(PainelComprasPage, {
         actorName: "WAGNER",
@@ -26,6 +26,8 @@ describe("PainelComprasPage", () => {
             userName: null,
             dateFrom: "01/05/2026",
             dateTo: null,
+            visitDateFrom: "08/05/2026",
+            visitDateTo: null,
           },
           items: [
             {
@@ -33,6 +35,7 @@ describe("PainelComprasPage", () => {
               purchaseDate: "06/05/2026",
               paymentDate: "07/05/2026",
               paymentTime: "14:32:11",
+              visitDate: "08/05/2026",
               type: "bilhe",
               typeLabel: "Bilheteria",
               status: "conc",
@@ -48,22 +51,23 @@ describe("PainelComprasPage", () => {
       }),
     );
 
-    expect(html).toContain("Lista de compras / reservas");
-    expect(html).toContain("Forma Pag.");
+    expect(html).toContain("Lista de compras e reservas");
+    expect(html).toContain("Forma de pgto");
     expect(html).toContain("Pagamento");
     expect(html).toContain(">Compra<");
-    expect(html).toContain("Remover Filtros");
+    expect(html).toContain("Data agendada de");
+    expect(html).toContain("Data agendada");
+    expect(html).toContain("Limpar filtros");
     expect(html).toContain("Filtrar");
     expect(html).toContain("Bilheteria");
     expect(html).toContain("DEV");
     expect(html).toContain("/ingresso/painel/usuario-site/detalhe/cpf/MTIzNDU2Nzg5MDE=");
-    expect(html).toContain("Lista de vouchers");
-    expect(html).toContain("Disponivel na proxima fase da migracao.");
-    expect(html).toContain("Atualizar compras");
-    expect(html).toContain("Acao liberada junto da fase de sincronizacao.");
+    expect(html).toContain("08/05/2026");
+    expect(html).toContain("Atualizacao manual em fase futura");
+    expect(html).toContain("Exportar");
   });
 
-  it("nao renderiza remover filtros quando nao ha filtros ativos", () => {
+  it("nao renderiza limpar filtros quando nao ha filtros ativos", () => {
     const html = renderToStaticMarkup(
       React.createElement(PainelComprasPage, {
         actorName: "Operador",
@@ -85,6 +89,8 @@ describe("PainelComprasPage", () => {
             userName: null,
             dateFrom: null,
             dateTo: null,
+            visitDateFrom: null,
+            visitDateTo: null,
           },
           items: [],
         },
@@ -92,8 +98,7 @@ describe("PainelComprasPage", () => {
     );
 
     expect(html).toContain("Nenhuma compra encontrada.");
-    expect(html).not.toContain("Remover Filtros");
-    expect(html).toContain("Lista de vouchers");
-    expect(html).not.toContain("Atualizar compras");
+    expect(html).not.toContain("Limpar filtros");
+    expect(html).not.toContain("Atualizacao manual em fase futura");
   });
 });

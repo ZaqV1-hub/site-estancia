@@ -29,6 +29,7 @@ type DeleteTarget = {
 };
 
 type EventMode = "date" | "link";
+type HomeHeroMode = "with-link" | "without-link";
 
 type EventDatePayload = {
   agenda?: {
@@ -41,11 +42,11 @@ type EventDatePayload = {
 
 function itemTitle(item: EditableItem) {
   if (item.section === "home") {
-    return item.item ? "Editar imagem da home" : "Adicionar imagem da home";
+    return item.item ? "Editar imagem da hero" : "Adicionar imagem da hero";
   }
 
   if (item.section === "attraction") {
-    return item.item ? "Editar atracao" : "Adicionar atracao";
+    return item.item ? "Editar atração" : "Adicionar atração";
   }
 
   return item.item ? "Editar evento" : "Adicionar evento";
@@ -62,6 +63,10 @@ function resolveEventDate(event: ManagedEvent | null | undefined) {
   const match = href.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/);
 
   return match?.[1] ?? "";
+}
+
+function resolveHomeHeroMode(item: ManagedHomeImage | null | undefined): HomeHeroMode {
+  return item?.href?.trim() ? "with-link" : "without-link";
 }
 
 function ImagePicker({ name, label }: { name: string; label: string }) {
@@ -123,6 +128,43 @@ function SubmitButton({ pending }: { pending: boolean }) {
   );
 }
 
+function MoveButtons({
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
+  busy,
+}: {
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  busy: boolean;
+}) {
+  return (
+    <div className="flex gap-2">
+      <button
+        type="button"
+        onClick={onMoveUp}
+        disabled={!canMoveUp || busy}
+        aria-label="Mover para cima"
+        className="rounded-full border border-[#dbe7d7] px-3 py-2 text-xs font-black text-[#17351f] disabled:cursor-not-allowed disabled:opacity-45"
+      >
+        ↑
+      </button>
+      <button
+        type="button"
+        onClick={onMoveDown}
+        disabled={!canMoveDown || busy}
+        aria-label="Mover para baixo"
+        className="rounded-full border border-[#dbe7d7] px-3 py-2 text-xs font-black text-[#17351f] disabled:cursor-not-allowed disabled:opacity-45"
+      >
+        ↓
+      </button>
+    </div>
+  );
+}
+
 export function PainelSiteManager({
   content,
   initialEditEventId = null,
@@ -153,23 +195,25 @@ export function PainelSiteManager({
     () => addons.map((product) => product.id),
     [addons],
   );
-  const [editing, setEditing] = useState<EditableItem | null>(() => {
+  const initialEditing = (() => {
     if (initialEditEventId) {
       const item = content.events.find((event) => event.id === initialEditEventId) ?? null;
 
       if (item) {
-        return { section: "event", item };
+        return { section: "event", item } satisfies EditableItem;
       }
     }
 
     if (initialOpenCreateEvent) {
-      return { section: "event", item: null };
+      return { section: "event", item: null } satisfies EditableItem;
     }
 
     return null;
-  });
+  })();
+  const [editing, setEditing] = useState<EditableItem | null>(initialEditing);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [pending, setPending] = useState(false);
+  const [movingKey, setMovingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [eventMode, setEventMode] = useState<EventMode>("date");
   const [eventDateValue, setEventDateValue] = useState("");
@@ -183,24 +227,30 @@ export function PainelSiteManager({
     defaultInformationId ?? null,
   );
   const [eventAvailabilityLoading, setEventAvailabilityLoading] = useState(false);
+  const [homeHeroMode, setHomeHeroMode] = useState<HomeHeroMode>("without-link");
+  const [homeHeroHrefValue, setHomeHeroHrefValue] = useState("");
   const currentEvent =
     editing?.section === "event" ? (editing.item as ManagedEvent | null) : null;
 
   useEffect(() => {
-    if (editing?.section !== "event") {
+    if (editing?.section === "event") {
+      const nextMode = resolveEventMode(currentEvent);
+      setEventMode(currentEvent ? nextMode : "date");
+      setEventDateValue(resolveEventDate(currentEvent));
+      setEventHrefValue(
+        currentEvent && nextMode === "link" ? currentEvent.href ?? "" : "",
+      );
+      setSelectedPassportIds(defaultPassportIds);
+      setSelectedAddonIds(defaultAddonIds);
+      setEventPriceTableId(defaultPriceTableId ?? null);
+      setEventInformationId(defaultInformationId ?? null);
       return;
     }
 
-    const nextMode = resolveEventMode(currentEvent);
-    setEventMode(currentEvent ? nextMode : "date");
-    setEventDateValue(resolveEventDate(currentEvent));
-    setEventHrefValue(
-      currentEvent && nextMode === "link" ? currentEvent.href ?? "" : "",
-    );
-    setSelectedPassportIds(defaultPassportIds);
-    setSelectedAddonIds(defaultAddonIds);
-    setEventPriceTableId(defaultPriceTableId ?? null);
-    setEventInformationId(defaultInformationId ?? null);
+    if (editing?.section === "home") {
+      setHomeHeroMode(resolveHomeHeroMode(editing.item));
+      setHomeHeroHrefValue(editing.item?.href ?? "");
+    }
   }, [
     currentEvent,
     defaultAddonIds,
@@ -291,6 +341,20 @@ export function PainelSiteManager({
     setError(null);
   }
 
+  function openCreateHome() {
+    setEditing({ section: "home", item: null });
+    setHomeHeroMode("without-link");
+    setHomeHeroHrefValue("");
+    setError(null);
+  }
+
+  function openEditHome(item: ManagedHomeImage) {
+    setEditing({ section: "home", item });
+    setHomeHeroMode(resolveHomeHeroMode(item));
+    setHomeHeroHrefValue(item.href ?? "");
+    setError(null);
+  }
+
   function openEditEvent(item: ManagedEvent) {
     setEditing({ section: "event", item });
     setError(null);
@@ -340,6 +404,14 @@ export function PainelSiteManager({
         }
       }
 
+      if (editing?.section === "home") {
+        if (homeHeroMode === "with-link" && !homeHeroHrefValue.trim()) {
+          throw new Error("Informe o link da hero.");
+        }
+
+        formData.set("href", homeHeroMode === "with-link" ? homeHeroHrefValue : "");
+      }
+
       const response = await fetch("/api/painel/site-content", {
         method: "POST",
         body: formData,
@@ -362,6 +434,42 @@ export function PainelSiteManager({
       );
     } finally {
       setPending(false);
+    }
+  }
+
+  async function moveItem(
+    section: "home" | "attraction" | "event",
+    id: string,
+    direction: "up" | "down",
+  ) {
+    const key = `${section}:${id}:${direction}`;
+    setMovingKey(key);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/painel/site-content", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ section, id, direction }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: { message?: string };
+      } | null;
+
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.error?.message || "Nao foi possivel mover o item.");
+      }
+
+      router.refresh();
+    } catch (moveError) {
+      setError(
+        moveError instanceof Error
+          ? moveError.message
+          : "Nao foi possivel mover o item.",
+      );
+    } finally {
+      setMovingKey(null);
     }
   }
 
@@ -404,19 +512,19 @@ export function PainelSiteManager({
   return (
     <>
       <section className="panel-section p-5">
-        <p className="panel-eyebrow">Imagens da home</p>
+        <p className="panel-eyebrow">Imagens da hero</p>
         <div className="mt-4 flex items-center justify-between gap-3">
           <h3 className="text-[24px] font-black text-[#17351f]">Banners publicados</h3>
           <button
             type="button"
-            onClick={() => setEditing({ section: "home", item: null })}
+            onClick={openCreateHome}
             className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white"
           >
             Adicionar imagem
           </button>
         </div>
         <div className="mt-5 flex gap-4 overflow-x-auto pb-3">
-          {content.homeImages.map((item) => (
+          {content.homeImages.map((item, index) => (
             <article
               key={item.id}
               className="min-w-[320px] rounded-[8px] border border-[#dbe7d7] bg-white p-4"
@@ -429,12 +537,31 @@ export function PainelSiteManager({
                   loading="lazy"
                 />
               </div>
-              <h4 className="mt-3 text-lg font-black text-[#17351f]">{item.alt}</h4>
-              <p className="text-sm text-[#5f7564]">{item.active ? "Publicado" : "Oculto"}</p>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-3 flex items-start justify-between gap-3">
+                <div>
+                  <h4 className="text-lg font-black text-[#17351f]">{item.alt}</h4>
+                  <p className="text-sm text-[#5f7564]">
+                    {item.active ? "Publicado" : "Oculto"}
+                  </p>
+                  <p className="text-xs text-[#6a806e]">
+                    {item.href?.trim() ? "Com link" : "Sem link"}
+                  </p>
+                </div>
+                <span className="rounded-full bg-[#eef5eb] px-3 py-1 text-xs font-black text-[#2d6b37]">
+                  #{item.sortOrder}
+                </span>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <MoveButtons
+                  onMoveUp={() => moveItem("home", item.id, "up")}
+                  onMoveDown={() => moveItem("home", item.id, "down")}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < content.homeImages.length - 1}
+                  busy={movingKey?.startsWith(`home:${item.id}:`) ?? false}
+                />
                 <button
                   type="button"
-                  onClick={() => setEditing({ section: "home", item })}
+                  onClick={() => openEditHome(item)}
                   className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]"
                 >
                   Editar
@@ -460,9 +587,11 @@ export function PainelSiteManager({
 
       <section className="grid gap-5 xl:grid-cols-2">
         <ContentList
+          section="attraction"
           title="Atracoes"
           buttonLabel="Adicionar atracao"
           items={content.attractions}
+          movingKey={movingKey}
           onEdit={(item) => setEditing({ section: "attraction", item })}
           onCreate={() => setEditing({ section: "attraction", item: null })}
           onDelete={(item) =>
@@ -472,16 +601,20 @@ export function PainelSiteManager({
               title: item.title,
             })
           }
+          onMove={(id, direction) => moveItem("attraction", id, direction)}
         />
         <ContentList
+          section="event"
           title="Eventos"
           buttonLabel="Adicionar evento"
           items={content.events}
+          movingKey={movingKey}
           onEdit={openEditEvent}
           onCreate={openCreateEvent}
           onDelete={(item) =>
             setDeleteTarget({ section: "event", id: item.id, title: item.title })
           }
+          onMove={(id, direction) => moveItem("event", id, direction)}
         />
       </section>
 
@@ -503,6 +636,52 @@ export function PainelSiteManager({
                     className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
                   />
                 </Field>
+
+                <div className="grid gap-3 rounded-[10px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
+                  <div>
+                    <p className="text-sm font-black text-[#17351f]">Link da hero</p>
+                    <p className="mt-1 text-xs leading-5 text-[#5f7564]">
+                      Defina se essa imagem da hero pode ser clicada na home.
+                    </p>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => setHomeHeroMode("with-link")}
+                      className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
+                        homeHeroMode === "with-link"
+                          ? "border-[#17342d] bg-[#17342d] text-white"
+                          : "border-[#dbe7d7] bg-white text-[#17351f]"
+                      }`}
+                    >
+                      Com link
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHomeHeroMode("without-link")}
+                      className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
+                        homeHeroMode === "without-link"
+                          ? "border-[#17342d] bg-[#17342d] text-white"
+                          : "border-[#dbe7d7] bg-white text-[#17351f]"
+                      }`}
+                    >
+                      Sem link
+                    </button>
+                  </div>
+                </div>
+
+                {homeHeroMode === "with-link" ? (
+                  <Field label="Link da hero">
+                    <input
+                      name="hrefVisible"
+                      value={homeHeroHrefValue}
+                      onChange={(event) => setHomeHeroHrefValue(event.target.value)}
+                      placeholder="https://site.com.br ou /pagina"
+                      className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                    />
+                  </Field>
+                ) : null}
+
                 {editing.item ? (
                   <>
                     <CurrentImagePreview
@@ -658,16 +837,6 @@ export function PainelSiteManager({
               </>
             )}
 
-            <Field label="Ordem">
-              <input
-                name="sortOrder"
-                type="number"
-                min="1"
-                defaultValue={editing.item?.sortOrder ?? ""}
-                className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
-              />
-            </Field>
-
             <label className="flex items-center gap-2 text-sm font-black text-[#17351f]">
               <input
                 name="active"
@@ -805,19 +974,25 @@ function MultiSelectGrid({
 }
 
 function ContentList<T extends ManagedAttraction | ManagedEvent>({
+  section,
   title,
   buttonLabel,
   items,
+  movingKey,
   onEdit,
   onCreate,
   onDelete,
+  onMove,
 }: {
+  section: "attraction" | "event";
   title: string;
   buttonLabel: string | null;
   items: T[];
+  movingKey: string | null;
   onEdit: (item: T) => void;
   onCreate: () => void;
   onDelete: (item: T) => void;
+  onMove: (id: string, direction: "up" | "down") => void;
 }) {
   return (
     <article className="panel-section p-5">
@@ -834,7 +1009,7 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
         ) : null}
       </div>
       <div className="mt-5 grid max-h-[520px] gap-3 overflow-y-auto pr-2">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <div
             key={item.id}
             className="rounded-[10px] border border-[#dbe7d7] bg-white p-4"
@@ -855,7 +1030,14 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
                 </span>
               </div>
             ) : null}
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
+              <MoveButtons
+                onMoveUp={() => onMove(item.id, "up")}
+                onMoveDown={() => onMove(item.id, "down")}
+                canMoveUp={index > 0}
+                canMoveDown={index < items.length - 1}
+                busy={movingKey?.startsWith(`${section}:${item.id}:`) ?? false}
+              />
               <button
                 type="button"
                 onClick={() => onEdit(item)}

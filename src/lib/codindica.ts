@@ -376,7 +376,13 @@ export function calculateCodindicaCartTotals(input: {
   const record = input.record as CodindicaRow;
 
   const configuredDiscount = readMoney(record.vldescnormal ?? record.vlvendanormal);
-  const discountAmount = Math.min(normalizeMoney(configuredDiscount), totalGross);
+  const discountKind = normalizeDiscountKind(record.tpdesconto);
+  const discountAmount = Math.min(
+    discountKind === "percentual"
+      ? normalizeMoney(totalGross * (configuredDiscount / 100))
+      : normalizeMoney(configuredDiscount),
+    totalGross,
+  );
 
   return {
     code: input.code,

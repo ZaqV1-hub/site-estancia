@@ -73,6 +73,14 @@ function buildComprasHref(
     params.set("dtcompra[ate]", filters.dateTo);
   }
 
+  if (filters.visitDateFrom) {
+    params.set("dtagenda[de]", filters.visitDateFrom);
+  }
+
+  if (filters.visitDateTo) {
+    params.set("dtagenda[ate]", filters.visitDateTo);
+  }
+
   if (filters.purchaseId) {
     params.set("idcompra", filters.purchaseId);
   }
@@ -233,6 +241,24 @@ export function PainelComprasPage({
             />
           </label>
           <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            Data agendada de
+            <input
+              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
+              defaultValue={toDateInputValue(result.filters.visitDateFrom ?? null)}
+              name="dtagenda[de]"
+              type="date"
+            />
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
+            Data agendada ate
+            <input
+              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
+              defaultValue={toDateInputValue(result.filters.visitDateTo ?? null)}
+              name="dtagenda[ate]"
+              type="date"
+            />
+          </label>
+          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
             ID
             <input
               className="estancia-field rounded-[8px] px-3 py-2 text-sm"
@@ -319,6 +345,7 @@ export function PainelComprasPage({
                 <tr>
                   <th className="px-3 py-2.5 text-xs font-semibold">ID</th>
                   <th className="px-3 py-2.5 text-xs font-semibold">Data</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Data agendada</th>
                   <th className="px-3 py-2.5 text-xs font-semibold">Tipo</th>
                   <th className="px-3 py-2.5 text-xs font-semibold">Status</th>
                   <th className="px-3 py-2.5 text-xs font-semibold">Forma</th>
@@ -343,6 +370,7 @@ export function PainelComprasPage({
                       </Link>
                     </td>
                     <td className="px-3 py-3 align-top">{item.purchaseDate ?? "-"}</td>
+                    <td className="px-3 py-3 align-top">{item.visitDate ?? "-"}</td>
                     <td className="px-3 py-3 align-top">{item.typeLabel}</td>
                     <td className="px-3 py-3 align-top">{item.statusLabel}</td>
                     <td className="px-3 py-3 align-top">{item.paymentMethodLabel}</td>

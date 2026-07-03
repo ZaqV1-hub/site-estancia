@@ -29,12 +29,14 @@ type DeleteTarget = {
 };
 
 type EventMode = "date" | "link";
+type EventPageMode = "without-page" | "with-page";
 type HomeHeroMode = "with-link" | "without-link";
 
 const ATTRACTION_TITLE_LIMIT = 36;
 const ATTRACTION_DESCRIPTION_LIMIT = 160;
 const EVENT_TITLE_LIMIT = 52;
 const EVENT_DESCRIPTION_LIMIT = 220;
+const EVENT_PAGE_TITLE_LIMIT = 80;
 
 type EventDatePayload = {
   agenda?: {
@@ -68,6 +70,10 @@ function resolveEventDate(event: ManagedEvent | null | undefined) {
   const match = href.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/);
 
   return match?.[1] ?? "";
+}
+
+function resolveEventPageMode(event: ManagedEvent | null | undefined): EventPageMode {
+  return event?.pageEnabled ? "with-page" : "without-page";
 }
 
 function resolveHomeHeroMode(item: ManagedHomeImage | null | undefined): HomeHeroMode {
@@ -235,8 +241,11 @@ export function PainelSiteManager({
   const [movingKey, setMovingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [eventMode, setEventMode] = useState<EventMode>("date");
+  const [eventPageMode, setEventPageMode] = useState<EventPageMode>("without-page");
   const [eventDateValue, setEventDateValue] = useState("");
   const [eventHrefValue, setEventHrefValue] = useState("");
+  const [eventPageTitleValue, setEventPageTitleValue] = useState("");
+  const [eventPageContentValue, setEventPageContentValue] = useState("");
   const [selectedPassportIds, setSelectedPassportIds] = useState<string[]>(defaultPassportIds);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>(defaultAddonIds);
   const [eventPriceTableId, setEventPriceTableId] = useState<number | null>(
@@ -255,10 +264,13 @@ export function PainelSiteManager({
     if (editing?.section === "event") {
       const nextMode = resolveEventMode(currentEvent);
       setEventMode(currentEvent ? nextMode : "date");
+      setEventPageMode(currentEvent ? resolveEventPageMode(currentEvent) : "without-page");
       setEventDateValue(resolveEventDate(currentEvent));
       setEventHrefValue(
         currentEvent && nextMode === "link" ? currentEvent.href ?? "" : "",
       );
+      setEventPageTitleValue(currentEvent?.pageTitle ?? "");
+      setEventPageContentValue(currentEvent?.pageContent ?? "");
       setSelectedPassportIds(defaultPassportIds);
       setSelectedAddonIds(defaultAddonIds);
       setEventPriceTableId(defaultPriceTableId ?? null);
@@ -357,6 +369,9 @@ export function PainelSiteManager({
   function openCreateEvent() {
     setEditing({ section: "event", item: null });
     setEventMode("date");
+    setEventPageMode("without-page");
+    setEventPageTitleValue("");
+    setEventPageContentValue("");
     setError(null);
   }
 
@@ -401,8 +416,11 @@ export function PainelSiteManager({
 
       if (editing?.section === "event") {
         formData.set("eventMode", eventMode);
+        formData.set("eventPageMode", eventPageMode);
         formData.set("eventDate", eventDateValue);
         formData.set("href", eventHrefValue);
+        formData.set("pageTitle", eventPageTitleValue);
+        formData.set("pageContent", eventPageContentValue);
         formData.delete("passportIds");
         formData.delete("addonIds");
 
@@ -748,7 +766,10 @@ export function PainelSiteManager({
                             </button>
                             <button
                               type="button"
-                              onClick={() => setEventMode("link")}
+                              onClick={() => {
+                                setEventMode("link");
+                                setEventPageMode("without-page");
+                              }}
                               className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
                                 eventMode === "link"
                                   ? "border-[#17342d] bg-[#17342d] text-white"
@@ -775,7 +796,7 @@ export function PainelSiteManager({
                         </div>
                       </Field>
 
-                      <Field label="Descricao">
+                      <Field label={editing.section === "event" ? "Resumo" : "Descricao"}>
                         <div className="grid gap-2">
                           <textarea
                             name="description"
@@ -785,8 +806,9 @@ export function PainelSiteManager({
                             className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
                           />
                           <p className="text-xs font-medium text-[#6a806e]">
-                            Maximo de {limits.description} caracteres para manter a imagem e o
-                            texto equilibrados no site.
+                            {editing.section === "event"
+                              ? `Maximo de ${limits.description} caracteres para manter o resumo equilibrado na listagem do site.`
+                              : `Maximo de ${limits.description} caracteres para manter a imagem e o texto equilibrados no site.`}
                           </p>
                         </div>
                       </Field>
@@ -807,6 +829,76 @@ export function PainelSiteManager({
                             className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
                           />
                         </Field>
+
+                        <div className="grid gap-3 rounded-[10px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
+                          <div>
+                            <p className="text-sm font-black text-[#17351f]">Pagina do evento</p>
+                            <p className="mt-1 text-xs leading-5 text-[#5f7564]">
+                              Escolha se este evento com data continua apenas na agenda ou se tera
+                              uma pagina propria dentro do site.
+                            </p>
+                          </div>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <button
+                              type="button"
+                              onClick={() => setEventPageMode("without-page")}
+                              className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
+                                eventPageMode === "without-page"
+                                  ? "border-[#17342d] bg-[#17342d] text-white"
+                                  : "border-[#dbe7d7] bg-white text-[#17351f]"
+                              }`}
+                            >
+                              Sem pagina
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEventPageMode("with-page")}
+                              className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
+                                eventPageMode === "with-page"
+                                  ? "border-[#17342d] bg-[#17342d] text-white"
+                                  : "border-[#dbe7d7] bg-white text-[#17351f]"
+                              }`}
+                            >
+                              Com pagina
+                            </button>
+                          </div>
+                        </div>
+
+                        {eventPageMode === "with-page" ? (
+                          <>
+                            <Field label="Titulo da pagina">
+                              <div className="grid gap-2">
+                                <input
+                                  value={eventPageTitleValue}
+                                  onChange={(event) => setEventPageTitleValue(event.target.value)}
+                                  maxLength={EVENT_PAGE_TITLE_LIMIT}
+                                  className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                                />
+                                <p className="text-xs font-medium text-[#6a806e]">
+                                  Maximo de {EVENT_PAGE_TITLE_LIMIT} caracteres para o topo da
+                                  pagina do evento.
+                                </p>
+                              </div>
+                            </Field>
+
+                            <Field label="Descricao completa">
+                              <div className="grid gap-2">
+                                <textarea
+                                  value={eventPageContentValue}
+                                  onChange={(event) =>
+                                    setEventPageContentValue(event.target.value)
+                                  }
+                                  rows={10}
+                                  className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                                />
+                                <p className="text-xs font-medium text-[#6a806e]">
+                                  Campo livre para montar a pagina propria do evento com mais
+                                  detalhes, paragrafos e listas.
+                                </p>
+                              </div>
+                            </Field>
+                          </>
+                        ) : null}
 
                         <MultiSelectGrid
                           title="Tipo de passaportes"
@@ -845,15 +937,17 @@ export function PainelSiteManager({
                         />
                       </>
                     ) : (
-                      <Field label="Link externo">
-                        <input
-                          name="hrefVisible"
-                          value={eventHrefValue}
-                          onChange={(event) => setEventHrefValue(event.target.value)}
-                          placeholder="https://site.com.br ou /agenda"
-                          className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
-                        />
-                      </Field>
+                      <>
+                        <Field label="Link externo">
+                          <input
+                            name="hrefVisible"
+                            value={eventHrefValue}
+                            onChange={(event) => setEventHrefValue(event.target.value)}
+                            placeholder="https://site.com.br ou /agenda"
+                            className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                          />
+                        </Field>
+                      </>
                     )}
 
                     <Field label="Texto do botao">

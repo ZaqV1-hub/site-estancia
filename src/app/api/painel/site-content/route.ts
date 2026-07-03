@@ -21,6 +21,7 @@ import {
   saveUploadedSiteImage,
   writeEstanciaContent,
 } from "@/lib/estancia-content-store";
+import { buildManagedEventPageSlug } from "@/lib/estancia-event-pages";
 
 export const runtime = "nodejs";
 
@@ -54,6 +55,7 @@ async function authorize(request: Request) {
 
 function revalidateSite() {
   revalidatePath("/");
+  revalidatePath("/evento");
   revalidatePath("/painel/site");
   revalidatePath("/painel/eventos");
   revalidatePath("/painel/agenda");
@@ -195,7 +197,10 @@ export async function POST(request: Request) {
     const current = data.events.find((item) => item.id === id);
     const imageUpload = await saveUploadedSiteImage(formData.get("image"));
     const hasDate = asText(formData.get("eventMode")) === "date";
+    const hasPage = hasDate && asText(formData.get("eventPageMode")) === "with-page";
     const eventDate = asText(formData.get("eventDate"));
+    const pageTitle = asText(formData.get("pageTitle"));
+    const pageContent = asText(formData.get("pageContent"));
     const passportIds = formData
       .getAll("passportIds")
       .map((item) => String(item).trim())
@@ -228,6 +233,14 @@ export async function POST(request: Request) {
 
     if (hasDate && !eventDate) {
       return errorResponse("Informe a data promocional do evento.");
+    }
+
+    if (hasPage && !pageTitle) {
+      return errorResponse("Informe o titulo da pagina do evento.");
+    }
+
+    if (hasPage && !pageContent) {
+      return errorResponse("Informe a descricao completa da pagina do evento.");
     }
 
     if (!hasDate && !asText(formData.get("href")) && !current?.href) {
@@ -281,6 +294,19 @@ export async function POST(request: Request) {
         title: title || current?.title || "Novo evento",
         description:
           asText(formData.get("description")) || current?.description || "",
+        pageTitle:
+          pageTitle || current?.pageTitle || title || current?.title || "Novo evento",
+        pageContent: pageContent || current?.pageContent || "",
+        pageEnabled: hasPage,
+        pageSlug: hasPage
+          ? buildManagedEventPageSlug({
+              id,
+              title: title || current?.title || "Novo evento",
+              pageTitle:
+                pageTitle || current?.pageTitle || title || current?.title || "Novo evento",
+              pageSlug: current?.pageSlug || "",
+            })
+          : current?.pageSlug || "",
         imageSrc: imageUpload ?? current?.imageSrc ?? "",
         href: derivedHref || asText(formData.get("href")) || current?.href || "/agenda",
         buttonLabel:

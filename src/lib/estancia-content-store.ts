@@ -6,6 +6,7 @@ import {
   type B2cProductType,
   type B2cVoucherType,
 } from "@/lib/b2c-catalog-defaults";
+import { resolveManagedEventPublicHref } from "@/lib/estancia-event-pages";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 
 export type ManagedHomeImage = {
@@ -31,6 +32,10 @@ export type ManagedEvent = {
   id: string;
   title: string;
   description: string;
+  pageTitle: string;
+  pageContent: string;
+  pageEnabled: boolean;
+  pageSlug: string;
   imageSrc: string;
   href: string;
   buttonLabel: string;
@@ -142,6 +147,10 @@ const defaultContent: EstanciaContentData = {
     {
       id: "festa-junina",
       title: "Festa Junina",
+      pageTitle: "",
+      pageContent: "",
+      pageEnabled: false,
+      pageSlug: "",
       description:
         "Comidas típicas, música, brincadeiras e lazer ao ar livre em um dia preparado para curtir com a família na Estância.",
       imageSrc: "/hero/current/banner-14-06-2026.jpg",
@@ -264,6 +273,13 @@ function normalizeManagedEvent(item: ManagedEvent, fallback: ManagedEvent) {
     ...item,
     title: repairMojibakeText(item.title, fallback.title),
     description: repairMojibakeText(item.description, fallback.description),
+    pageTitle: repairMojibakeText(
+      item.pageTitle,
+      item.title || fallback.pageTitle || fallback.title,
+    ),
+    pageContent: repairMojibakeText(item.pageContent, fallback.pageContent),
+    pageEnabled: item.pageEnabled === true,
+    pageSlug: item.pageSlug?.trim() || fallback.pageSlug,
     imageSrc: normalizeManagedImageSrc(item.imageSrc, fallback.imageSrc),
     href: item.href?.trim() || fallback.href,
     buttonLabel: repairMojibakeText(item.buttonLabel, fallback.buttonLabel),
@@ -488,7 +504,10 @@ export async function getActiveAttractions() {
 
 export async function getActiveEvents() {
   const items = (await readEstanciaContent()).events.filter((item) => item.active);
-  return items;
+  return items.map((item) => ({
+    ...item,
+    href: resolveManagedEventPublicHref(item),
+  }));
 }
 
 export async function getManagedB2cProducts(type?: B2cProductType) {

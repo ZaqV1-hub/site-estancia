@@ -369,6 +369,7 @@ describe("listPainelPurchases", () => {
           {
             idcompra: 551,
             dtcompra: "2026-05-06",
+            dtagenda: "2026-05-15",
             tpcompra: "bilhe",
             stcompra: "conc",
             formapag: "pix",
@@ -401,6 +402,7 @@ describe("listPainelPurchases", () => {
           purchaseDate: "06/05/2026",
           paymentDate: "07/05/2026",
           paymentTime: "10:15:00",
+          visitDate: "15/05/2026",
           type: "bilhe",
           typeLabel: "Bilheteria",
           status: "conc",
@@ -420,6 +422,7 @@ describe("listPainelPurchases", () => {
         purchaseId: "551",
         type: null,
         purchaseStatus: null,
+        paymentMethod: null,
         ticketPaymentMethod: "pix",
         gatewayPaymentMethod: null,
         gatewayStatus: null,
@@ -427,6 +430,8 @@ describe("listPainelPurchases", () => {
         userName: null,
         dateFrom: null,
         dateTo: null,
+        visitDateFrom: null,
+        visitDateTo: null,
       },
     });
 

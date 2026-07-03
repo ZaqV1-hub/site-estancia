@@ -955,6 +955,7 @@ export async function listPainelPurchases(input: {
       SELECT
         compra.idcompra,
         compra.dtcompra::text AS dtcompra,
+        a.dtagenda::text AS dtagenda,
         compra.tpcompra,
         compra.stcompra,
         compra.formapag,
@@ -968,6 +969,12 @@ export async function listPainelPurchases(input: {
         pagpagseguro.status
       FROM compra
       LEFT JOIN usuario ON usuario.cpf = compra.cpf
+      LEFT JOIN LATERAL (
+        SELECT MIN(agenda.dtagenda) AS dtagenda
+        FROM voucher
+        JOIN agenda ON agenda.idagenda = voucher.idagenda
+        WHERE voucher.idcompra = compra.idcompra
+      ) AS a ON true
       LEFT JOIN LATERAL (
         SELECT
           pagamento.idpagseguro,
@@ -989,6 +996,12 @@ export async function listPainelPurchases(input: {
       SELECT COUNT(*)::text AS total
       FROM compra
       LEFT JOIN usuario ON usuario.cpf = compra.cpf
+      LEFT JOIN LATERAL (
+        SELECT MIN(agenda.dtagenda) AS dtagenda
+        FROM voucher
+        JOIN agenda ON agenda.idagenda = voucher.idagenda
+        WHERE voucher.idcompra = compra.idcompra
+      ) AS a ON true
       LEFT JOIN LATERAL (
         SELECT
           pagamento.idpagseguro,

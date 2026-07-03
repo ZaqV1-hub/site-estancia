@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type {
   PainelAgendaScreenData,
@@ -95,8 +95,14 @@ export function PainelAgendaEditor({
   const [mutationState, setMutationState] = useState<MutationState>({
     status: "idle",
   });
-  const passports = products.filter((product) => product.type === "passport");
-  const addons = products.filter((product) => product.type === "addon");
+  const passports = useMemo(
+    () => products.filter((product) => product.type === "passport"),
+    [products],
+  );
+  const addons = useMemo(
+    () => products.filter((product) => product.type === "addon"),
+    [products],
+  );
   const [selectedPassportIds, setSelectedPassportIds] = useState<string[]>(() =>
     data.selectedDay?.selectedPassportIds?.length
       ? data.selectedDay.selectedPassportIds

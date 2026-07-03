@@ -31,6 +31,11 @@ type DeleteTarget = {
 type EventMode = "date" | "link";
 type HomeHeroMode = "with-link" | "without-link";
 
+const ATTRACTION_TITLE_LIMIT = 36;
+const ATTRACTION_DESCRIPTION_LIMIT = 160;
+const EVENT_TITLE_LIMIT = 52;
+const EVENT_DESCRIPTION_LIMIT = 220;
+
 type EventDatePayload = {
   agenda?: {
     priceTableId?: number | null;
@@ -67,6 +72,20 @@ function resolveEventDate(event: ManagedEvent | null | undefined) {
 
 function resolveHomeHeroMode(item: ManagedHomeImage | null | undefined): HomeHeroMode {
   return item?.href?.trim() ? "with-link" : "without-link";
+}
+
+function resolveTextLimits(section: "attraction" | "event") {
+  if (section === "event") {
+    return {
+      title: EVENT_TITLE_LIMIT,
+      description: EVENT_DESCRIPTION_LIMIT,
+    };
+  }
+
+  return {
+    title: ATTRACTION_TITLE_LIMIT,
+    description: ATTRACTION_DESCRIPTION_LIMIT,
+  };
 }
 
 function ImagePicker({ name, label }: { name: string; label: string }) {
@@ -701,58 +720,79 @@ export function PainelSiteManager({
               </>
             ) : (
               <>
-                {editing.section === "event" ? (
-                  <div className="grid gap-3 rounded-[10px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
-                    <div>
-                      <p className="text-sm font-black text-[#17351f]">Tipo do evento</p>
-                      <p className="mt-1 text-xs leading-5 text-[#5f7564]">
-                        Escolha se o botao vai abrir uma data promocional da agenda ou um
-                        link externo.
-                      </p>
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => setEventMode("date")}
-                        className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
-                          eventMode === "date"
-                            ? "border-[#17342d] bg-[#17342d] text-white"
-                            : "border-[#dbe7d7] bg-white text-[#17351f]"
-                        }`}
-                      >
-                        Data
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEventMode("link")}
-                        className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
-                          eventMode === "link"
-                            ? "border-[#17342d] bg-[#17342d] text-white"
-                            : "border-[#dbe7d7] bg-white text-[#17351f]"
-                        }`}
-                      >
-                        Link externo
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
+                {(() => {
+                  const limits = resolveTextLimits(editing.section);
 
-                <Field label="Titulo">
-                  <input
-                    name="title"
-                    defaultValue={editing.item?.title ?? ""}
-                    className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
-                  />
-                </Field>
+                  return (
+                    <>
+                      {editing.section === "event" ? (
+                        <div className="grid gap-3 rounded-[10px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
+                          <div>
+                            <p className="text-sm font-black text-[#17351f]">Tipo do evento</p>
+                            <p className="mt-1 text-xs leading-5 text-[#5f7564]">
+                              Escolha se o botao vai abrir uma data promocional da agenda ou um
+                              link externo.
+                            </p>
+                          </div>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <button
+                              type="button"
+                              onClick={() => setEventMode("date")}
+                              className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
+                                eventMode === "date"
+                                  ? "border-[#17342d] bg-[#17342d] text-white"
+                                  : "border-[#dbe7d7] bg-white text-[#17351f]"
+                              }`}
+                            >
+                              Data
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEventMode("link")}
+                              className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
+                                eventMode === "link"
+                                  ? "border-[#17342d] bg-[#17342d] text-white"
+                                  : "border-[#dbe7d7] bg-white text-[#17351f]"
+                              }`}
+                            >
+                              Link externo
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
 
-                <Field label="Descricao">
-                  <textarea
-                    name="description"
-                    defaultValue={editing.item?.description ?? ""}
-                    rows={4}
-                    className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
-                  />
-                </Field>
+                      <Field label="Titulo">
+                        <div className="grid gap-2">
+                          <input
+                            name="title"
+                            maxLength={limits.title}
+                            defaultValue={editing.item?.title ?? ""}
+                            className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                          />
+                          <p className="text-xs font-medium text-[#6a806e]">
+                            Maximo de {limits.title} caracteres para manter o layout correto.
+                          </p>
+                        </div>
+                      </Field>
+
+                      <Field label="Descricao">
+                        <div className="grid gap-2">
+                          <textarea
+                            name="description"
+                            maxLength={limits.description}
+                            defaultValue={editing.item?.description ?? ""}
+                            rows={4}
+                            className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                          />
+                          <p className="text-xs font-medium text-[#6a806e]">
+                            Maximo de {limits.description} caracteres para manter a imagem e o
+                            texto equilibrados no site.
+                          </p>
+                        </div>
+                      </Field>
+                    </>
+                  );
+                })()}
 
                 {editing.section === "event" ? (
                   <>

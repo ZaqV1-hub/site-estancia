@@ -11,6 +11,32 @@ type Props = {
   codigo?: string;
 };
 
+function PercentInput({
+  defaultValue,
+  name,
+  placeholder,
+}: {
+  defaultValue: string;
+  name: string;
+  placeholder: string;
+}) {
+  return (
+    <div className="relative mt-1">
+      <input
+        className="w-full border border-[#c8c8c8] bg-white px-3 py-2 pr-10 text-sm text-[#444]"
+        defaultValue={defaultValue}
+        name={name}
+        inputMode="decimal"
+        placeholder={placeholder}
+        type="text"
+      />
+      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-[#6b7280]">
+        %
+      </span>
+    </div>
+  );
+}
+
 export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) {
   const router = useRouter();
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -142,22 +168,18 @@ export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) 
           </label>
           <label className="block text-sm font-semibold text-[#5a5a5a]">
             Desconto (%)
-            <input
-              className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
+            <PercentInput
               defaultValue={initialValues.discountValue}
               name="discountValue"
-              inputMode="decimal"
-              placeholder="10,00"
-              type="text"
+              placeholder="10"
             />
           </label>
           <label className="block text-sm font-semibold text-[#5a5a5a]">
             CashBack (% por venda)
-            <input
-              className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
+            <PercentInput
               defaultValue={initialValues.cashbackPercent}
               name="cashbackPercent"
-              type="text"
+              placeholder="10"
             />
           </label>
           <label className="block text-sm font-semibold text-[#5a5a5a]">

@@ -535,21 +535,21 @@ export function EstanciaHomePage({
                 {attractions.map((attraction) => (
                   <article
                     key={attraction.title}
-                    className="grid min-w-[86vw] snap-center overflow-hidden rounded-[18px] border border-[#dfe8d8] bg-[#f2f0ed] shadow-[0_22px_52px_rgba(23,52,45,0.08)] md:min-w-[920px] md:grid-cols-[0.98fr_1fr] lg:min-w-[1120px]"
+                    className="grid min-w-[86vw] snap-center overflow-hidden rounded-[18px] border border-[#dfe8d8] bg-[#f2f0ed] shadow-[0_22px_52px_rgba(23,52,45,0.08)] md:min-h-[360px] md:min-w-[920px] md:grid-cols-[0.98fr_1fr] lg:min-w-[1120px]"
                   >
-                    <div className="order-2 md:order-none">
-                      <div className="bg-[#dfe8d8]">
+                    <div className="order-2 h-full md:order-none">
+                      <div className="h-full bg-[#dfe8d8]">
                         <img
                           src={attraction.imageSrc}
                           alt={attraction.title}
-                          className="block h-[240px] w-full object-cover md:h-[360px]"
+                          className="block h-[240px] w-full object-cover object-center md:h-full md:min-h-[360px]"
                           loading="lazy"
                           draggable={false}
                         />
                       </div>
                     </div>
                     <div className="flex flex-col justify-center px-6 py-8 text-left md:px-10">
-                      <h3 className="text-[1.8rem] font-black uppercase leading-none text-[#5b635f] md:text-[2.85rem]">
+                      <h3 className="text-[1.8rem] font-black uppercase leading-[0.95] text-[#5b635f] md:text-[2.85rem]">
                         {attraction.title}
                       </h3>
                       <p className="mt-5 max-w-[560px] text-[1rem] leading-8 text-[#365048]">
@@ -641,11 +641,11 @@ export function EstanciaHomePage({
                   {events.map((event) => (
                     <article
                       key={event.title}
-                      className="grid min-w-[86vw] snap-center items-stretch overflow-hidden rounded-[18px] bg-[#efeded] shadow-[0_24px_54px_rgba(5,18,14,0.24)] md:min-w-[920px] md:grid-cols-[0.98fr_1fr] lg:min-w-[1120px]"
+                      className="grid min-w-[86vw] snap-center items-stretch overflow-hidden rounded-[18px] bg-[#efeded] shadow-[0_24px_54px_rgba(5,18,14,0.24)] md:min-h-[380px] md:min-w-[920px] md:grid-cols-[0.98fr_1fr] lg:min-w-[1120px]"
                     >
                       <Link
                         href={event.href}
-                        className="block overflow-hidden bg-white"
+                        className="block h-full overflow-hidden bg-white"
                         aria-label={event.title}
                         onPointerDown={(pointerEvent) =>
                           pointerEvent.stopPropagation()
@@ -654,14 +654,14 @@ export function EstanciaHomePage({
                         <img
                           src={event.imageSrc}
                           alt={event.title}
-                          className="block h-[260px] w-full object-cover transition-transform duration-500 hover:scale-[1.03] md:h-[380px]"
+                          className="block h-[260px] w-full object-cover object-center transition-transform duration-500 hover:scale-[1.03] md:h-full md:min-h-[380px]"
                           loading="lazy"
                           draggable={false}
                         />
                       </Link>
 
                       <div className="flex flex-col justify-center px-6 py-8 text-left md:px-10">
-                        <h3 className="mb-5 text-[clamp(2rem,4vw,2.8rem)] font-black leading-none text-[#071514]">
+                        <h3 className="mb-5 text-[clamp(2rem,4vw,2.8rem)] font-black leading-[0.95] text-[#071514]">
                           {event.title}
                         </h3>
                         <p className="mb-7 text-[1rem] leading-8 text-[#4b6570]">

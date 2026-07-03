@@ -32,6 +32,22 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: getAllowedDevOrigins(),
   devIndicators: false,
   output: "standalone",
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "www.estanciadayuse.com.br",
+          },
+        ],
+        destination: "https://estanciadayuse.com.br/:path*",
+        basePath: false,
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

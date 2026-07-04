@@ -645,7 +645,7 @@ export function EstanciaHomePage({
                     >
                       <Link
                         href={event.href}
-                        className="block overflow-hidden bg-white"
+                        className="flex items-center justify-center overflow-hidden bg-[#f3f1ed]"
                         aria-label={event.title}
                         onPointerDown={(pointerEvent) =>
                           pointerEvent.stopPropagation()
@@ -654,7 +654,7 @@ export function EstanciaHomePage({
                         <img
                           src={event.imageSrc}
                           alt={event.title}
-                          className="block h-[260px] w-full object-cover object-center transition-transform duration-500 hover:scale-[1.03] md:h-[380px]"
+                          className="block h-[260px] w-full object-contain object-center md:h-[380px]"
                           loading="lazy"
                           draggable={false}
                         />

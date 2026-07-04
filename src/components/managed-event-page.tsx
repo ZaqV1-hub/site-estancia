@@ -126,8 +126,8 @@ export function ManagedEventPage({ event }: { event: ManagedEvent }) {
               </div>
 
               <div className="mt-6 flex flex-col gap-3">
-                <ActionLink href={event.href} primary>
-                  {event.buttonLabel}
+                <ActionLink href="/agenda" primary>
+                  Comprar ingressos!
                 </ActionLink>
                 <ActionLink href="/agenda">Voltar para agenda</ActionLink>
               </div>

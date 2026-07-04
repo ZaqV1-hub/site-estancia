@@ -41,7 +41,7 @@ const metroRoute = [
 ];
 
 const finalNote =
-  "Descer no ponto da escola Cattony que está ao lado do clube, entrada pelo portão 3. Avisar o motorista que você vai descer neste ponto porque o micro-ônibus é circular.";
+  "Consulte o mapa antes de sair e confirme a melhor rota no aplicativo de navegação da sua preferência.";
 
 export function LocationPage() {
   return (
@@ -75,7 +75,7 @@ export function LocationPage() {
               <strong className="legacy-condensed block text-[14px] uppercase text-[#155188]">
                 Endereço
               </strong>
-              Av. do Jaceguava, 2.222 - Jardim Casa Grande - São Paulo - SP / CEP: 04.870-020
+              {contact.address}
             </div>
           </address>
 
@@ -95,7 +95,7 @@ export function LocationPage() {
         <div className="mt-5 overflow-hidden rounded bg-[#eaeaea]">
           <iframe
             title="Mapa Estancia"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10114.54023873911!2d-46.747566408833706!3d-23.77692536125703!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce4eacb5029f0b%3A0x3023a922486787e9!2sClube+Rinc%C3%A3o!5e0!3m2!1spt-BR!2sbr!4v1455706557119"
+            src={contact.mapEmbed}
             className="h-[320px] w-full md:h-[450px]"
             style={{ border: 0 }}
             loading="lazy"
@@ -131,7 +131,7 @@ export function LocationPage() {
                 {finalNote}
               </h3>
               <p className="site-page-note mt-2">
-                Obs: avise o motorista para descer no ponto correto, porque o micro-ônibus é circular.
+                Obs: os trajetos de transporte público podem variar. Use o mapa atualizado para confirmar o caminho.
               </p>
             </div>
           </div>
@@ -165,7 +165,7 @@ export function LocationPage() {
                 {finalNote}
               </h3>
               <p className="site-page-note mt-2">
-                Obs: avise o motorista para descer no ponto correto, porque o micro-ônibus é circular.
+                Obs: os trajetos de transporte público podem variar. Use o mapa atualizado para confirmar o caminho.
               </p>
             </div>
           </div>

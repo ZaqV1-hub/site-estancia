@@ -72,7 +72,7 @@ export function ManagedEventPage({ event }: { event: ManagedEvent }) {
   return (
     <section className="w-full bg-[#f5f8f2]">
       <div className="bg-[linear-gradient(135deg,#17342d_0%,#1f4a3f_100%)]">
-        <div className="mx-auto w-full max-w-[1240px] px-5 py-16 text-left text-white md:px-8 lg:py-20">
+        <div className="mx-auto w-full max-w-[1240px] px-5 py-24 text-left text-white md:px-8 lg:py-28">
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.24em] text-[#c8dfcf]">
               Agenda
@@ -93,17 +93,17 @@ export function ManagedEventPage({ event }: { event: ManagedEvent }) {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <article className="rounded-[28px] border border-[#d8e5d8] bg-white p-6 shadow-[0_22px_48px_rgba(23,52,45,0.08)] md:p-8">
             <p className="text-[12px] font-bold uppercase tracking-[0.24em] text-[#6d9778]">
-              Descricao
+              Descrição
             </p>
             <h2 className="mt-3 text-[clamp(2rem,4vw,3rem)] font-black leading-[0.95] text-[#17342d]">
-              Descricao
+              Descrição
             </h2>
             <div className="mt-6 space-y-5">
               {pageContent ? (
                 renderTextBlocks(pageContent)
               ) : (
                 <p className="text-[15px] leading-8 text-[#355148]">
-                  Este evento ainda nao possui uma descricao completa publicada.
+                  Este evento ainda não possui uma descrição completa publicada.
                 </p>
               )}
             </div>
@@ -112,7 +112,7 @@ export function ManagedEventPage({ event }: { event: ManagedEvent }) {
           <aside className="space-y-6">
             <div className="rounded-[28px] border border-[#d8e5d8] bg-white p-6 shadow-[0_18px_42px_rgba(23,52,45,0.08)]">
               <p className="text-[12px] font-bold uppercase tracking-[0.24em] text-[#6d9778]">
-                Informacoes rapidas
+                Informações rápidas
               </p>
               <div className="mt-5 space-y-4">
                 <div className="rounded-[18px] bg-[#f4f8f2] px-4 py-4">
@@ -120,7 +120,7 @@ export function ManagedEventPage({ event }: { event: ManagedEvent }) {
                     Resumo
                   </strong>
                   <p className="mt-2 text-[15px] leading-7 text-[#355148]">
-                    {summary || "Resumo nao informado."}
+                    {summary || "Resumo não informado."}
                   </p>
                 </div>
               </div>

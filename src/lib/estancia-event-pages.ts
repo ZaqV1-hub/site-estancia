@@ -61,10 +61,10 @@ export function findManagedEventBySlug(events: ManagedEvent[], slug: string) {
 }
 
 export function buildManagedEventMetadata(event: ManagedEvent): Metadata {
-  const title = `${resolveManagedEventPageTitle(event)} - Estancia`;
+  const title = `${resolveManagedEventPageTitle(event)} - Estância`;
   const description =
     String(event.description ?? "").trim() ||
-    "Evento especial da Estancia e Parque Ecologico das Aguas.";
+    "Evento especial da Estância e Parque Ecológico das Águas.";
   const path = buildManagedEventPagePath(event);
   const image = String(event.imageSrc ?? "").trim();
   const siteUrl = getSiteUrl();
@@ -79,7 +79,7 @@ export function buildManagedEventMetadata(event: ManagedEvent): Metadata {
       title,
       description,
       url: `${siteUrl}${path}`,
-      siteName: "Estancia",
+      siteName: "Estância",
       type: "article",
       images: image
         ? [

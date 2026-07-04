@@ -56,7 +56,7 @@ export function CareersPage() {
                   Endereço
                 </strong>
                 <address className="not-italic text-[16px] text-[#666]">
-                  Av. do Jaceguava, 2.222 - Jardim Casa Grande - São Paulo - SP / CEP: 04.870-020
+                  {contact.address}
                 </address>
                 <a
                   href="/localizacao"
@@ -70,7 +70,7 @@ export function CareersPage() {
             <div className="overflow-hidden rounded bg-[#eaeaea]">
               <iframe
                 title="Mapa Estancia"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10114.54023873911!2d-46.747566408833706!3d-23.77692536125703!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce4eacb5029f0b%3A0x3023a922486787e9!2sClube+Rinc%C3%A3o!5e0!3m2!1spt-BR!2sbr!4v1455706557119"
+                src={contact.mapEmbed}
                 className="h-[280px] w-full md:h-[360px]"
                 style={{ border: 0 }}
                 loading="lazy"
@@ -112,15 +112,9 @@ export function CareersPage() {
               </div>
               <div>
                 <strong className="legacy-condensed block text-[22px] text-[#3393d6]">
-                  Telefone 2
+                  Endereço
                 </strong>
-                <span className="text-[13px] leading-6 text-[#333]">{contact.phones[1]}</span>
-              </div>
-              <div>
-                <strong className="legacy-condensed block text-[22px] text-[#3393d6]">
-                  Telefone 3
-                </strong>
-                <span className="text-[13px] leading-6 text-[#333]">{contact.phones[2]}</span>
+                <span className="text-[13px] leading-6 text-[#333]">{contact.address}</span>
               </div>
             </div>
 

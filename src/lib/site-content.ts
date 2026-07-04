@@ -70,12 +70,14 @@ export const contact = {
   instagram: "https://www.instagram.com/estanciaecodasaguas/",
   tiktok: "#",
   facebook: "https://www.facebook.com/estanciaecodasaguas/?locale=pt_BR",
-  map: "https://goo.gl/maps/hK5JdJb6nM92",
-  address: "Av. do Jaceguava, 2.222 - Jardim Casa Grande - São Paulo - SP",
-  cep: "04870-425",
+  map: "https://www.google.com/maps/search/?api=1&query=Estrada+do+Caibro,+1494+-+Col%C3%B4nia,+S%C3%A3o+Paulo+-+SP,+04898-030",
+  mapEmbed:
+    "https://www.google.com/maps?q=Estrada%20do%20Caibro%2C%201494%20-%20Col%C3%B4nia%2C%20S%C3%A3o%20Paulo%20-%20SP%2C%2004898-030&z=15&output=embed",
+  address: "Estrada do Caibro, 1494 - Colônia, São Paulo - SP, 04898-030",
+  cep: "04898-030",
   company: "Estancia Pousada e Lazer LTDA",
   cnpj: "14.582.297/0001-55",
-  phones: ["(11) 5979-2522", "(11) 5979-6000", "(11) 5922-8464"],
+  phones: ["(11) 5197-5837"],
 };
 
 export const primaryNav = [
@@ -439,16 +441,16 @@ export const infoPages: Record<string, InfoPage> = {
     summary:
       "A pagina de localizacao concentra endereco, rotas por onibus e metro/trem e o acesso ao mapa ampliado para facilitar a chegada ao clube.",
     highlights: [
-      "Endereco completo em Av. do Jaceguava, 2.222, Jardim Casa Grande, Sao Paulo.",
-      "Roteiro detalhado a partir do Terminal Varginha e da Estacao Grajau.",
-      "Entrada de referencia pelo portao 3, ao lado da Escola Cattony.",
+      "Endereço completo em Estrada do Caibro, 1494, Colônia, São Paulo.",
+      "Mapa atualizado disponível para traçar a rota antes da visita.",
+      "Contato principal disponível para confirmar o melhor acesso.",
     ],
     cta: { label: "Ver mapa", href: contact.map },
     secondaryCta: { label: "Falar no WhatsApp", href: contact.whatsapp },
     facts: [
       { label: "Endereco", value: contact.address },
-      { label: "CEP", value: "04870-020" },
-      { label: "Referencia", value: "Portao 3 ao lado da Escola Cattony" },
+      { label: "CEP", value: contact.cep },
+      { label: "Referência", value: "Use o mapa atualizado para chegada" },
     ],
     heroImage: {
       src: "/photos/day-use.jpg",
@@ -461,10 +463,10 @@ export const infoPages: Record<string, InfoPage> = {
           "Pegar onibus ate o Terminal Varginha.",
           "Descer dentro do Terminal Varginha.",
           "Pegar o micro-onibus Messiânica dentro do terminal.",
-          "Descer no ponto da Escola Cattony, ao lado do clube, com entrada pelo portao 3.",
+          "Abra o mapa atualizado antes de sair para confirmar o ponto final mais conveniente.",
         ],
         note:
-          "Avisar o motorista que voce vai descer neste ponto porque o micro-onibus e circular.",
+          "Os trajetos podem mudar conforme a operacao da linha. Confirme o caminho no mapa antes da visita.",
       },
       {
         title: "Roteiro metro ou trem",
@@ -472,10 +474,10 @@ export const infoPages: Record<string, InfoPage> = {
           "Chegar na Linha Esmeralda da CPTM e descer na Estacao Grajau.",
           "Pegar onibus para o Terminal Varginha dentro do Terminal Grajau.",
           "Descer dentro do Terminal Varginha.",
-          "Pegar o micro-onibus Messiânica e descer no ponto da Escola Cattony, com entrada pelo portao 3.",
+          "Abra o mapa atualizado para confirmar o trecho final ate a entrada.",
         ],
         note:
-          "A nova pagina institucional preserva o conteudo publico da rota e substitui o layout antigo do WordPress.",
+          "As linhas e pontos podem variar. Use o mapa atualizado para validar o trajeto no dia.",
       },
     ],
   },
@@ -497,9 +499,9 @@ export const infoPages: Record<string, InfoPage> = {
     cta: { label: "Enviar curriculo", href: contact.whatsapp },
     secondaryCta: { label: "Ver mapa ampliado", href: contact.map },
     facts: [
-      { label: "Telefone 1", value: contact.phones[0] },
-      { label: "Telefone 2", value: contact.phones[1] },
-      { label: "Telefone 3", value: contact.phones[2] },
+      { label: "Telefone", value: contact.phones[0] },
+      { label: "Endereço", value: contact.address },
+      { label: "CEP", value: contact.cep },
     ],
     heroImage: {
       src: "/photos/confraternizacao.jpg",
@@ -517,7 +519,7 @@ export const infoPages: Record<string, InfoPage> = {
         title: "Informacoes publicas atuais",
         items: [
           `Telefones: ${contact.phones.join(" / ")}.`,
-          "Endereco: Av. do Jaceguava, 2.222 - Jardim Casa Grande - Sao Paulo - SP.",
+          `Endereco: ${contact.address}.`,
           "Mapa ampliado disponivel para orientar o deslocamento.",
         ],
       },

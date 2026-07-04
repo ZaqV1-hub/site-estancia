@@ -271,6 +271,18 @@ export function SiteShell({
           </div>
         </div>
 
+        <div className="mx-auto mt-10 max-w-[1240px] border-t border-white/10 pt-8">
+          <div className="overflow-hidden rounded-[24px] border border-white/10 bg-white/5 shadow-[0_18px_40px_rgba(0,0,0,0.16)]">
+            <iframe
+              title="Mapa da Estância"
+              src={contact.mapEmbed}
+              className="h-[260px] w-full md:h-[320px]"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </div>
+
         <div className="mx-auto mt-10 flex max-w-[1240px] flex-col gap-3 border-t border-white/10 pt-6 text-[0.9rem] text-white/52 md:flex-row md:items-center md:justify-between">
           <p className="m-0">{"\u00a9 2026 Est\u00e2ncia. Todos os direitos reservados."}</p>
           <div className="flex flex-wrap gap-4">

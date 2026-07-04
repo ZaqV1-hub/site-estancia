@@ -72,7 +72,7 @@ export function ManagedEventPage({ event }: { event: ManagedEvent }) {
   return (
     <section className="w-full bg-[#f5f8f2]">
       <div className="bg-[linear-gradient(135deg,#17342d_0%,#1f4a3f_100%)]">
-        <div className="mx-auto w-full max-w-[1240px] px-5 py-24 text-left text-white md:px-8 lg:py-28">
+        <div className="mx-auto w-full max-w-[1240px] px-5 pb-24 pt-36 text-left text-white md:px-8 lg:pb-28 lg:pt-44">
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.24em] text-[#c8dfcf]">
               Agenda

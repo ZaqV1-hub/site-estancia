@@ -641,11 +641,11 @@ export function EstanciaHomePage({
                   {events.map((event) => (
                     <article
                       key={event.title}
-                      className="grid min-w-[86vw] snap-center items-stretch overflow-hidden rounded-[18px] bg-[#efeded] shadow-[0_24px_54px_rgba(5,18,14,0.24)] md:min-w-[920px] md:grid-cols-[0.98fr_1fr] lg:min-w-[1120px]"
+                      className="grid min-w-[86vw] snap-center items-stretch overflow-hidden rounded-[10px] bg-[#efeded] md:min-w-[920px] md:grid-cols-[0.98fr_1fr] lg:min-w-[1120px]"
                     >
                       <Link
                         href={event.href}
-                        className="flex items-center justify-center overflow-hidden bg-[#f3f1ed]"
+                        className="block overflow-hidden bg-white"
                         aria-label={event.title}
                         onPointerDown={(pointerEvent) =>
                           pointerEvent.stopPropagation()
@@ -654,22 +654,22 @@ export function EstanciaHomePage({
                         <img
                           src={event.imageSrc}
                           alt={event.title}
-                          className="block h-[260px] w-full object-contain object-center md:h-[380px]"
+                          className="block h-[260px] w-full object-cover transition-transform duration-500 hover:scale-[1.03] md:h-[380px]"
                           loading="lazy"
                           draggable={false}
                         />
                       </Link>
 
                       <div className="flex flex-col justify-center px-7 py-8 text-left md:px-10">
-                        <h3 className="mb-5 text-[clamp(2rem,4vw,3.2rem)] font-black leading-none text-[#071514]">
+                        <h3 className="text-[clamp(2rem,4vw,3.2rem)] font-black leading-none text-[#071514]">
                           {event.title}
                         </h3>
-                        <p className="mb-7 text-[1rem] leading-8 text-[#4b6570]">
+                        <p className="mt-5 text-[1rem] leading-8 text-[#4b6570]">
                           {event.description}
                         </p>
                         <Link
                           href={event.href}
-                          className="inline-flex min-h-[52px] w-fit items-center justify-center rounded-full bg-[#1a6b3a] px-8 text-[0.95rem] font-black text-white shadow-[0_16px_28px_rgba(26,107,58,0.24)] transition hover:-translate-y-0.5 hover:bg-[#145630]"
+                          className="mt-7 inline-flex min-h-[52px] w-fit items-center justify-center rounded-full bg-[#1a6b3a] px-8 text-[0.95rem] font-black text-white shadow-[0_16px_28px_rgba(26,107,58,0.24)] transition hover:-translate-y-0.5 hover:bg-[#145630]"
                           onPointerDown={(pointerEvent) =>
                             pointerEvent.stopPropagation()
                           }

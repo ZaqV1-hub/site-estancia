@@ -6,6 +6,7 @@ import {
   findManagedEventBySlug,
   hasManagedEventPage,
   resolveManagedEventPublicHref,
+  resolveManagedEventPurchaseHref,
 } from "@/lib/estancia-event-pages";
 
 function createEvent(overrides: Partial<ManagedEvent> = {}): ManagedEvent {
@@ -59,6 +60,12 @@ describe("estancia event pages", () => {
       "/evento/festa-junina-especial",
     );
     expect(resolveManagedEventPublicHref(externalEvent)).toBe(
+      "https://externo.example.com",
+    );
+    expect(resolveManagedEventPurchaseHref(eventWithPage)).toBe(
+      "/agenda?mes=7&ano=2026&date=2026-07-15",
+    );
+    expect(resolveManagedEventPurchaseHref(externalEvent)).toBe(
       "https://externo.example.com",
     );
   });

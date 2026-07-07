@@ -48,6 +48,14 @@ export function resolveManagedEventPublicHref(event: ManagedEvent) {
   return hasManagedEventPage(event) ? buildManagedEventPagePath(event) : event.href;
 }
 
+export function resolveManagedEventPurchaseHref(
+  event: Pick<ManagedEvent, "href">,
+) {
+  const href = String(event.href ?? "").trim();
+
+  return href || "/agenda";
+}
+
 export function findManagedEventBySlug(events: ManagedEvent[], slug: string) {
   const normalizedSlug = normalizeSlugPart(slug);
 

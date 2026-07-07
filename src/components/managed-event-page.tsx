@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { ManagedEvent } from "@/lib/estancia-content-store";
-import { resolveManagedEventPageTitle } from "@/lib/estancia-event-pages";
+import {
+  resolveManagedEventPageTitle,
+  resolveManagedEventPurchaseHref,
+} from "@/lib/estancia-event-pages";
 
 function ActionLink({
   href,
@@ -68,6 +71,7 @@ export function ManagedEventPage({ event }: { event: ManagedEvent }) {
   const pageTitle = resolveManagedEventPageTitle(event);
   const pageContent = String(event.pageContent ?? "").trim();
   const summary = String(event.description ?? "").trim();
+  const purchaseHref = resolveManagedEventPurchaseHref(event);
 
   return (
     <section className="w-full bg-[#f5f8f2]">
@@ -126,7 +130,7 @@ export function ManagedEventPage({ event }: { event: ManagedEvent }) {
               </div>
 
               <div className="mt-6 flex flex-col gap-3">
-                <ActionLink href="/agenda" primary>
+                <ActionLink href={purchaseHref} primary>
                   Comprar ingressos!
                 </ActionLink>
                 <ActionLink href="/agenda">Voltar para agenda</ActionLink>

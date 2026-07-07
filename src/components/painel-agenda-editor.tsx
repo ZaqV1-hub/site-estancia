@@ -9,6 +9,7 @@ import type {
 } from "@/lib/painel-agenda";
 import {
   formatPainelAgendaDateLabel,
+  getPainelAgendaStatusOptions,
   getPainelAgendaTypeOptions,
 } from "@/lib/painel-agenda-ui";
 import {
@@ -52,7 +53,7 @@ function defaultReason(selectedDate: string | null) {
     : "Criação de agenda pelo painel";
 }
 
-function buildDefaultForm(
+export function buildPainelAgendaEditorDefaultForm(
   data: PainelAgendaScreenData,
   initialType?: PainelAgendaType,
 ) {
@@ -85,7 +86,9 @@ export function PainelAgendaEditor({
 }: PainelAgendaEditorProps) {
   const router = useRouter();
   const selectedAgenda = data.selectedDay?.agenda ?? null;
-  const [form, setForm] = useState(() => buildDefaultForm(data, initialType));
+  const [form, setForm] = useState(() =>
+    buildPainelAgendaEditorDefaultForm(data, initialType),
+  );
   const [rangePreview, setRangePreview] = useState<RangePreviewState>({
     status: "idle",
     existingDates: [],
@@ -117,26 +120,6 @@ export function PainelAgendaEditor({
     passports.length > 0 && selectedPassportIds.length === passports.length;
   const allAddonsSelected =
     addons.length > 0 && selectedAddonIds.length === addons.length;
-
-  useEffect(() => {
-    setForm(buildDefaultForm(data, initialType));
-  }, [data, initialType]);
-
-  useEffect(() => {
-    setSelectedPassportIds(
-      data.selectedDay?.selectedPassportIds?.length
-        ? data.selectedDay.selectedPassportIds
-        : passports.map((item) => item.id),
-    );
-  }, [data.selectedDay, passports]);
-
-  useEffect(() => {
-    setSelectedAddonIds(
-      data.selectedDay?.selectedAddonIds?.length
-        ? data.selectedDay.selectedAddonIds
-        : addons.map((item) => item.id),
-    );
-  }, [addons, data.selectedDay]);
 
   function togglePassportSelection(passportId: string) {
     setSelectedPassportIds((current) =>
@@ -234,6 +217,7 @@ export function PainelAgendaEditor({
   const typeOptions = getPainelAgendaTypeOptions(
     mode === "create" ? "padra" : (selectedAgenda?.type ?? null),
   );
+  const statusOptions = getPainelAgendaStatusOptions();
   const overwriteRequired = rangePreview.existingDates.length > 0;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -384,6 +368,68 @@ export function PainelAgendaEditor({
             </select>
           </label>
         </div>
+
+        <div className="grid gap-3 lg:grid-cols-2">
+          <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
+            Status da agenda
+            <select
+              value={form.status}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  status: event.target.value as PainelAgendaStatus,
+                }))
+              }
+              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5 text-sm font-normal text-[#17351f]"
+            >
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
+            Tabela de preco da agenda
+            <select
+              value={form.priceTableId}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  priceTableId: Number(event.target.value),
+                }))
+              }
+              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5 text-sm font-normal text-[#17351f]"
+            >
+              {data.priceTables.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
+          Informacao vinculada
+          <select
+            value={form.informationId}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                informationId: Number(event.target.value),
+              }))
+            }
+            className="rounded-[8px] border border-[#dbe7d7] px-3 py-2.5 text-sm font-normal text-[#17351f]"
+          >
+            {data.informationOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
         {form.type === "promo" ? (
           <div className="grid gap-3 rounded-[8px] border border-[#dbe7d7] bg-[#fbfdf9] p-3">

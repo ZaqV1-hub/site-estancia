@@ -5,6 +5,7 @@ import {
   FlowIcon,
   FlowStepper,
   IconBubble,
+  type OrderFlowStep,
   PrimaryFlowButton,
 } from "@/components/order-flow-ui";
 import type { AuthUser } from "@/lib/auth-contracts";
@@ -17,7 +18,6 @@ import type {
   PurchaseAgendaDetail,
 } from "@/lib/purchase-contracts";
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -29,6 +29,13 @@ type PurchasePageProps = {
 
 type PurchaseStep = "passports" | "addons" | "review";
 type Quantities = Record<string, number>;
+type PurchaseDraft = {
+  step: PurchaseStep;
+  quantities: Quantities;
+  codindica: string;
+  appliedCodindica: string | null;
+  appliedDiscount: string;
+};
 
 function formatCurrency(value: number | string) {
   return new Intl.NumberFormat("pt-BR", {
@@ -89,6 +96,89 @@ async function readResponseBody<T>(response: Response) {
   } catch {
     return null;
   }
+}
+
+function getPurchaseDraftStorageKey(agendaId: number) {
+  return `purchase-draft:${agendaId}`;
+}
+
+function readPurchaseDraftFromSessionStorage(agendaId: number) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const savedDraft = window.sessionStorage.getItem(
+    getPurchaseDraftStorageKey(agendaId),
+  );
+
+  if (!savedDraft) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(savedDraft) as PurchaseDraft;
+  } catch (draftError) {
+    console.error("purchase-draft-restore-failed", draftError);
+    return null;
+  }
+}
+
+export function sanitizePurchaseDraft(
+  draft: PurchaseDraft | null,
+  products: B2cProduct[],
+): PurchaseDraft | null {
+  if (!draft) {
+    return null;
+  }
+
+  const availableProductIds = new Set(products.map((product) => product.id));
+  const quantities = Object.fromEntries(
+    Object.entries(draft.quantities).filter(
+      ([productId, quantity]) =>
+        availableProductIds.has(productId) &&
+        Number.isFinite(quantity) &&
+        quantity > 0,
+    ),
+  );
+  const passportIds = new Set(
+    products
+      .filter((product) => product.type === "passport")
+      .map((product) => product.id),
+  );
+  const hasPassport = Object.entries(quantities).some(
+    ([productId, quantity]) => passportIds.has(productId) && quantity > 0,
+  );
+
+  return {
+    step:
+      hasPassport && (draft.step === "addons" || draft.step === "review")
+        ? draft.step
+        : "passports",
+    quantities,
+    codindica: String(draft.codindica ?? ""),
+    appliedCodindica:
+      typeof draft.appliedCodindica === "string" ? draft.appliedCodindica : null,
+    appliedDiscount:
+      typeof draft.appliedDiscount === "string" ? draft.appliedDiscount : "0.00",
+  };
+}
+
+export function buildPurchaseDateStepHref(agendaId: number, date: string) {
+  const [year, month] = date.split("-");
+
+  return `/agenda?mes=${month}&ano=${year}&agendaId=${agendaId}`;
+}
+
+function getFlowStepFromPurchaseStep(step: PurchaseStep): OrderFlowStep {
+  if (step === "passports") {
+    return "passports";
+  }
+
+  if (step === "addons") {
+    return "addons";
+  }
+
+  return "payment";
 }
 
 type CodindicaPreviewResponse =
@@ -199,6 +289,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeCarouselPage, setActiveCarouselPage] = useState(0);
+  const [draftReady, setDraftReady] = useState(false);
   const dateLabel = formatLongDate(agenda.date);
 
   const lineItems = useMemo(
@@ -229,6 +320,52 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
     ? Math.max(Number(totalValue) - Number(appliedDiscount), 0).toFixed(2)
     : totalValue;
   const desktopDotCount = step === "passports" ? 3 : 1;
+
+  useEffect(() => {
+    const restoreTimeout = window.setTimeout(() => {
+      const restoredDraft = sanitizePurchaseDraft(
+        readPurchaseDraftFromSessionStorage(agenda.id),
+        products,
+      );
+
+      if (restoredDraft) {
+        setStep(restoredDraft.step);
+        setQuantities(restoredDraft.quantities);
+        setCodindica(restoredDraft.codindica);
+        setAppliedCodindica(restoredDraft.appliedCodindica);
+        setAppliedDiscount(restoredDraft.appliedDiscount);
+      }
+
+      setDraftReady(true);
+    }, 0);
+
+    return () => window.clearTimeout(restoreTimeout);
+  }, [agenda.id, products]);
+
+  useEffect(() => {
+    if (!draftReady || typeof window === "undefined") {
+      return;
+    }
+
+    window.sessionStorage.setItem(
+      getPurchaseDraftStorageKey(agenda.id),
+      JSON.stringify({
+        step,
+        quantities,
+        codindica,
+        appliedCodindica,
+        appliedDiscount,
+      } satisfies PurchaseDraft),
+    );
+  }, [
+    agenda.id,
+    appliedCodindica,
+    appliedDiscount,
+    codindica,
+    draftReady,
+    quantities,
+    step,
+  ]);
 
   useEffect(() => {
     const element = carouselRef.current;
@@ -272,6 +409,42 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
 
     setError(null);
     setStep(nextStep);
+  }
+
+  function persistPurchaseDraft(nextStep = step) {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.sessionStorage.setItem(
+      getPurchaseDraftStorageKey(agenda.id),
+      JSON.stringify({
+        step: nextStep,
+        quantities,
+        codindica,
+        appliedCodindica,
+        appliedDiscount,
+      } satisfies PurchaseDraft),
+    );
+  }
+
+  function handleStepNavigation(targetStep: OrderFlowStep) {
+    if (targetStep === "date") {
+      persistPurchaseDraft();
+      router.push(buildPurchaseDateStepHref(agenda.id, agenda.date));
+      return;
+    }
+
+    if (targetStep === "passports") {
+      setError(null);
+      setStep("passports");
+      return;
+    }
+
+    if (targetStep === "addons" && passportQuantity > 0) {
+      setError(null);
+      setStep("addons");
+    }
   }
 
   async function handleSubmit() {
@@ -319,6 +492,10 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
             : "Não foi possível iniciar a compra agora.",
         );
         return;
+      }
+
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(getPurchaseDraftStorageKey(agenda.id));
       }
 
       router.replace(payload.data.checkoutRedirect);
@@ -424,13 +601,14 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
               Selecione os passaportes que deseja incluir na sua visita.
             </p>
           </div>
-          <Link
-            href="/agenda"
+          <button
+            type="button"
+            onClick={() => handleStepNavigation("date")}
             className="hidden min-h-9 items-center gap-2 rounded-full border border-[#d8dfd7] bg-white px-3 text-[12px] font-bold text-[#073f35] shadow-[0_8px_18px_rgba(18,52,45,0.045)] hover:border-[#20aa1f] lg:inline-flex"
           >
             <FlowIcon name="calendar" className="h-4 w-4" />
             Alterar data
-          </Link>
+          </button>
         </div>
 
         <div className="relative">
@@ -565,13 +743,8 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
           }`}
         >
           <FlowStepper
-            current={
-              step === "passports"
-                ? "passports"
-                : step === "addons"
-                  ? "addons"
-                  : "payment"
-            }
+            current={getFlowStepFromPurchaseStep(step)}
+            onStepChange={handleStepNavigation}
           />
 
           {error ? (

@@ -18,7 +18,19 @@ const stepIndex: Record<OrderFlowStep, number> = {
   payment: 3,
 };
 
-export function FlowStepper({ current }: { current: OrderFlowStep }) {
+export function isFlowStepUnlocked(current: OrderFlowStep, target: OrderFlowStep) {
+  return stepIndex[target] <= stepIndex[current];
+}
+
+export function FlowStepper({
+  current,
+  hrefForStep,
+  onStepChange,
+}: {
+  current: OrderFlowStep;
+  hrefForStep?: Partial<Record<OrderFlowStep, string>>;
+  onStepChange?: (step: OrderFlowStep) => void;
+}) {
   const activeIndex = stepIndex[current];
 
   return (
@@ -34,12 +46,15 @@ export function FlowStepper({ current }: { current: OrderFlowStep }) {
         />
         {steps.map((step, index) => {
           const isActive = step.key === current;
-
-          return (
-            <li
-              key={step.key}
-              className="relative flex flex-col items-center gap-1.5 text-center"
-            >
+          const isUnlocked = isFlowStepUnlocked(current, step.key);
+          const href = !isActive && isUnlocked ? hrefForStep?.[step.key] : undefined;
+          const isClickable =
+            !isActive && isUnlocked && (Boolean(href) || Boolean(onStepChange));
+          const sharedClasses = `flex flex-col items-center gap-1.5 text-center transition ${
+            isClickable ? "cursor-pointer hover:opacity-85" : ""
+          }`;
+          const content = (
+            <>
               <span
                 className={`grid h-6 w-6 place-items-center rounded-full border text-[12px] font-bold shadow-[0_7px_16px_rgba(18,52,45,0.055)] sm:h-8 sm:w-8 sm:text-[14px] ${
                   isActive
@@ -59,6 +74,29 @@ export function FlowStepper({ current }: { current: OrderFlowStep }) {
                   {index + 1}. {step.label}
                 </span>
               </span>
+            </>
+          );
+
+          return (
+            <li
+              key={step.key}
+              className="relative flex flex-col items-center gap-1.5 text-center"
+            >
+              {href ? (
+                <Link href={href} className={sharedClasses}>
+                  {content}
+                </Link>
+              ) : isClickable ? (
+                <button
+                  type="button"
+                  onClick={() => onStepChange?.(step.key)}
+                  className={sharedClasses}
+                >
+                  {content}
+                </button>
+              ) : (
+                <span className={sharedClasses}>{content}</span>
+              )}
             </li>
           );
         })}

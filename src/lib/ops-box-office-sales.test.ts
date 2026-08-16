@@ -290,6 +290,76 @@ describe("ops-box-office-sales", () => {
     expect(mocks.registerOpsAuditLog).not.toHaveBeenCalled();
   });
 
+  it("uses the explicit unit price for special add-ons", async () => {
+    mocks.clientQuery.mockImplementation(async (sql: string, values?: unknown[]) => {
+      if (sql === "BEGIN" || sql === "COMMIT" || sql === "ROLLBACK") {
+        return { rows: [] };
+      }
+
+      if (sql.includes("FROM agenda")) {
+        return {
+          rows: [
+            {
+              idagenda: 88,
+              dtagenda: "2026-07-25",
+              tpagenda: "padra",
+              stagenda: "abe",
+              vlnormalbil: "100.00",
+              vlinfantbil: "70.00",
+            },
+          ],
+        };
+      }
+
+      if (sql.includes("INSERT INTO compra (")) {
+        expect(values).toEqual([null, "debit", "7.00"]);
+        return { rows: [{ idcompra: 325 }] };
+      }
+
+      if (sql.includes("SELECT numvoucher")) {
+        return { rows: [] };
+      }
+
+      if (sql.includes("INSERT INTO voucher")) {
+        expect(values).toEqual([
+          325,
+          expect.stringMatching(/^E/),
+          88,
+          "espec",
+          "7.00",
+          "n",
+          expect.any(String),
+          null,
+          "Estacionamento",
+          null,
+          null,
+          "n",
+        ]);
+        return { rows: [{ idvoucher: 9400 }] };
+      }
+
+      if (sql.includes("INSERT INTO compra_pagamentos")) {
+        expect(values).toEqual([325, "debit", "7.00"]);
+        return { rows: [] };
+      }
+
+      return { rows: [] };
+    });
+
+    await expect(
+      createOperationalBoxOfficeSale({
+        agendaId: 88,
+        items: [{ type: "espec", quantity: 1, label: "Estacionamento", unitValue: "7.00" }],
+        payments: [{ method: "debit", value: "7.00" }],
+      }),
+    ).resolves.toMatchObject({
+      purchaseId: 325,
+      totalValue: "7.00",
+      paymentMethods: ["debit"],
+      voucherIds: [9400],
+    });
+  });
+
   it("allows zero-value courtesy-only sales without payment rows", async () => {
     mocks.clientQuery.mockImplementation(async (sql: string, values?: unknown[]) => {
       if (sql === "BEGIN" || sql === "COMMIT" || sql === "ROLLBACK") {

@@ -58,10 +58,11 @@ type IdempotentSaleRow = {
 };
 
 export type BoxOfficeSaleItemInput = {
-  type: "norma" | "infan" | "isent" | string;
+  type: "norma" | "infan" | "espec" | "isent" | string;
   quantity: number;
   discountId?: number | null;
   label?: string | null;
+  unitValue?: string | number | null;
 };
 
 export type BoxOfficeSaleCourtesyInput = {
@@ -90,10 +91,11 @@ export type CreateBoxOfficeSaleInput = {
 };
 
 type NormalizedSaleItem = {
-  type: "norma" | "infan" | "isent";
+  type: "norma" | "infan" | "espec" | "isent";
   label: string;
   quantity: number;
   legacyDiscountId: number | null;
+  unitValue: number | null;
 };
 
 type NormalizedCourtesy = {
@@ -109,7 +111,7 @@ type NormalizedPayment = {
 };
 
 type VoucherDraft = {
-  type: "norma" | "infan" | "isent" | "corte";
+  type: "norma" | "infan" | "espec" | "isent" | "corte";
   prefix: string;
   value: number;
   discountId: number | null;
@@ -229,6 +231,15 @@ function normalizeItemType(value: string) {
     return "isent";
   }
 
+  if (
+    normalized === "espec" ||
+    normalized === "especial" ||
+    normalized === "adicional" ||
+    normalized === "addon"
+  ) {
+    return "espec";
+  }
+
   return null;
 }
 
@@ -241,6 +252,10 @@ function labelForItemType(type: NormalizedSaleItem["type"]) {
     return "Passaporte Infantil";
   }
 
+  if (type === "espec") {
+    return "Adicional";
+  }
+
   return "Isento";
 }
 
@@ -251,6 +266,10 @@ function prefixForVoucherType(type: VoucherDraft["type"]) {
 
   if (type === "isent") {
     return "I";
+  }
+
+  if (type === "espec") {
+    return "E";
   }
 
   return "A";
@@ -275,6 +294,7 @@ function normalizeItems(items: BoxOfficeSaleItemInput[] | undefined) {
           Number.isInteger(Number(item.discountId)) && Number(item.discountId) > 0
             ? Number(item.discountId)
             : null,
+        unitValue: parseMoney(item.unitValue),
       },
     ];
   });
@@ -545,11 +565,25 @@ function buildPaidVoucherDrafts(
 
   for (const item of items) {
     const basePrice =
-      item.type === "norma" ? normalPrice : item.type === "infan" ? childPrice : 0;
+      item.type === "norma"
+        ? normalPrice
+        : item.type === "infan"
+          ? childPrice
+          : item.type === "espec"
+            ? item.unitValue
+            : 0;
     const discount =
       applyLegacyItemDiscounts && item.legacyDiscountId
         ? discounts.get(item.legacyDiscountId) ?? null
         : null;
+
+    if (item.type === "espec" && (basePrice === null || basePrice < 0)) {
+      throw new BoxOfficeSaleError(
+        "box_office_item_pricing_unavailable",
+        `O valor do item ${item.label || "adicional"} nao esta disponivel para a venda.`,
+        409,
+      );
+    }
 
     if (applyLegacyItemDiscounts && item.legacyDiscountId && !discount) {
       throw new BoxOfficeSaleError(
@@ -567,8 +601,9 @@ function buildPaidVoucherDrafts(
       );
     }
 
+    const resolvedBasePrice = basePrice ?? 0;
     const unitPrice =
-      item.type === "isent" ? 0 : calculateDiscountedUnitPrice(basePrice, discount);
+      item.type === "isent" ? 0 : calculateDiscountedUnitPrice(resolvedBasePrice, discount);
     const description = discount?.nome
       ? `${item.label} - ${normalizeText(discount.nome)}`
       : item.type === "isent"

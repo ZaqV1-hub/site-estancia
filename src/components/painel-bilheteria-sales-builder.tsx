@@ -215,7 +215,12 @@ export function PainelBilheteriaSalesBuilder({
 
         return [
           {
-            type: product.voucherType === "infan" ? "infan" : "norma",
+            type:
+              product.voucherType === "infan"
+                ? "infan"
+                : product.voucherType === "espec"
+                  ? "espec"
+                  : "norma",
             quantity: line.quantity,
             label: product.title,
             baseUnitValue: basePrice.toFixed(2),

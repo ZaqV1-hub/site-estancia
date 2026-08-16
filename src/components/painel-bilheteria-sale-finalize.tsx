@@ -181,6 +181,7 @@ export function PainelBilheteriaSaleFinalize() {
             type: item.type,
             quantity: item.quantity,
             label: item.label,
+            unitValue: item.unitValue,
           })),
           purchaseDiscountId: draft.purchaseDiscountId,
           courtesies: draft.courtesies.map((courtesy) => ({

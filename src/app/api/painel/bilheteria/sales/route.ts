@@ -37,6 +37,7 @@ export async function POST(request: Request) {
                 quantity: number;
                 discountId?: number | null;
                 label?: string | null;
+                unitValue?: string | number | null;
               }>)
             : [],
           purchaseDiscountId:

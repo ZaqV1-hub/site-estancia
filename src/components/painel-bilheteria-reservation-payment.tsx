@@ -97,16 +97,19 @@ export function PainelBilheteriaReservationPayment({
   const cashChange = Math.max(parseMoney(cashReceived) - totalPurchase, 0);
 
   function updatePaymentRow(id: string, patch: Partial<PaymentRow>) {
+    setErrorMessage(null);
     setPaymentRows((current) =>
       current.map((row) => (row.id === id ? { ...row, ...patch } : row)),
     );
   }
 
   function addPaymentRow() {
+    setErrorMessage(null);
     setPaymentRows((current) => [...current, { id: createId(), method: "", value: "" }]);
   }
 
   function removePaymentRow(id: string) {
+    setErrorMessage(null);
     setPaymentRows((current) => current.filter((row) => row.id !== id));
   }
 
@@ -310,7 +313,10 @@ export function PainelBilheteriaReservationPayment({
                   Valor entregue
                   <input
                     value={cashReceived}
-                    onChange={(event) => setCashReceived(event.target.value)}
+                    onChange={(event) => {
+                      setErrorMessage(null);
+                      setCashReceived(event.target.value);
+                    }}
                     className="min-h-[44px] border border-[#b8d0e6] px-4 py-2.5 text-sm text-[#1f3650]"
                   />
                 </label>

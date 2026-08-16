@@ -130,16 +130,19 @@ export function PainelBilheteriaSaleFinalize() {
   const cashChange = Math.max(parseMoney(cashReceived) - totalPurchase, 0);
 
   function updatePaymentRow(id: string, patch: Partial<PaymentRow>) {
+    setErrorMessage(null);
     setPaymentRows((current) =>
       current.map((row) => (row.id === id ? { ...row, ...patch } : row)),
     );
   }
 
   function addPaymentRow() {
+    setErrorMessage(null);
     setPaymentRows((current) => [...current, createRow(createId(), "", "")]);
   }
 
   function removePaymentRow(id: string) {
+    setErrorMessage(null);
     setPaymentRows((current) => current.filter((row) => row.id !== id));
   }
 
@@ -392,7 +395,10 @@ export function PainelBilheteriaSaleFinalize() {
                   Valor entregue
                   <input
                     value={cashReceived}
-                    onChange={(event) => setCashReceived(event.target.value)}
+                    onChange={(event) => {
+                      setErrorMessage(null);
+                      setCashReceived(event.target.value);
+                    }}
                     className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-sm text-[#17351f]"
                   />
                 </label>

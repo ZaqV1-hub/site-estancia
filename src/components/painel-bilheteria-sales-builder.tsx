@@ -142,6 +142,18 @@ function readAgendaPrice(product: B2cProduct) {
   return parseMoney(getB2cBoxOfficePrice(product));
 }
 
+function resolveSaleDraftItemType(product: B2cProduct) {
+  if (product.type === "addon") {
+    return "espec";
+  }
+
+  if (product.voucherType === "infan") {
+    return "infan";
+  }
+
+  return product.voucherType === "espec" ? "espec" : "norma";
+}
+
 export function PainelBilheteriaSalesBuilder({
   today,
   agendas,
@@ -215,12 +227,7 @@ export function PainelBilheteriaSalesBuilder({
 
         return [
           {
-            type:
-              product.voucherType === "infan"
-                ? "infan"
-                : product.voucherType === "espec"
-                  ? "espec"
-                  : "norma",
+            type: resolveSaleDraftItemType(product),
             quantity: line.quantity,
             label: product.title,
             baseUnitValue: basePrice.toFixed(2),

@@ -286,7 +286,22 @@ function normalizeManagedEvent(item: ManagedEvent, fallback: ManagedEvent) {
   };
 }
 
+export function resolveManagedProductType(
+  item: Pick<B2cProduct, "id" | "title" | "type">,
+  fallback: B2cProductType,
+): B2cProductType {
+  const rawType = item.type === "addon" || item.type === "passport" ? item.type : fallback;
+  const normalizedIdentity = makeContentId(`${item.id} ${item.title}`);
+
+  if (normalizedIdentity.includes("estacionamento")) {
+    return "addon";
+  }
+
+  return rawType;
+}
+
 function normalizeManagedProduct(item: B2cProduct, fallback: B2cProduct) {
+  const productType = resolveManagedProductType(item, fallback.type);
   const sitePrice = normalizePrice(item.sitePrice ?? item.fixedPrice ?? fallback.sitePrice);
   const boxOfficePrice = normalizePrice(
     item.boxOfficePrice ?? item.sitePrice ?? item.fixedPrice ?? fallback.boxOfficePrice,
@@ -294,6 +309,7 @@ function normalizeManagedProduct(item: B2cProduct, fallback: B2cProduct) {
 
   return {
     ...item,
+    type: productType,
     title: repairMojibakeText(item.title, fallback.title),
     subtitle: repairMojibakeText(item.subtitle, fallback.subtitle),
     description: repairMojibakeText(item.description, fallback.description),
@@ -301,7 +317,7 @@ function normalizeManagedProduct(item: B2cProduct, fallback: B2cProduct) {
     sitePrice,
     boxOfficePrice,
     fixedPrice: sitePrice,
-    voucherType: item.voucherType === "infan" || item.voucherType === "espec" ? item.voucherType : fallback.voucherType,
+    voucherType: resolveManagedVoucherType(item.voucherType, productType, fallback.voucherType),
     voucherPrefix: item.voucherPrefix?.trim() || fallback.voucherPrefix,
   };
 }
@@ -551,9 +567,40 @@ export function normalizePrice(value: FormDataEntryValue | null) {
   return Number.isFinite(parsed) ? parsed.toFixed(2) : "0.00";
 }
 
+export function resolveManagedVoucherType(
+  value: string | null | undefined,
+  productType: B2cProductType,
+  fallback: B2cVoucherType,
+): B2cVoucherType {
+  const raw = String(value ?? "").trim().toLowerCase();
+
+  if (raw === "infan" || raw === "infantil") {
+    return "infan";
+  }
+
+  if (
+    raw === "espec" ||
+    raw === "especial" ||
+    raw === "adicional" ||
+    raw === "addon"
+  ) {
+    return "espec";
+  }
+
+  if (
+    raw === "norma" ||
+    raw === "normal" ||
+    raw === "adulto" ||
+    raw === "passaporte"
+  ) {
+    return "norma";
+  }
+
+  return productType === "addon" ? "espec" : fallback;
+}
+
 export function normalizeVoucherType(value: FormDataEntryValue | null): B2cVoucherType {
-  const raw = String(value ?? "").trim();
-  return raw === "infan" || raw === "espec" ? raw : "norma";
+  return resolveManagedVoucherType(String(value ?? ""), "passport", "norma");
 }
 
 export async function saveUploadedSiteImage(file: FormDataEntryValue | null) {

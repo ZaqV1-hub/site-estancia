@@ -3,12 +3,12 @@ import { buildPageMetadata } from "@/lib/site-metadata";
 import { contact, getInfoPage } from "@/lib/site-content";
 
 describe("site branding", () => {
-  it("uses Estancia in public metadata", () => {
+  it("uses Estância in public metadata", () => {
     const metadata = buildPageMetadata("agenda");
 
-    expect(metadata.title).toContain("Estancia");
-    expect(metadata.openGraph?.siteName).toContain("Estancia");
-    expect(metadata.twitter?.title).toContain("Estancia");
+    expect(metadata.title).toContain("Estância");
+    expect(metadata.openGraph?.siteName).toContain("Estância");
+    expect(metadata.twitter?.title).toContain("Estância");
   });
 
   it("uses Estancia in core public content", () => {

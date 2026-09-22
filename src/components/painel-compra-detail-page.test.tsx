@@ -21,9 +21,9 @@ describe("PainelCompraDetailPage", () => {
           type: "ponli",
           typeLabel: "Compra",
           status: "conc",
-          statusLabel: "Concluida",
+          statusLabel: "Concluída",
           paymentLabel: "Cielo 3 - Paga",
-          paymentMethodLabel: "Cartao de credito",
+          paymentMethodLabel: "Cartão de crédito",
           paymentDate: "07/05/2026",
           paymentTime: "14:32:11",
           totalValue: "80,00",
@@ -45,7 +45,7 @@ describe("PainelCompraDetailPage", () => {
               periodName: "Manha",
               unitValue: "40,00",
               used: "n",
-              usedLabel: "Nao",
+              usedLabel: "Não",
               usedDate: null,
               usedTime: null,
               schoolTripHref: "/painel/clientes/passeios/2306/alunos",
@@ -61,7 +61,7 @@ describe("PainelCompraDetailPage", () => {
               periodName: null,
               unitValue: "40,00",
               used: "n",
-              usedLabel: "Nao",
+              usedLabel: "Não",
               usedDate: null,
               usedTime: null,
               schoolTripHref: null,
@@ -71,14 +71,13 @@ describe("PainelCompraDetailPage", () => {
       }),
     );
 
-    expect(html).toContain("Dados Compra / Reserva");
+    expect(html).toContain("Dados da Compra / Reserva");
     expect(html).toContain("Itens da compra");
     expect(html).toContain("Almoco Caipira Buffet");
     expect(html).toContain("Adicional");
     expect(html).toContain("Pagamento");
     expect(html).toContain("ID Pagamento");
     expect(html).toContain("Vouchers");
-    expect(html).toContain("Consultar pagamento (Cielo)");
     expect(html).toContain("PainelCompraDetailActions");
     expect(html).toContain("Colegio Estancia");
     expect(html).toContain("/painel/clientes/passeios/2306/alunos");

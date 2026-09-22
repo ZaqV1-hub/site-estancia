@@ -17,6 +17,7 @@
 
 # next.js
 /.next/
+/.next.pre-*/
 /out/
 /.data/
 /.local/
@@ -35,6 +36,12 @@ yarn-error.log*
 .pnpm-debug.log*
 .next-dev*.log
 .codex-dev-server*.log
+/build-*.log
+/logs/
+/codex-*.js
+
+# arquivos enviados pelo CMS no servidor
+/public/uploads/site/
 
 # env files (can opt-in for committing if needed)
 .env*

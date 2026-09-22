@@ -226,6 +226,15 @@ credito e debito). O segredo do webhook deve ser configurado tanto no portal
 Cielo quanto em `INGRESSO_CIELO_NOTIFICATION_SECRET`; nunca o envie no corpo da
 notificacao nem o versione no repositorio.
 
+Na VM Rincao, `scripts/set-rincao-cielo-credentials.ps1` faz o preflight das
+novas credenciais sem criar cobranca, cria backup, atualiza o B2C e os legados
+de homologacao/producao e reinicia somente o runtime Next. Execute sem passar a
+chave na linha de comando para que ela seja solicitada como entrada protegida:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\set-rincao-cielo-credentials.ps1
+```
+
 O endpoint `POST /api/me/vouchers/[purchaseId]/whatsapp` usa o mesmo
 microservico de tickets para enviar vouchers selecionados ao numero informado na
 area do cliente. Em homologacao, `INGRESSO_TICKET_API_WHATSAPP_TESTING=true`

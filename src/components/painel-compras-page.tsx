@@ -353,6 +353,7 @@ export function PainelComprasPage({
                   <th className="px-3 py-2.5 text-xs font-semibold">CPF</th>
                   <th className="px-3 py-2.5 text-xs font-semibold">Usuario</th>
                   <th className="px-3 py-2.5 text-xs font-semibold text-right">Valor</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold text-center">Detalhes</th>
                 </tr>
               </thead>
               <tbody>
@@ -390,6 +391,14 @@ export function PainelComprasPage({
                     </td>
                     <td className="px-3 py-3 align-top text-right font-semibold text-[#17351f]">
                       {item.totalValue}
+                    </td>
+                    <td className="px-3 py-3 align-top text-center">
+                      <Link
+                        className="inline-flex rounded-[8px] border border-[#dbe7d7] px-3 py-1.5 text-xs font-semibold text-[#17351f]"
+                        href={`/painel/compras/${item.purchaseId}`}
+                      >
+                        Ver detalhes
+                      </Link>
                     </td>
                   </tr>
                 ))}

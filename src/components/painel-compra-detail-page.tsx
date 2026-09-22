@@ -12,12 +12,97 @@ type PainelCompraDetailPageProps = {
   canManageHistory: boolean;
 };
 
+type PurchaseItemSummary = {
+  key: string;
+  label: string;
+  categoryLabel: string;
+  visitDate: string | null;
+  schoolName: string | null;
+  className: string | null;
+  periodName: string | null;
+  quantity: number;
+  unitValue: string;
+  totalValue: string;
+};
+
+function parseMoneyLabel(value: string) {
+  const normalized = value.replace(/\./g, "").replace(",", ".");
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function formatMoneyLabel(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function resolveVoucherCategoryLabel(voucher: PainelPurchaseDetail["vouchers"][number]) {
+  switch (voucher.voucherType) {
+    case "espec":
+      return "Adicional";
+    case "escol":
+      return "Passeio escolar";
+    case "infan":
+      return "Passaporte infantil";
+    case "isent":
+      return "Isento";
+    case "corte":
+      return "Cortesia";
+    default:
+      return "Passaporte";
+  }
+}
+
+function summarizePurchaseItems(vouchers: PainelPurchaseDetail["vouchers"]) {
+  const grouped = new Map<string, PurchaseItemSummary>();
+
+  for (const voucher of vouchers) {
+    const key = [
+      voucher.voucherTypeLabel,
+      voucher.voucherType,
+      voucher.visitDate ?? "",
+      voucher.schoolName ?? "",
+      voucher.className ?? "",
+      voucher.periodName ?? "",
+      voucher.unitValue,
+    ].join("|");
+    const current = grouped.get(key);
+
+    if (current) {
+      current.quantity += 1;
+      current.totalValue = formatMoneyLabel(
+        parseMoneyLabel(current.unitValue) * current.quantity,
+      );
+      continue;
+    }
+
+    grouped.set(key, {
+      key,
+      label: voucher.voucherTypeLabel,
+      categoryLabel: resolveVoucherCategoryLabel(voucher),
+      visitDate: voucher.visitDate,
+      schoolName: voucher.schoolName,
+      className: voucher.className,
+      periodName: voucher.periodName,
+      quantity: 1,
+      unitValue: voucher.unitValue,
+      totalValue: voucher.unitValue,
+    });
+  }
+
+  return Array.from(grouped.values());
+}
+
 export function PainelCompraDetailPage({
   detail,
   actorName,
   actorCpf,
   canManageHistory,
 }: PainelCompraDetailPageProps) {
+  const items = summarizePurchaseItems(detail.vouchers);
+
   return (
     <section className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_300px]">
       <div className="rounded-[6px] bg-white px-4 py-6 shadow-[0_10px_28px_rgba(26,61,94,0.08)] md:px-8">
@@ -34,7 +119,7 @@ export function PainelCompraDetailPage({
         </div>
 
         <h1 className="mt-6 text-[28px] font-semibold text-[#205a7f]">
-          Dados Compra / Reserva
+          Dados da Compra / Reserva
         </h1>
 
         <div className="mt-4 overflow-x-auto border border-[#cfcfcf]">
@@ -71,10 +156,10 @@ export function PainelCompraDetailPage({
                   <tr className="bg-[#5f84a3] text-left text-white">
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor</th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">
-                      Codigo Indicacao
+                      Código de Indicação
                     </th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">CPF</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Usuario</th>
+                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Usuário</th>
                   </tr>
                   <tr>
                     <td className="border border-[#d7d7d7] px-4 py-3">{detail.totalValue}</td>
@@ -90,7 +175,7 @@ export function PainelCompraDetailPage({
                       Valor
                     </th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">CPF</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Usuario</th>
+                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Usuário</th>
                   </tr>
                   <tr>
                     <td className="border border-[#d7d7d7] px-4 py-3" colSpan={2}>
@@ -104,6 +189,56 @@ export function PainelCompraDetailPage({
             </tbody>
           </table>
         </div>
+
+        <h2 className="mt-8 text-[28px] font-semibold text-[#205a7f]">Itens da compra</h2>
+        {items.length === 0 ? (
+          <p className="mt-4 text-[17px] text-[#5a5a5a]">Nenhum item encontrado.</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto border border-[#cfcfcf]">
+            <table className="min-w-full border-collapse text-[15px]">
+              <thead className="bg-[#5f84a3] text-left text-white">
+                <tr>
+                  <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Item</th>
+                  <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Categoria</th>
+                  <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Visita</th>
+                  <th className="border border-[#6f8ea8] px-4 py-3 font-normal text-center">
+                    Quantidade
+                  </th>
+                  <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor unit.</th>
+                  <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, index) => (
+                  <tr
+                    className={index % 2 === 1 ? "bg-[#fafafa]" : "bg-white"}
+                    key={item.key}
+                  >
+                    <td className="border border-[#d7d7d7] px-4 py-3">
+                      <div className="font-semibold text-[#17351f]">{item.label}</div>
+                      {item.schoolName ? (
+                        <div className="mt-1 text-sm text-[#5a5a5a]">
+                          {item.schoolName}
+                          {item.className ? ` | ${item.className}` : ""}
+                          {item.periodName ? ` | ${item.periodName}` : ""}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="border border-[#d7d7d7] px-4 py-3">{item.categoryLabel}</td>
+                    <td className="border border-[#d7d7d7] px-4 py-3">{item.visitDate ?? "-"}</td>
+                    <td className="border border-[#d7d7d7] px-4 py-3 text-center">
+                      {item.quantity}
+                    </td>
+                    <td className="border border-[#d7d7d7] px-4 py-3">{item.unitValue}</td>
+                    <td className="border border-[#d7d7d7] px-4 py-3 font-semibold text-[#17351f]">
+                      {item.totalValue}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {detail.gatewayPaymentId ? (
           <>
@@ -149,7 +284,7 @@ export function PainelCompraDetailPage({
                   <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Tipo</th>
                   <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Escola</th>
                   <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Turma</th>
-                  <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Periodo</th>
+                  <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Período</th>
                   <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor</th>
                   <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Usado?</th>
                   <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Data de uso</th>
@@ -195,19 +330,11 @@ export function PainelCompraDetailPage({
 
       <aside className="grid content-start gap-5">
         <div className="rounded-[6px] border border-[#d4dde5] bg-white p-5 shadow-[0_10px_28px_rgba(26,61,94,0.08)]">
-          <h2 className="text-lg font-semibold text-[#205a7f]">Acoes</h2>
+          <h2 className="text-lg font-semibold text-[#205a7f]">Ações</h2>
           <ul className="mt-4 grid gap-3 text-sm">
             <li>
               <Link className="text-[#1d68a2] underline" href="/painel/compras">
                 Lista de compras / reservas
-              </Link>
-            </li>
-            <li>
-              <Link
-                className="text-[#1d68a2] underline"
-                href={`/painel/compras/${detail.purchaseId}/consulta-pagamento`}
-              >
-                Consultar pagamento (Cielo)
               </Link>
             </li>
           </ul>

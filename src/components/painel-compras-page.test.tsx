@@ -62,6 +62,8 @@ describe("PainelComprasPage", () => {
     expect(html).toContain("Bilheteria");
     expect(html).toContain("DEV");
     expect(html).toContain("/ingresso/painel/usuario-site/detalhe/cpf/MTIzNDU2Nzg5MDE=");
+    expect(html).toContain("Ver detalhes");
+    expect(html).toContain("/painel/compras/551");
     expect(html).toContain("08/05/2026");
     expect(html).toContain("Atualizacao manual em fase futura");
     expect(html).toContain("Exportar");

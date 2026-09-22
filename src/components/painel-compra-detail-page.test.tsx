@@ -9,7 +9,7 @@ vi.mock("@/components/painel-compra-detail-actions", () => ({
 }));
 
 describe("PainelCompraDetailPage", () => {
-  it("renderiza os blocos legados de dados, pagamento e vouchers", () => {
+  it("renderiza os blocos legados de dados, itens, pagamento e vouchers", () => {
     const html = renderToStaticMarkup(
       React.createElement(PainelCompraDetailPage, {
         actorName: "WAGNER",
@@ -50,12 +50,31 @@ describe("PainelCompraDetailPage", () => {
               usedTime: null,
               schoolTripHref: "/painel/clientes/passeios/2306/alunos",
             },
+            {
+              voucherId: 9002,
+              voucherNumber: "ABC-124",
+              visitDate: "08/05/2026",
+              voucherType: "espec",
+              voucherTypeLabel: "Almoco Caipira Buffet",
+              schoolName: null,
+              className: null,
+              periodName: null,
+              unitValue: "40,00",
+              used: "n",
+              usedLabel: "Nao",
+              usedDate: null,
+              usedTime: null,
+              schoolTripHref: null,
+            },
           ],
         },
       }),
     );
 
     expect(html).toContain("Dados Compra / Reserva");
+    expect(html).toContain("Itens da compra");
+    expect(html).toContain("Almoco Caipira Buffet");
+    expect(html).toContain("Adicional");
     expect(html).toContain("Pagamento");
     expect(html).toContain("ID Pagamento");
     expect(html).toContain("Vouchers");

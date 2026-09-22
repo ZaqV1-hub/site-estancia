@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { getInfoPage } from "@/lib/site-content";
 
 const productionSiteUrl = "https://www.estancia.local";
-const brandName = "Estancia";
+export const brandName = "Estância - Parque Ecológico das Águas";
+export const defaultShareDescription =
+  "Viva momentos inesquecíveis em meio à natureza, com atrações para famílias, grupos e passeios no Estância - Parque Ecológico das Águas.";
+export const defaultShareImage = "/social/estancia-share.png";
 
 export function getSiteUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL ?? productionSiteUrl;

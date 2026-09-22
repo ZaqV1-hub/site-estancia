@@ -330,37 +330,37 @@ const purchaseTypeLabels: Record<string, string> = {
 
 const purchaseStatusLabels: Record<string, string> = {
   pend: "Em processamento",
-  conc: "Concluida",
+  conc: "Concluída",
   canc: "Cancelada",
 };
 
 const ticketPaymentMethodLabels: Record<string, string> = {
   dinhe: "Dinheiro",
-  debit: "Debito",
-  credi: "Credito",
+  debit: "Débito",
+  credi: "Crédito",
   chequ: "Cheque",
-  tranb: "Trans. Bancaria",
+  tranb: "Trans. Bancária",
   corte: "Cortesia",
   pix: "PIX",
   pgseg: "Pagamento online",
 };
 
 const gatewayPaymentMethodLabels: Record<string, string> = {
-  "1": "Cartao de credito",
+  "1": "Cartão de crédito",
   "2": "Boleto",
   "11": "Pix",
 };
 
 const gatewayStatusLabels: Record<string, string> = {
   "1": "Aguardando pagamento",
-  "2": "Em analise",
+  "2": "Em análise",
   "3": "Paga",
-  "4": "Disponivel",
+  "4": "Disponível",
   "5": "Em disputa",
   "6": "Devolvida",
   "7": "Cancelada",
   "8": "Chargeback debitado",
-  "9": "Em contestacao",
+  "9": "Em contestação",
 };
 
 const voucherTypeLabels: Record<string, string> = {
@@ -533,7 +533,7 @@ function formatVoucherTypeLabel(code: string | null | undefined) {
 }
 
 function formatVoucherUsedLabel(code: string | null | undefined) {
-  return String(code ?? "").trim().toLowerCase() === "s" ? "Sim" : "Nao";
+  return String(code ?? "").trim().toLowerCase() === "s" ? "Sim" : "Não";
 }
 
 function formatPurchaseLocationLabel(code: string | null | undefined) {
@@ -1220,7 +1220,7 @@ export function mapPainelPurchaseListExportRows(result: PainelPurchaseListResult
         "Hora de pagamento",
         "Valor",
         "CPF",
-        "Usuario",
+        "Usuário",
       ],
     ...result.items.map((item) => [
       String(item.purchaseId),

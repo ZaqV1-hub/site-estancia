@@ -3,7 +3,13 @@ import { Rubik, Salsa } from "next/font/google";
 import "./globals.css";
 import { SiteShell } from "@/components/site-shell";
 import { getAuthSession } from "@/lib/auth-session";
-import { getSiteUrl, robotsForEnvironment } from "@/lib/site-metadata";
+import {
+  brandName,
+  defaultShareDescription,
+  defaultShareImage,
+  getSiteUrl,
+  robotsForEnvironment,
+} from "@/lib/site-metadata";
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -19,24 +25,28 @@ const salsa = Salsa({
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: "Estancia em Sao Paulo",
-  description:
-    "Novo institucional do Estancia em Next.js, com paginas publicas, segmentos de atendimento e convivencia inicial com o dominio transacional `/ingresso`.",
+  title: brandName,
+  description: defaultShareDescription,
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "Estancia em Sao Paulo",
-    description:
-      "Conheca o novo institucional do Estancia, com estrutura, segmentos e canais de atendimento.",
-    siteName: "Estancia",
+    title: brandName,
+    description: defaultShareDescription,
+    siteName: brandName,
     type: "website",
     images: [
       {
-        url: "/photos/day-use.jpg",
-        alt: "Area verde do Estancia",
+        url: defaultShareImage,
+        alt: "Estância - Parque Ecológico das Águas",
       },
     ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: brandName,
+    description: defaultShareDescription,
+    images: [defaultShareImage],
   },
   robots: robotsForEnvironment(),
 };

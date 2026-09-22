@@ -183,6 +183,7 @@ Variaveis aceitas para conectar no Postgres do `/ingresso`:
 - `INGRESSO_DB_POOL_MAX`, padrao `4`
 - `INGRESSO_DB_SSL=true`, quando o banco exigir TLS
 - `INGRESSO_CIELO_MERCHANT_ID` e `INGRESSO_CIELO_MERCHANT_KEY`, obrigatorias para consulta direta Cielo no BFF
+- `INGRESSO_CIELO_NOTIFICATION_HEADER`, padrao `CieloWebhookSecret`, e `INGRESSO_CIELO_NOTIFICATION_SECRET`, que devem reproduzir o cabecalho personalizado configurado no webhook da Cielo
 - `INGRESSO_CIELO_API_ENDPOINT`, padrao `https://api.cieloecommerce.cielo.com.br/`
 - `INGRESSO_CIELO_QUERY_ENDPOINT`, padrao `https://apiquery.cieloecommerce.cielo.com.br/`
 - `INGRESSO_CIELO_TIMEOUT_MS`, padrao `30000`
@@ -191,7 +192,7 @@ Variaveis aceitas para conectar no Postgres do `/ingresso`:
 - `INGRESSO_CIELO_MAX_INSTALLMENTS`, padrao `12`
 - `INGRESSO_CIELO_MIN_INSTALLMENT_VALUE_CENTS`, padrao `100`
 - `INGRESSO_CIELO_3DS_CLIENT_ID`, `INGRESSO_CIELO_3DS_CLIENT_SECRET`, `INGRESSO_CIELO_3DS_ESTABLISHMENT_CODE`, `INGRESSO_CIELO_3DS_MERCHANT_NAME` e `INGRESSO_CIELO_3DS_MCC`, para emissao nativa do token 3DS no BFF
-- `INGRESSO_CIELO_3DS_TOKEN_ENDPOINT`, padrao `https://mpi.braspag.com.br/api/public/v1/access-token`
+- `INGRESSO_CIELO_3DS_TOKEN_ENDPOINT`, padrao atual `https://mpi.braspag.com.br/v2/auth/token`
 - `INGRESSO_CIELO_3DS_ENVIRONMENT`, padrao `PRD`
 - `INGRESSO_CIELO_3DS_DEBUG`, padrao `false`
 - `INGRESSO_CIELO_3DS_TIMEOUT_MS`, padrao `30000`
@@ -210,11 +211,20 @@ Endpoints de pagamento expostos pelo BFF:
 O checkout, status, token 3DS e webhook usam a stack nativa do BFF quando
 `INGRESSO_CIELO_*` e `INGRESSO_CIELO_3DS_*` estiverem configurados. O BFF cria
 venda, cancela Pix pendente antes de gerar outro, aplica conciliacao nativa em
-`pagpagseguro` e `compra`, responde o webhook localmente e usa o microservico
+`pagpagseguro` e `compra`, responde o webhook localmente somente depois de
+validar o cabecalho secreto e consultar o estado real da transacao na Cielo, e usa o microservico
 de tickets para emissao e envio quando `INGRESSO_TICKET_API_*` estiver
 configurado. Cashback e demais efeitos operacionais sincronizam
 `compra.vlcomiss` nativamente e usam o historico `codindica_cashback` quando
 essa tabela existir no ambiente.
+
+Para ativar a Cielo em producao, o `MerchantId` e o `MerchantKey` devem ser da
+API E-commerce Cielo 3.0 do ambiente de producao. Depois da troca, valide as
+credenciais com uma consulta somente leitura, confirme que o retorno deixou de
+ser `401` e execute uma compra controlada de baixo valor para cada meio (Pix,
+credito e debito). O segredo do webhook deve ser configurado tanto no portal
+Cielo quanto em `INGRESSO_CIELO_NOTIFICATION_SECRET`; nunca o envie no corpo da
+notificacao nem o versione no repositorio.
 
 O endpoint `POST /api/me/vouchers/[purchaseId]/whatsapp` usa o mesmo
 microservico de tickets para enviar vouchers selecionados ao numero informado na

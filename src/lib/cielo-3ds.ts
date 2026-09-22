@@ -1,5 +1,4 @@
-const defaultTokenEndpoint =
-  "https://mpi.braspag.com.br/api/public/v1/access-token";
+const defaultTokenEndpoint = "https://mpi.braspag.com.br/v2/auth/token";
 
 type Cielo3dsConfig = {
   clientId: string;

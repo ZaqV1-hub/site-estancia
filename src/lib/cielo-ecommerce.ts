@@ -263,15 +263,22 @@ function normalizeBrand(value: unknown) {
 }
 
 function normalizeExpirationDate(card: Record<string, unknown> | null) {
+  const normalizeYear = (value: string) => {
+    if (value.length === 2) {
+      return `20${value}`;
+    }
+
+    return value.length >= 4 ? value.slice(-4) : "";
+  };
   const expirationDate = digitsOnly(
     getString(card, ["expirationDate", "ExpirationDate"]),
   );
 
   if (expirationDate.length >= 4) {
     const month = expirationDate.slice(0, 2);
-    const year = expirationDate.slice(2);
+    const year = normalizeYear(expirationDate.slice(2));
 
-    return `${month}/${year.length === 2 ? year : year.slice(-2)}`;
+    return year ? `${month}/${year}` : "";
   }
 
   const month = digitsOnly(getString(card, ["expirationMonth", "ExpirationMonth"]));
@@ -281,7 +288,11 @@ function normalizeExpirationDate(card: Record<string, unknown> | null) {
     return "";
   }
 
-  return `${month.padStart(2, "0")}/${year.length === 2 ? year : year.slice(-2)}`;
+  const normalizedYear = normalizeYear(year);
+
+  return normalizedYear
+    ? `${month.padStart(2, "0")}/${normalizedYear}`
+    : "";
 }
 
 function normalizeSoftDescriptor(value: unknown) {

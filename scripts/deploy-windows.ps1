@@ -1,11 +1,22 @@
 param(
-  [int]$Port = 3001
+  [int]$Port = 3001,
+  [string]$NodeHome = "C:\Tools\node-v20.19.5-win-x64"
 )
 
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $projectRoot
+$nodeExecutable = Join-Path $NodeHome "node.exe"
+if (-not (Test-Path -LiteralPath $nodeExecutable)) {
+  throw "Node.js nao encontrado em $NodeHome."
+}
+$env:PATH = "$NodeHome;$env:PATH"
+$nodeVersion = [version]((& node --version).TrimStart("v"))
+if ($nodeVersion -lt [version]"20.9.0") {
+  throw "Node.js $nodeVersion e incompativel; o Next.js exige pelo menos 20.9.0."
+}
+
 $serviceName = "site-estancia-next"
 $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
 $restartService = $service -and $service.Status -eq "Running"
@@ -14,6 +25,7 @@ $failedBuild = Join-Path $projectRoot (".next-failed-" + (Get-Date -Format "yyyy
 
 Write-Host "Projeto:" $projectRoot
 Write-Host "Porta do app:" $Port
+Write-Host "Node.js:" $nodeVersion
 
 if ($restartService) {
   Write-Host "Parando o servico" $serviceName "antes de substituir o build..."

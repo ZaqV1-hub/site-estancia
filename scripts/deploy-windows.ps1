@@ -87,7 +87,7 @@ try {
     $healthy = $false
     for ($attempt = 0; $attempt -lt 20; $attempt++) {
       try {
-        $response = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/" -UseBasicParsing -TimeoutSec 5
+        $response = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/robots.txt" -Method Head -UseBasicParsing -TimeoutSec 5
         if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 400) {
           $healthy = $true
           break
@@ -103,7 +103,7 @@ try {
   }
 
   if (Test-Path $buildBackup) {
-    Remove-Item -LiteralPath $buildBackup -Recurse -Force
+    Write-Host "Build anterior preservado para rollback em" $buildBackup
   }
 
   Write-Host "Deploy concluido com sucesso."

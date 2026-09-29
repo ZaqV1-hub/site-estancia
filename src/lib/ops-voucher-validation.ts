@@ -874,6 +874,44 @@ export async function validateSelectedVouchers(
         continue;
       }
 
+      if (voucher.tpcompra === "ponli") {
+        if (voucher.stcompra !== "conc") {
+          throw new VoucherOperationError(
+            "voucher_payment_pending",
+            `Voucher ${voucher.numvoucher ?? ""} pendente de pagamento.`,
+            409,
+          );
+        }
+
+        if (!isOnlinePurchasePaid(voucher)) {
+          throw new VoucherOperationError(
+            "voucher_payment_status_invalid",
+            `A transacao do voucher ${voucher.numvoucher ?? ""} nao esta confirmada para validacao.`,
+            409,
+          );
+        }
+
+        const usage = evaluateAgendaUsage(voucher, false, date);
+
+        if (usage.status !== "ok") {
+          throw new VoucherOperationError(usage.code, usage.message, 409);
+        }
+      } else if (voucher.tpcompra === "reser") {
+        if (!isReservationPaid(voucher)) {
+          throw new VoucherOperationError(
+            "voucher_payment_required",
+            buildReservationPaymentMessage(voucher),
+            409,
+          );
+        }
+      } else {
+        throw new VoucherOperationError(
+          "voucher_invalid_purchase_type",
+          "Tipo de compra invalido para o voucher.",
+          409,
+        );
+      }
+
       await markVoucherUsed(client, voucher.idvoucher, date, time);
       affectedVoucherIds.push(voucher.idvoucher);
     }

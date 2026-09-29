@@ -273,6 +273,8 @@ export async function createPainelUsuario(values: PainelUsuarioFormValues) {
 
 export async function updatePainelUsuario(cpf: unknown, values: PainelUsuarioFormValues) {
   const normalizedCpf = sanitizeCpf(String(cpf ?? ""));
+  const senha = normalizeText(values.senha);
+  const csenha = normalizeText(values.csenha);
   const nmusuario = normalizeText(values.nmusuario);
   const email = normalizeText(values.email);
   const idpapel = Number(values.idpapel);
@@ -289,15 +291,25 @@ export async function updatePainelUsuario(cpf: unknown, values: PainelUsuarioFor
     throw new PainelUsuariosError("invalid_user_role", "Informe um papel valido.", 400);
   }
 
+  if (senha || csenha) {
+    validatePasswordPair(senha, csenha);
+  }
+
+  const updateValues: Record<string, unknown> = {
+    cpf: normalizedCpf,
+    name: nmusuario,
+    email,
+    roleId: idpapel,
+    status: normalizeStatus(values.stusuario) || "ati",
+  };
+
+  if (senha) {
+    updateValues.password = senha;
+  }
+
   return updateOpsAdminMasterData("internal-users", {
     id: normalizedCpf,
-    values: {
-      cpf: normalizedCpf,
-      name: nmusuario,
-      email,
-      roleId: idpapel,
-      status: normalizeStatus(values.stusuario) || "ati",
-    },
+    values: updateValues,
   });
 }
 

@@ -313,7 +313,7 @@ async function ticketRequest(
       });
 
       if (!response.ok || !allowedStatuses.includes(response.status)) {
-        throw new Error(`ticket_api_error_${response.status}`);
+        throw new Error(await describeTicketApiError(response));
       }
 
       return response.json().catch(() => ({}));
@@ -336,6 +336,28 @@ async function ticketRequest(
   throw lastError instanceof Error
     ? lastError
     : new Error("ticket_api_unreachable");
+}
+
+async function describeTicketApiError(response: Response) {
+  let detail = "";
+
+  try {
+    const payload = (await response.json()) as Record<string, unknown>;
+    const candidate = payload.code ?? payload.error ?? payload.message ?? payload.detail;
+
+    if (typeof candidate === "string") {
+      detail = candidate
+        .replace(/[\w.%+-]+@[\w.-]+\.[A-Za-z]{2,}/g, "[email ocultado]")
+        .replace(/(?:\+?\d[\d\s().-]{7,}\d)/g, "[telefone ocultado]")
+        .replace(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g, "[documento ocultado]")
+        .replace(/[\r\n\t]+/g, " ")
+        .slice(0, 240);
+    }
+  } catch {
+    // Keep the status-only error when the upstream body is not valid JSON.
+  }
+
+  return `ticket_api_error_${response.status}${detail ? `: ${detail}` : ""}`;
 }
 
 async function websiteTicketRequest(

@@ -215,6 +215,60 @@ describe("ticket-service", () => {
     );
   });
 
+  it("includes a redacted upstream reason when ticket delivery is rejected", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ token: "ticket-token" }))
+      .mockResolvedValueOnce(
+        Response.json(
+          { message: "Invalid contact cliente@example.com +55 (11) 96412-0664" },
+          { status: 400 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    dbQuery.mockImplementation(async (sql: string) => {
+      if (sql.includes("FROM compra")) {
+        return {
+          rows: [
+            {
+              idcompra: 456,
+              cpf: "52998224725",
+              tpcompra: "ponli",
+              dtcompra: "2026-04-23",
+              email: "cliente@example.com",
+              nmusuario: "Cliente Teste",
+              celular: "51999999999",
+            },
+          ],
+        };
+      }
+
+      if (sql.includes("FROM voucher")) {
+        return {
+          rows: [
+            {
+              idvoucher: 9001,
+              numvoucher: "123456",
+              tpvoucher: "norma",
+              vlunicompra: "129.90",
+              stusado: "n",
+              voucherenviado: "n",
+              identificacao: null,
+              idagenda: 10,
+              dtagenda: "2026-05-01",
+            },
+          ],
+        };
+      }
+
+      return { rows: [] };
+    });
+
+    await expect(processConfirmedPurchaseTickets(456)).rejects.toThrow(
+      "ticket_api_error_400: Invalid contact [email ocultado] [telefone ocultado]",
+    );
+  });
+
   it("prefers the voucher description as ticket title when sending online purchases", async () => {
     const fetchMock = vi
       .fn()

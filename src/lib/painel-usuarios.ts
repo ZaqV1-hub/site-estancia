@@ -13,9 +13,9 @@ type PainelUsuarioRawItem = {
   email: string | null;
   stusuario: string | null;
   idpapel: number | null;
-  dtcadastro?: string | null;
-  dtulogin?: string | null;
-  hrulogin?: string | null;
+  dtcadastro?: string | Date | null;
+  dtulogin?: string | Date | null;
+  hrulogin?: string | Date | null;
 };
 
 export type PainelUsuarioItem = {
@@ -107,12 +107,31 @@ function mapStatusLabel(status: string | null) {
   return status === "ina" ? "Inativo" : "Ativo";
 }
 
-function mapLastLoginLabel(item: PainelUsuarioRawItem) {
-  if (!item.dtulogin) {
+function formatUserDate(value: string | Date | null | undefined) {
+  if (!value) {
     return null;
   }
 
-  return item.hrulogin ? `${item.dtulogin} ${item.hrulogin}` : item.dtulogin;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime())
+      ? null
+      : value.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+  }
+
+  const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return dateOnly ? `${dateOnly[3]}/${dateOnly[2]}/${dateOnly[1]}` : value;
+}
+
+function mapLastLoginLabel(item: PainelUsuarioRawItem) {
+  const date = formatUserDate(item.dtulogin);
+  if (!date) {
+    return null;
+  }
+
+  const time = item.hrulogin instanceof Date
+    ? item.hrulogin.toLocaleTimeString("pt-BR", { timeZone: "UTC" })
+    : item.hrulogin;
+  return time ? `${date} ${time}` : date;
 }
 
 function mapUsuario(item: PainelUsuarioRawItem): PainelUsuarioItem {
@@ -127,7 +146,7 @@ function mapUsuario(item: PainelUsuarioRawItem): PainelUsuarioItem {
     roleLabel: mapRoleLabel(item.idpapel ?? null),
     status,
     statusLabel: mapStatusLabel(status),
-    createdAt: item.dtcadastro ?? null,
+    createdAt: formatUserDate(item.dtcadastro),
     lastLoginLabel: mapLastLoginLabel(item),
   };
 }

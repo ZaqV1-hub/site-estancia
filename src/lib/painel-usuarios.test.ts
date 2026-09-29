@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  getPainelUsuario,
   listPainelUsuarios,
   PainelUsuariosError,
   togglePainelUsuarioStatus,
@@ -53,6 +54,31 @@ describe("painel-usuarios", () => {
       cpf: "12345678901",
       status: "ati",
       statusLabel: "Ativo",
+    });
+  });
+
+  it("formata datas retornadas pelo banco como objetos Date", async () => {
+    vi.mocked(listOpsAdminMasterData).mockResolvedValue({
+      items: [
+        {
+          cpf: "12345678901",
+          nmusuario: "Usuario",
+          email: "usuario@example.com",
+          stusuario: "ati",
+          idpapel: 1,
+          dtcadastro: new Date("2026-09-20T00:00:00.000Z"),
+          dtulogin: new Date("2026-09-21T00:00:00.000Z"),
+          hrulogin: "10:30:00",
+        },
+      ],
+      label: "usuario interno",
+      primaryKey: "cpf",
+      resource: "internal-users",
+    });
+
+    await expect(getPainelUsuario("12345678901")).resolves.toMatchObject({
+      createdAt: "20/09/2026",
+      lastLoginLabel: "21/09/2026 10:30:00",
     });
   });
 

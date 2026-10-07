@@ -78,6 +78,8 @@ describe("PainelCompraDetailPage", () => {
     expect(html).toContain("Pagamento");
     expect(html).toContain("ID Pagamento");
     expect(html).toContain("Vouchers");
+    expect(html).toContain("Ações");
+    expect(html).not.toContain("Consultar pagamento (Cielo)");
     expect(html).toContain("PainelCompraDetailActions");
     expect(html).toContain("Colegio Estancia");
     expect(html).toContain("/painel/clientes/passeios/2306/alunos");

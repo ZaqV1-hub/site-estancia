@@ -70,6 +70,7 @@ export async function verifyRecaptchaToken(input: {
         },
         body,
         cache: "no-store",
+        signal: AbortSignal.timeout(5_000),
       },
     );
 

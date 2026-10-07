@@ -1,18 +1,10 @@
 import { EstanciaHomePage } from "@/components/estancia-home-page";
-import {
-  getActiveAttractions,
-  getActiveEvents,
-  getActiveHomeImages,
-} from "@/lib/estancia-content-store";
+import { getActiveHomePageContent } from "@/lib/estancia-content-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [heroImages, attractions, events] = await Promise.all([
-    getActiveHomeImages(),
-    getActiveAttractions(),
-    getActiveEvents(),
-  ]);
+  const { heroImages, attractions, events } = await getActiveHomePageContent();
 
   return (
     <EstanciaHomePage

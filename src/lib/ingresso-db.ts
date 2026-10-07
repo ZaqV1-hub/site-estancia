@@ -6,6 +6,11 @@ function getPoolConfig(): PoolConfig {
   if (connectionString) {
     return {
       connectionString,
+      connectionTimeoutMillis: 5_000,
+      idleTimeoutMillis: 30_000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10_000,
+      query_timeout: 15_000,
       ssl:
         process.env.INGRESSO_DB_SSL === "true"
           ? { rejectUnauthorized: true }
@@ -20,6 +25,11 @@ function getPoolConfig(): PoolConfig {
     user: process.env.INGRESSO_DB_USER ?? "postgres",
     password: process.env.INGRESSO_DB_PASSWORD ?? "postgres",
     max: Number(process.env.INGRESSO_DB_POOL_MAX ?? 4),
+    connectionTimeoutMillis: 5_000,
+    idleTimeoutMillis: 30_000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10_000,
+    query_timeout: 15_000,
     ssl:
       process.env.INGRESSO_DB_SSL === "true"
         ? { rejectUnauthorized: true }

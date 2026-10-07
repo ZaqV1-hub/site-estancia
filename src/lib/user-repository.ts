@@ -1,3 +1,4 @@
+import type { QueryConfig } from "pg";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 import { hashPasswordForLegacyUser } from "@/lib/password-hashing";
 import type { AuthUser } from "@/lib/auth-contracts";
@@ -190,16 +191,17 @@ function legacyPasswordHash(password: string) {
 
 export async function authenticatePublicUser(cpf: string, password: string) {
   const pool = getIngressoDbPool();
-  const result = await pool.query<UserRow>(
-    `
+  const result = await pool.query<UserRow>({
+    text: `
       SELECT cpf, nmusuario, email, stusuario
       FROM usuario
       WHERE cpf = $1
         AND senha = $2
       LIMIT 1
     `,
-    [sanitizeCpf(cpf), legacyPasswordHash(password)],
-  );
+    values: [sanitizeCpf(cpf), legacyPasswordHash(password)],
+    query_timeout: 5_000,
+  } as QueryConfig & { query_timeout: number });
   const row = result.rows[0];
 
   if (!row) {
@@ -227,16 +229,17 @@ export async function authenticatePublicUser(cpf: string, password: string) {
 
 export async function authenticatePanelUser(cpf: string, password: string) {
   const pool = getIngressoDbPool();
-  const result = await pool.query<UserRow>(
-    `
+  const result = await pool.query<UserRow>({
+    text: `
       SELECT cpf, nmusuario, email, stusuario, idpapel
       FROM usuario
       WHERE cpf = $1
         AND senha = $2
       LIMIT 1
     `,
-    [sanitizeCpf(cpf), legacyPasswordHash(password)],
-  );
+    values: [sanitizeCpf(cpf), legacyPasswordHash(password)],
+    query_timeout: 5_000,
+  } as QueryConfig & { query_timeout: number });
   const row = result.rows[0];
 
   if (!row) {

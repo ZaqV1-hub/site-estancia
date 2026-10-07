@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import type { QueryConfig } from "pg";
 import { dirname, extname, join, resolve } from "path";
 import {
   DEFAULT_B2C_PRODUCTS,
@@ -511,6 +512,53 @@ export async function writeEstanciaContent(data: EstanciaContentData) {
 export async function getActiveHomeImages() {
   const items = (await readEstanciaContent()).homeImages.filter((item) => item.active);
   return items.length > 0 ? items : defaultContent.homeImages.filter((item) => item.active);
+}
+
+export async function getActiveHomePageContent() {
+  let content: EstanciaContentData;
+
+  try {
+    const query: QueryConfig & { query_timeout: number } = {
+      text: `
+        SELECT content_json
+        FROM public.estancia_site_content
+        WHERE content_key = $1
+        LIMIT 1
+      `,
+      values: [siteContentKey],
+      query_timeout: 2_500,
+    };
+    const result = await getIngressoDbPool().query<{
+      content_json: Partial<EstanciaContentData>;
+    }>(query);
+
+    content = normalizeEstanciaContent(result.rows[0]?.content_json ?? null);
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String(error.code)
+        : "unknown";
+    console.error("home-content-database-fallback", { code });
+    content = readLegacyEstanciaContent();
+  }
+
+  const heroImages = content.homeImages.filter((item) => item.active);
+  const attractions = content.attractions.filter((item) => item.active);
+  const events = content.events
+    .filter((item) => item.active)
+    .map((item) => ({
+      ...item,
+      href: resolveManagedEventPublicHref(item),
+    }));
+
+  return {
+    heroImages:
+      heroImages.length > 0
+        ? heroImages
+        : defaultContent.homeImages.filter((item) => item.active),
+    attractions,
+    events,
+  };
 }
 
 export async function getActiveAttractions() {

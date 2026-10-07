@@ -216,6 +216,7 @@ describe("mapPainelPurchaseListExportRows", () => {
           purchaseDate: "06/05/2026",
           paymentDate: "07/05/2026",
           paymentTime: "14:32:11",
+          visitDate: null,
           type: "ponli",
           typeLabel: "Compra",
           status: "conc",
@@ -242,6 +243,8 @@ describe("mapPainelPurchaseListExportRows", () => {
         userName: null,
         dateFrom: null,
         dateTo: null,
+        visitDateFrom: null,
+        visitDateTo: null,
       },
     };
 
@@ -809,3 +812,4 @@ describe("listPainelPurchaseVouchers", () => {
     });
   });
 });
+

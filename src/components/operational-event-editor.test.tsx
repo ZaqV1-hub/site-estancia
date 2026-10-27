@@ -15,6 +15,16 @@ describe("event editor presentation", () => {
         expect(html).toContain("Resumo legado preservado");
     });
     it("calendar creation fixes internal mode and prefilled date with visible counters", () => { const html = renderToStaticMarkup(createElement(OperationalEventEditor, { products: [], initialDate: "2027-01-01", fromCalendar: true })); expect(html).toContain('value="2027-01-01"'); expect(html).toContain("readOnly"); expect(html).toContain("Título"); expect(html).toContain("Resumo"); expect(html).toContain("(0/52)"); expect(html).toContain("(0/220)"); expect(html).toContain("Data do evento</li>"); expect(html).not.toContain("Tipo do evento"); });
+    it("requires tomorrow or later when creating an internal event", () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2026-12-31T23:30:00-03:00"));
+        try {
+            const html = renderToStaticMarkup(createElement(OperationalEventEditor, { products: [] }));
+            expect(html).toMatch(/type="date"[^>]*min="2027-01-01"/);
+            const existing = renderToStaticMarkup(createElement(OperationalEventEditor, { products: [], event }));
+            expect(existing).not.toMatch(/type="date"[^>]*min=/);
+        } finally { vi.useRealTimers(); }
+    });
     it("does not reopen a sold-out event when its wizard is saved", () => {
         const html=renderToStaticMarkup(createElement(OperationalEventEditor,{products:[],event,rule:{agendaId:1,date:"2027-01-01",type:"event",status:"lot",validity:"day",passportIds:[],addonIds:[],eventId:"evento",eventTitle:"Evento"}}));
         expect(html).toContain("Esta data estava lotada");

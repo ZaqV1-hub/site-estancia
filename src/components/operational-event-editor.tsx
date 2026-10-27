@@ -6,7 +6,7 @@ import { CalendarProductFields } from "@/components/calendar-product-fields";
 import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
 import type { ManagedEvent } from "@/lib/estancia-content-store";
 import { calendarEventDate } from "@/lib/calendar-event-link";
-import { editableCalendarStatus, isEventOnlyProduct } from "@/lib/calendar-validity";
+import { editableCalendarStatus, getSaoPauloToday, isEventOnlyProduct } from "@/lib/calendar-validity";
 import { calendarValidityLabels, type CalendarRule, type CalendarValidity } from "@/lib/operational-calendar-contracts";
 type Props = {
     products: B2cProduct[];
@@ -62,7 +62,7 @@ export function OperationalEventEditor({ products, event = null, rule = null, in
         return () => controller.abort();
     }, [event, eventDate, presentation, rule]);
     const isModal = presentation === "modal";
-    const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+    const today = getSaoPauloToday();
     async function submit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setError(null);
@@ -79,9 +79,28 @@ export function OperationalEventEditor({ products, event = null, rule = null, in
             return;
         }
         if (!isModal && step === 1 && mode === "date") {
+            if (!event && date <= today) {
+                setError("A nova data precisa ser futura.");
+                return;
+            }
             if (!event && !image) {
                 setError("Envie uma imagem para o evento.");
                 return;
+            }
+            if (!event) {
+                setPending(true);
+                try {
+                    const response = await fetch("/api/painel/agenda/range-check", {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ startDate: date, endDate: date }),
+                    });
+                    const payload = await response.json();
+                    if (!response.ok || !payload.ok) throw new Error(payload.error?.message || "Não foi possível verificar a data.");
+                    if (payload.data.existingDates.length) throw new Error("Esta data já existe. Edite a data pelo calendário.");
+                } catch (error) {
+                    setError(error instanceof Error ? error.message : "Não foi possível verificar a data.");
+                    return;
+                } finally { setPending(false); }
             }
             setStep(2);
             return;
@@ -134,8 +153,8 @@ export function OperationalEventEditor({ products, event = null, rule = null, in
                         <h3>Tipo do evento</h3>
                         <p className="calendar-muted">Escolha se o botão vai abrir uma data do site ou um link externo.</p>
                         <div className="calendar-segmented" role="group" aria-label="Tipo do evento">
-                            <button type="button" aria-pressed={mode === "date"} onClick={() => setMode("date")}>Data do site</button>
-                            <button type="button" aria-pressed={mode === "link"} onClick={() => setMode("link")}>Link externo</button>
+                            <button type="button" disabled={pending} aria-pressed={mode === "date"} onClick={() => setMode("date")}>Data do site</button>
+                            <button type="button" disabled={pending} aria-pressed={mode === "link"} onClick={() => setMode("link")}>Link externo</button>
                         </div>
                     </section>}
                     {fromCalendar && <p className="calendar-event-notice">Criado pelo calendário: o evento já abre como data do site, na data escolhida.</p>}
@@ -149,7 +168,7 @@ export function OperationalEventEditor({ products, event = null, rule = null, in
                     </Field>
                     {(event?.description.length ?? 0) > 220 && <p className="calendar-catalog-note">Resumo legado preservado. Ao editar este texto, ajuste-o para até 220 caracteres antes de salvar.</p>}
                     {!isModal && <p className="calendar-muted">Máximo de 220 caracteres para manter o resumo equilibrado na listagem.</p>}
-                    {mode === "date" && !isModal && <Field label="Data do evento"><input className="calendar-input" type="date" required value={date} min={event ? undefined : today} readOnly={Boolean(event) || fromCalendar} onChange={e => setDate(e.target.value)} /></Field>}
+                    {mode === "date" && !isModal && <Field label="Data do evento"><input className="calendar-input" type="date" required disabled={pending} value={date} min={event ? undefined : new Date(new Date(`${today}T12:00:00Z`).getTime() + 86_400_000).toISOString().slice(0, 10)} readOnly={Boolean(event) || fromCalendar} onChange={e => setDate(e.target.value)} /></Field>}
                     {mode === "link" && <Field label="Link externo"><input className="calendar-input" type="url" required value={href} placeholder="https://" onChange={e => setHref(e.target.value)} /></Field>}
                     {mode === "date" && <section className={isModal ? "calendar-event-form" : "calendar-event-section"}>
                         {isModal ? <Field label="Página do evento"><select className="calendar-input" value={String(pageEnabled)} onChange={e => setPageEnabled(e.target.value === "true")}><option value="false">Sem página</option><option value="true">Com página</option></select></Field> : <>

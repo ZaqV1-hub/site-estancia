@@ -38,9 +38,9 @@ Arquivos: `src/components/operational-calendar.tsx`, `operational-day-report.tsx
 ## T5 — Prova e publicação
 - [x] Build/types/lint e suíte completa; integrações reais no Postgres local incluindo regressões de legado e filtro; sem SMTP/pagamentos reais.
 - [x] Navegador local em1440×1000 e390×844, temas claro/escuro; comparar todas as telas principais com HTML, conferir contraste e largura das tabelas.
-- [ ] Backup atual de banco/build da VM, branch limpa, release base conferida. Push `codex/develop`, conferir SHA; promoção `main` sem force; deploy com rollback.
-- [ ] Navegador no domínio real: evento01/11 laranja e relatório, lista por data efetivamente filtrada, detalhe escuro legível, modal de validade, calendário e compra fiéis ao protótipo, console/HTTP sem falhas. Encerrar sessão temporária.
-- [ ] Registrar evidências e limites reais; não alegar validação mutável em produção se ela só ocorreu localmente.
+- [x] Backup atual de banco/build da VM, branch limpa, release base conferida. Push `codex/develop`, conferir SHA; promoção `main` sem force; deploy com rollback.
+- [x] Navegador no domínio real: evento01/11 laranja e relatório, lista por data efetivamente filtrada, detalhe escuro legível, modal de validade, calendário e compra fiéis ao protótipo, console/HTTP sem falhas. Encerrar sessão temporária.
+- [x] Registrar evidências e limites reais; não alegar validação mutável em produção se ela só ocorreu localmente.
 
 ## Estado / handoff
 Implementação integrada; revisões independentes concluídas, incluindo filtros, eventos e revisão final. Achados resolvidos: filtros/valor por data, propriedade do vínculo interno, abertura mobile e classificação única de catálogo no detalhe. Sem pendências materiais de revisão.
@@ -51,7 +51,7 @@ Navegador local: criação de day use 01/12 e evento 02/12 em duas etapas; ediç
 
 VM reconferida: main b093b9b, serviço Running, build GbzAvwneHQMS7jjyGFu7R, oferta estável preservada. Sem HML Next; HML PHP pertence ao legado. Backup novo de banco completo207093bytes/467entradas, pg_restore --list validado, cópia privada local e C:\Users\Administrator\site-estancia-backups\20261027-corrections\database.dump. Nenhuma migração nova nesta correção. Checkout da VM sem alterações rastreadas; backups antigos não rastreados preservados.
 
-Próxima ação: concluir reconferência CSS compilado, commit/push codex/develop → main, deploy Windows com backup/rollback e auditoria no domínio real. Nenhuma mudança publicada ainda.
+Execução concluída. Código final c5b8586 publicado passando por codex/develop e main; checkout local voltou para develop. Registro final abaixo.
 
 
 ## Publicação e conferência no domínio
@@ -60,3 +60,13 @@ Próxima ação: concluir reconferência CSS compilado, commit/push codex/develo
 - Navegador HTTPS: calendário/evento/report/lista/detalhe/Site, desktop1440 e mobile390, claro/escuro, sem erros de console; detalhe com5colunas B2C e tabelas legíveis. Modal preserva resumo legado e oferece validade editável, sem enviar POST real.
 - Ajuste final identificado na barra de origem100%: style SSR comprimido sem espaço não correspondia ao seletor de padding0; incluir ambas as serializações e verificar largura0 no build local antes de republicar. Nenhuma regra de negócio alterada.
 - Pendência externa ao escopo visual/fluxos: npm audit --omit=dev apontou9alertas (1crítico,5altos,3moderados) nas versões preexistentes, incluindo Next16.2.4 em Windows. Aviso confirmado: https://github.com/advisories/GHSA-p293-qw3h-jr36. Atualização de dependências exige ciclo separado; não foi executada nem alegada nesta entrega.
+
+
+## Encerramento verificado
+- Código final: c5b8586e716c1e38591a3556039a77ee802dbf0f. Build produção Lv1d_BPqlHjUP8435-xQF, serviço Running e health200. Rollback imediato de build em C:\Sites\AzureIIS\site-estancia\.next-deploy-backup-20261027162146 (versão9ef8966); backup anterior à correção em .next-deploy-backup-20261027161344. Banco e oferta privados preservados.
+- Ajuste0% comprovado no CSS compilado: largura0px para segmento sem vendas, inclusive estilo SSR width:0%. Em produção01/11: segmentos1062/0px desktop e324/0px mobile; documento1440/390px corresponde ao viewport, sem rolagem horizontal da página.
+- Após build final: domínio real com evento/report/lista/detalhe legível; console sem erros/avisos na amostra. Sessão temporária do navegador encerrada e API protegida401 conferida. Autenticação de produção via sessão assinada curta de gestor ativo, sem reset de senha; login por CPF/senha não retestado. Login local por credenciais testado.
+- Não houve mutação de compras/vouchers/eventos reais, nem pagamentos/SMTP externos. Gravações e fluxo completo foram validados exclusivamente na base local. Não há HML Next utilizável. Preços/faixas reais foram mantidos.
+- Evidências privadas: corrections-final-production-deploy.log, corrections-final-production-smoke.json, corrections-local-evidence.json e relatórios de revisão em .local/calendar-validation. Local continua em http://localhost:3002/painel com runtime standalone (PID63202 na conclusão).
+- Ocorrência local durante gravação do relatório: ENOSPC. Removido somente .next/dev667MB gerado nesta tarefa, com servidor de desenvolvimento parado; runtime standalone, fontes, dados e backups preservados. Espaço livre recuperado925MiB. Não foi realizada limpeza geral do Mac.
+- Pendência residual real: dependências anteriores com alertas de segurança, principalmente Next16.2.4 no Windows (CVE-2026-75604); permanece fora desta alteração de layout e fluxos, sem alegar remediação.

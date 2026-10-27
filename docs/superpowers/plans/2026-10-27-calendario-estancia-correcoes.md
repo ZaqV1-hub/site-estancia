@@ -52,3 +52,11 @@ Navegador local: criação de day use 01/12 e evento 02/12 em duas etapas; ediç
 VM reconferida: main b093b9b, serviço Running, build GbzAvwneHQMS7jjyGFu7R, oferta estável preservada. Sem HML Next; HML PHP pertence ao legado. Backup novo de banco completo207093bytes/467entradas, pg_restore --list validado, cópia privada local e C:\Users\Administrator\site-estancia-backups\20261027-corrections\database.dump. Nenhuma migração nova nesta correção. Checkout da VM sem alterações rastreadas; backups antigos não rastreados preservados.
 
 Próxima ação: concluir reconferência CSS compilado, commit/push codex/develop → main, deploy Windows com backup/rollback e auditoria no domínio real. Nenhuma mudança publicada ainda.
+
+
+## Publicação e conferência no domínio
+- Release funcional9ef8966 passou por codex/develop e main, ambas conferidas no remoto; VM atualizada sem force. Build Windows5YZOlXX9zE5WpZPK1KdD7, serviço Running, health200, oferta estável preservada. Build anterior preservado em .next-deploy-backup-20261027161344.
+- Smoke real:14 respostas verificadas, APIs protegidas401 sem sessão; calendário e relatório de01/11 reconhecem evento/título e6meses legados. Lista por visita retorna3compras/13pessoas/R$779,00, batendo com o relatório; PDF autenticado válido.
+- Navegador HTTPS: calendário/evento/report/lista/detalhe/Site, desktop1440 e mobile390, claro/escuro, sem erros de console; detalhe com5colunas B2C e tabelas legíveis. Modal preserva resumo legado e oferece validade editável, sem enviar POST real.
+- Ajuste final identificado na barra de origem100%: style SSR comprimido sem espaço não correspondia ao seletor de padding0; incluir ambas as serializações e verificar largura0 no build local antes de republicar. Nenhuma regra de negócio alterada.
+- Pendência externa ao escopo visual/fluxos: npm audit --omit=dev apontou9alertas (1crítico,5altos,3moderados) nas versões preexistentes, incluindo Next16.2.4 em Windows. Aviso confirmado: https://github.com/advisories/GHSA-p293-qw3h-jr36. Atualização de dependências exige ciclo separado; não foi executada nem alegada nesta entrega.

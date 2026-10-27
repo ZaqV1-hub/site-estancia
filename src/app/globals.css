@@ -1210,7 +1210,7 @@
   .calendar-source-bar > span { display: flex; align-items: center; padding: 0 12px; white-space: nowrap; overflow: hidden; }
   .calendar-source-bar > span:first-child { background: var(--panel-chart1); }
   .calendar-source-bar > span:last-child { background: var(--panel-chart4); color: var(--panel-on-gold); }
-  .calendar-source-bar > span[style*="width: 0%"] { padding: 0; }
+  .calendar-source-bar > span[style*="width: 0%"], .calendar-source-bar > span[style*="width:0%"] { padding: 0; }
   .calendar-source-labels { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--panel-muted); margin-top: 6px; }
   .calendar-report-columns, .calendar-purchase-columns { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 20px; }
   .calendar-chart-card h2 { font-size: 16px; }

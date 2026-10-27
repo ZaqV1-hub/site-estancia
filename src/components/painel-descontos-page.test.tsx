@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("PainelDescontosPage", () => {
-  it("renderiza tabela e sidebar legadas", () => {
+  it("renderiza descontos e links de cadastro e categorias", () => {
     const html = renderToStaticMarkup(
       React.createElement(PainelDescontosPage, {
         data: {
@@ -38,8 +38,10 @@ describe("PainelDescontosPage", () => {
     );
 
     expect(html).toContain("Descontos");
-    expect(html).toContain("Adicionar Desconto");
-    expect(html).toContain("Lista de Categorias");
+    expect(html).toContain("Novo desconto");
+    expect(html).toContain("Categorias");
+    expect(html).toContain('href="/painel/categorias"');
+    expect(html).toContain('href="/painel/descontos/novo"');
     expect(html).toContain("Desconto X");
   });
 });

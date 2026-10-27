@@ -56,6 +56,9 @@ export type PainelPurchaseDetailVoucher = {
   voucherId: number;
   voucherNumber: string | null;
   visitDate: string | null;
+  validUntil?: string | null;
+  originalDate?: string | null;
+  rescheduleReason?: string | null;
   voucherType: string;
   voucherTypeLabel: string;
   schoolName: string | null;
@@ -129,6 +132,8 @@ export type PainelPurchaseVoucherListItem = {
   voucherNumber: string | null;
   purchaseDate: string | null;
   visitDate: string | null;
+  validUntil?: string | null;
+  originalDate?: string | null;
   ticketTypeLabel: string;
   name: string | null;
   location: string;
@@ -268,6 +273,9 @@ type PainelPurchaseDetailVoucherRow = {
   tpvoucher: string | null;
   descricao: string | null;
   dtagenda: string | null;
+  dtvalidade?: string | null;
+  original_date?: string | null;
+  reschedule_reason?: string | null;
   idagenda: number | null;
   idescola: number | null;
   nmescola: string | null;
@@ -290,6 +298,8 @@ type PainelPurchaseVoucherListRow = {
   numvoucher: string | null;
   dtcompra: string | null;
   dtagenda: string | null;
+  dtvalidade?: string | null;
+  original_date?: string | null;
   tpvoucher: string | null;
   descricao: string | null;
   identificacao: string | null;
@@ -1099,6 +1109,8 @@ function mapPainelPurchaseVoucherListItem(
     voucherNumber: row.numvoucher,
     purchaseDate: formatDateLabel(row.dtcompra),
     visitDate: formatDateLabel(row.dtagenda),
+    ...(row.dtvalidade ? { validUntil: formatDateLabel(row.dtvalidade) } : {}),
+    ...(row.original_date ? { originalDate: formatDateLabel(row.original_date) } : {}),
     ticketTypeLabel,
     name: row.identificacao,
     location: String(row.tpcompra ?? "").trim(),
@@ -1139,6 +1151,8 @@ export async function listPainelPurchaseVouchers(input: {
           voucher.numvoucher,
           c.dtcompra::text AS dtcompra,
           a.dtagenda::text AS dtagenda,
+          voucher.dtvalidade::text AS dtvalidade,
+          reschedule.original_date::text AS original_date,
           voucher.tpvoucher,
           voucher.descricao,
           voucher.identificacao,
@@ -1150,6 +1164,7 @@ export async function listPainelPurchaseVouchers(input: {
           voucher.hruso::text AS hruso
         FROM voucher
         JOIN compra c ON c.idcompra = voucher.idcompra
+        LEFT JOIN estancia_voucher_reschedules reschedule ON reschedule.voucher_id = voucher.idvoucher
         JOIN agenda a ON a.idagenda = voucher.idagenda
         ${whereClause}
         ORDER BY c.dtcompra DESC, voucher.idvoucher DESC
@@ -1330,6 +1345,9 @@ export async function getPainelPurchaseDetail(
         voucher.descricao,
         voucher.idagenda,
         agenda.dtagenda::text AS dtagenda,
+        voucher.dtvalidade::text AS dtvalidade,
+        reschedule.original_date::text AS original_date,
+        reschedule.reason AS reschedule_reason,
         voucher.idescola,
         clientes.nome AS nmescola,
         voucher.turma,
@@ -1339,6 +1357,7 @@ export async function getPainelPurchaseDetail(
         voucher.dtuso::text AS dtuso,
         voucher.hruso::text AS hruso
       FROM voucher
+      LEFT JOIN estancia_voucher_reschedules reschedule ON reschedule.voucher_id = voucher.idvoucher
       LEFT JOIN agenda ON agenda.idagenda = voucher.idagenda
       LEFT JOIN clientes ON clientes.idcliente = voucher.idescola
       WHERE voucher.idcompra = $1
@@ -1375,6 +1394,9 @@ export async function getPainelPurchaseDetail(
       voucherId: voucher.idvoucher,
       voucherNumber: voucher.numvoucher,
       visitDate: formatDateLabel(voucher.dtagenda),
+      validUntil: formatDateLabel(voucher.dtvalidade ?? null),
+      originalDate: formatDateLabel(voucher.original_date ?? null),
+      rescheduleReason: voucher.reschedule_reason ?? null,
       voucherType: String(voucher.tpvoucher ?? "").trim(),
       voucherTypeLabel:
         String(voucher.descricao ?? "").trim() || formatVoucherTypeLabel(voucher.tpvoucher),

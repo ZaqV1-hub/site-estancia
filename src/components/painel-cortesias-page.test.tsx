@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("PainelCortesiasPage", () => {
-  it("renderiza tabela e sidebar legadas", () => {
+  it("renderiza autorizadores e ação de cadastro", () => {
     const html = renderToStaticMarkup(
       React.createElement(PainelCortesiasPage, {
         data: {
@@ -25,8 +25,10 @@ describe("PainelCortesiasPage", () => {
       }),
     );
 
-    expect(html).toContain("Cortesias | Autorizadores");
-    expect(html).toContain("Lista de autorizadores");
+    expect(html).toContain("Cortesias");
+    expect(html).toContain("Autorizadores");
+    expect(html).toContain('href="/painel/cortesias/novo"');
+    expect(html).toContain('href="/painel/cortesias/1/editar"');
     expect(html).toContain("Novo autorizador");
     expect(html).toContain("Diretoria");
   });

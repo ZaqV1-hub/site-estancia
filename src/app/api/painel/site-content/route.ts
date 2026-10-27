@@ -2,26 +2,20 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { authorizePainelApiAccess } from "@/lib/painel-api-auth";
 import {
-  deletePainelAgenda,
-  getPainelAgendaDay,
-  listPainelAgendaInformationOptions,
-  listPainelAgendaPriceTables,
-  upsertPainelAgendaRange,
-} from "@/lib/painel-agenda";
-import {
   moveOrderedItem,
   removeOrderedItem,
   upsertOrderedItem,
 } from "@/lib/managed-content-order";
 import { authenticateOperationsRequest } from "@/lib/ops-auth";
 import {
-  type EstanciaContentData,
   makeContentId,
   readEstanciaContent,
   saveUploadedSiteImage,
   writeEstanciaContent,
 } from "@/lib/estancia-content-store";
-import { buildManagedEventPageSlug } from "@/lib/estancia-event-pages";
+import { CalendarEventError, deleteCalendarEvent } from "@/lib/calendar-events";
+import { POST as saveEventRequest } from "@/app/api/painel/calendar-events/route";
+import { requirePainelApiAccess } from "@/lib/painel-api-auth";
 
 export const runtime = "nodejs";
 
@@ -59,60 +53,6 @@ function revalidateSite() {
   revalidatePath("/painel/site");
   revalidatePath("/painel/eventos");
   revalidatePath("/painel/agenda");
-}
-
-function resolveEventDateFromHref(href: string | undefined) {
-  const normalized = String(href ?? "").trim();
-  const match = normalized.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/);
-
-  return match?.[1] ?? null;
-}
-
-async function cleanupPromotionalAgendaByDate(date: string | null, reason: string) {
-  if (!date) {
-    return;
-  }
-
-  const agendaDay = await getPainelAgendaDay(date);
-
-  if (agendaDay.agenda?.type !== "promo") {
-    return;
-  }
-
-  try {
-    await deletePainelAgenda(agendaDay.agenda.id, { reason });
-  } catch {
-    const [priceTables, informationOptions] = await Promise.all([
-      listPainelAgendaPriceTables(),
-      listPainelAgendaInformationOptions(),
-    ]);
-
-    await upsertPainelAgendaRange({
-      agendaId: agendaDay.agenda.id,
-      startDate: date,
-      endDate: date,
-      priceTableId: agendaDay.agenda.priceTableId ?? priceTables[0]?.id ?? 0,
-      informationId:
-        agendaDay.agenda.informationId ?? informationOptions[0]?.id ?? 0,
-      type: "padra",
-      status: agendaDay.agenda.status,
-      promotionName: null,
-      promotionDescription: null,
-      passportIds: agendaDay.selectedPassportIds,
-      addonIds: agendaDay.selectedAddonIds,
-      confirmOverwrite: true,
-      reason,
-    });
-  }
-}
-
-function collectManagedImageSources(data: EstanciaContentData) {
-  return [
-    ...data.homeImages.flatMap((item) => [item.desktopSrc, item.mobileSrc]),
-    ...data.attractions.map((item) => item.imageSrc),
-    ...data.events.map((item) => item.imageSrc),
-    ...data.products.map((item) => item.imageSrc),
-  ].filter(Boolean);
 }
 
 export async function POST(request: Request) {
@@ -192,133 +132,9 @@ export async function POST(request: Request) {
   }
 
   if (section === "event") {
-    const title = asText(formData.get("title"));
-    const id = asText(formData.get("id")) || makeContentId(title);
-    const current = data.events.find((item) => item.id === id);
-    const imageUpload = await saveUploadedSiteImage(formData.get("image"));
-    const hasDate = asText(formData.get("eventMode")) === "date";
-    const hasPage = hasDate && asText(formData.get("eventPageMode")) === "with-page";
-    const eventDate = asText(formData.get("eventDate"));
-    const pageTitle = asText(formData.get("pageTitle"));
-    const pageContent = asText(formData.get("pageContent"));
-    const passportIds = formData
-      .getAll("passportIds")
-      .map((item) => String(item).trim())
-      .filter(Boolean);
-    const addonIds = formData
-      .getAll("addonIds")
-      .map((item) => String(item).trim())
-      .filter(Boolean);
-    const [priceTables, informationOptions] = await Promise.all([
-      listPainelAgendaPriceTables(),
-      listPainelAgendaInformationOptions(),
-    ]);
-    const currentEventDate = resolveEventDateFromHref(current?.href);
-    const currentAgendaDay = currentEventDate
-      ? await getPainelAgendaDay(currentEventDate)
-      : null;
-    const targetAgendaDay = hasDate && eventDate ? await getPainelAgendaDay(eventDate) : null;
-    const priceTableId =
-      Number(formData.get("priceTableId")) ||
-      targetAgendaDay?.agenda?.priceTableId ||
-      currentAgendaDay?.agenda?.priceTableId ||
-      priceTables[0]?.id ||
-      0;
-    const informationId =
-      Number(formData.get("informationId")) ||
-      targetAgendaDay?.agenda?.informationId ||
-      currentAgendaDay?.agenda?.informationId ||
-      informationOptions[0]?.id ||
-      0;
-
-    if (hasDate && !eventDate) {
-      return errorResponse("Informe a data promocional do evento.");
-    }
-
-    if (hasPage && !pageTitle) {
-      return errorResponse("Informe o titulo da pagina do evento.");
-    }
-
-    if (hasPage && !pageContent) {
-      return errorResponse("Informe a descricao completa da pagina do evento.");
-    }
-
-    if (!hasDate && !asText(formData.get("href")) && !current?.href) {
-      return errorResponse("Informe o link manual do botao.");
-    }
-
-    if (!imageUpload && !current?.imageSrc) {
-      return errorResponse("Envie uma imagem para o evento.");
-    }
-
-    const derivedHref =
-      hasDate && eventDate
-        ? `/agenda?mes=${Number(eventDate.slice(5, 7))}&ano=${eventDate.slice(0, 4)}&date=${eventDate}`
-        : "";
-
-    if (hasDate) {
-      if (currentEventDate && currentEventDate !== eventDate) {
-        await cleanupPromotionalAgendaByDate(
-          currentEventDate,
-          "Evento do site movido para outra data promocional.",
-        );
-      }
-
-      await upsertPainelAgendaRange({
-        agendaId: targetAgendaDay?.agenda?.id ?? null,
-        startDate: eventDate,
-        endDate: eventDate,
-        priceTableId,
-        informationId,
-        type: "promo",
-        status: targetAgendaDay?.agenda?.status ?? "abe",
-        promotionName: title || current?.title || "Novo evento",
-        promotionDescription:
-          asText(formData.get("description")) || current?.description || "",
-        passportIds,
-        addonIds,
-        confirmOverwrite: true,
-        reason: "Evento do site atualizado pelo painel",
-      });
-    } else if (currentEventDate) {
-      await cleanupPromotionalAgendaByDate(
-        currentEventDate,
-        "Evento do site alterado para link externo.",
-      );
-    }
-
-    await writeEstanciaContent({
-      ...data,
-      events: upsertOrderedItem(data.events, {
-        id,
-        title: title || current?.title || "Novo evento",
-        description:
-          asText(formData.get("description")) || current?.description || "",
-        pageTitle:
-          pageTitle || current?.pageTitle || title || current?.title || "Novo evento",
-        pageContent: pageContent || current?.pageContent || "",
-        pageEnabled: hasPage,
-        pageSlug: hasPage
-          ? buildManagedEventPageSlug({
-              id,
-              title: title || current?.title || "Novo evento",
-              pageTitle:
-                pageTitle || current?.pageTitle || title || current?.title || "Novo evento",
-              pageSlug: current?.pageSlug || "",
-            })
-          : current?.pageSlug || "",
-        imageSrc: imageUpload ?? current?.imageSrc ?? "",
-        href: derivedHref || asText(formData.get("href")) || current?.href || "/agenda",
-        buttonLabel:
-          asText(formData.get("buttonLabel")) ||
-          current?.buttonLabel ||
-          "Compre seu ingresso!",
-        active: asBool(formData.get("active")),
-        sortOrder: current?.sortOrder ?? data.events.length + 1,
-      }),
-    });
-    revalidateSite();
-    return NextResponse.json({ ok: true });
+    const headers = new Headers(request.headers);
+    headers.delete("content-type");
+    return saveEventRequest(new Request(request.url, { method: "POST", headers, body: formData }));
   }
 
   return errorResponse("Tipo de conteúdo inválido.");
@@ -352,17 +168,17 @@ export async function DELETE(request: Request) {
       attractions: removeOrderedItem(data.attractions, payload.id),
     });
   } else if (payload.section === "event") {
-    const current = data.events.find((item) => item.id === payload.id);
-
-    await cleanupPromotionalAgendaByDate(
-      resolveEventDateFromHref(current?.href),
-      "Evento do site removido pelo painel.",
-    );
-
-    await writeEstanciaContent({
-      ...data,
-      events: removeOrderedItem(data.events, payload.id),
-    });
+    const auth = authenticateOperationsRequest(request, { requiredPermission: "ops.purchases" });
+    if (!auth.ok) return auth.response;
+    const access = await requirePainelApiAccess(request, "vis_agenda");
+    if (!access.ok) return access.response;
+    try {
+      await deleteCalendarEvent(payload.id, { name: access.session.actorName, cpf: access.session.actorCpf });
+    } catch (error) {
+      if (error instanceof CalendarEventError) return errorResponse(error.message);
+      console.error("site-event-delete-failed", error);
+      return errorResponse("Não foi possível remover o evento.", 500);
+    }
   } else {
     return errorResponse("Tipo de conteúdo inválido.");
   }

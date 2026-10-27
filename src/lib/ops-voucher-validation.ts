@@ -16,6 +16,7 @@ type VoucherValidationRow = {
   formapag: string | null;
   payment_status: number | null;
   dtagenda: string | null;
+  dtvalidade: string | null;
   tpagenda: string | null;
 };
 
@@ -322,6 +323,13 @@ function evaluateAgendaUsage(
   todayDate: string,
 ) {
   const visitDate = String(row.dtagenda ?? "").slice(0, 10);
+  const validUntil = String(row.dtvalidade ?? "").slice(0, 10);
+  if (validUntil) {
+    if (todayDate > validUntil) return { status: "invalid" as const, code: "voucher_expired", message: `Voucher vencido em ${formatDateBr(validUntil)}.` };
+    if (visitDate && todayDate < visitDate) return { status: "invalid" as const, code: "voucher_before_visit_date", message: `Voucher válido a partir de ${formatDateBr(visitDate)}.` };
+    return { status: "ok" as const };
+  }
+
 
   if (!visitDate) {
     return {
@@ -372,6 +380,7 @@ async function getVoucherByNumber(client: PoolClient, voucherNumber: string) {
         compra.formapag,
         pagpagseguro.status AS payment_status,
         agenda.dtagenda::text AS dtagenda,
+        voucher.dtvalidade::text AS dtvalidade,
         agenda.tpagenda
       FROM voucher
       JOIN compra ON compra.idcompra = voucher.idcompra
@@ -403,6 +412,7 @@ async function getVouchersByPurchaseId(client: PoolClient, purchaseId: number) {
         compra.formapag,
         pagpagseguro.status AS payment_status,
         agenda.dtagenda::text AS dtagenda,
+        voucher.dtvalidade::text AS dtvalidade,
         agenda.tpagenda
       FROM voucher
       JOIN compra ON compra.idcompra = voucher.idcompra
@@ -434,6 +444,7 @@ async function getVouchersByIds(client: PoolClient, voucherIds: number[]) {
         compra.formapag,
         pagpagseguro.status AS payment_status,
         agenda.dtagenda::text AS dtagenda,
+        voucher.dtvalidade::text AS dtvalidade,
         agenda.tpagenda
       FROM voucher
       JOIN compra ON compra.idcompra = voucher.idcompra
@@ -539,6 +550,7 @@ async function getSchoolTripVouchers(
         compra.formapag,
         pagpagseguro.status AS payment_status,
         agenda.dtagenda::text AS dtagenda,
+        voucher.dtvalidade::text AS dtvalidade,
         agenda.tpagenda,
         voucher.idescola,
         voucher.idagenda
@@ -627,7 +639,11 @@ export async function validateVoucherByNumber(
       throw new VoucherOperationError(usage.code, usage.message, 409);
     }
 
-    await markVoucherUsed(client, voucher.idvoucher, date, time);
+    if (voucher.dtvalidade) {
+        const validity = evaluateAgendaUsage(voucher, false, date);
+        if (validity.status !== "ok") throw new VoucherOperationError(validity.code, validity.message, 409);
+      }
+      await markVoucherUsed(client, voucher.idvoucher, date, time);
     const auditLogId = await registerVoucherOperationAuditLog(client, {
       action: "validate",
       mode: "voucher_number",
@@ -758,6 +774,10 @@ export async function validatePurchaseVouchers(
         );
       }
 
+      if (voucher.dtvalidade) {
+        const validity = evaluateAgendaUsage(voucher, false, date);
+        if (validity.status !== "ok") throw new VoucherOperationError(validity.code, validity.message, 409);
+      }
       await markVoucherUsed(client, voucher.idvoucher, date, time);
       affectedVoucherIds.push(voucher.idvoucher);
     }
@@ -912,6 +932,10 @@ export async function validateSelectedVouchers(
         );
       }
 
+      if (voucher.dtvalidade) {
+        const validity = evaluateAgendaUsage(voucher, false, date);
+        if (validity.status !== "ok") throw new VoucherOperationError(validity.code, validity.message, 409);
+      }
       await markVoucherUsed(client, voucher.idvoucher, date, time);
       affectedVoucherIds.push(voucher.idvoucher);
     }
@@ -1056,6 +1080,10 @@ export async function validateSchoolTripVouchers(
         );
       }
 
+      if (voucher.dtvalidade) {
+        const validity = evaluateAgendaUsage(voucher, false, date);
+        if (validity.status !== "ok") throw new VoucherOperationError(validity.code, validity.message, 409);
+      }
       await markVoucherUsed(client, voucher.idvoucher, date, time);
       affectedVoucherIds.push(voucher.idvoucher);
     }

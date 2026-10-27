@@ -72,7 +72,7 @@ describe("/painel/bilheteria overview route", () => {
     renderToStaticMarkup(React.createElement(React.Fragment, null, element));
 
     expect(requirePainelAccess).toHaveBeenCalledWith(
-      ["vis_bilhet", "vis_compra"],
+      "vis_bilhet",
       "/painel/bilheteria",
     );
     expect(lookupPainelBilheteriaTicketByVoucherId).toHaveBeenCalledWith("123");

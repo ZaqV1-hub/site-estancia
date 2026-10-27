@@ -1,3 +1,4 @@
+import { getSaoPauloToday } from "@/lib/calendar-validity";
 import { Buffer } from "node:buffer";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 import { buildSchoolDisplay } from "@/lib/school-structure";
@@ -30,6 +31,8 @@ type VoucherRow = {
   dtuso: string | null;
   voucherenviado: string | null;
   dtvalidade: string | null;
+  original_date?: string | null;
+  reschedule_reason?: string | null;
   dtagenda: string | null;
   tpagenda: string | null;
   idescola: number | null;
@@ -54,6 +57,8 @@ export type VoucherExportVoucher = {
   type: string | null;
   typeLabel: string;
   visitDate: string | null;
+  validUntil?: string | null;
+  originalDate?: string | null;
   unitValue: string | null;
   agendaType: string | null;
   schoolName: string | null;
@@ -146,8 +151,9 @@ function mapVoucher(row: VoucherRow, purchase: PurchaseRow, today: Date): UserVo
   const purchaseAgeDays = daysBetween(purchase.dtcompra, today);
   const visitDiffDays = daysBetweenDates(today, row.dtagenda);
   const used = row.stusado === "s";
-  const expiredForGeneration = purchaseAgeDays > 90;
-  const canSelectForVoucher = purchase.stcompra === "conc" && !used && !expiredForGeneration;
+  const validUntil = normalizeDate(row.dtvalidade);
+  const expiredForGeneration = validUntil ? validUntil < getSaoPauloToday(today) : purchaseAgeDays > 90;
+  const canSelectForVoucher = purchase.stcompra === "conc" && row.stusado === "n" && !expiredForGeneration;
 
   return {
     id: row.idvoucher,
@@ -166,11 +172,14 @@ function mapVoucher(row: VoucherRow, purchase: PurchaseRow, today: Date): UserVo
     schoolName: row.nmescola,
     participantName: row.nomealuno || row.nomeeducador || null,
     sent: row.voucherenviado?.trim() === "s",
-    validUntil: normalizeDate(row.dtvalidade),
+    validUntil,
+    originalDate: normalizeDate(row.original_date ?? null),
+    rescheduleReason: row.reschedule_reason ?? null,
     canSelectForVoucher,
     canReschedule:
       row.tpagenda === "padra" &&
-      !used &&
+      purchase.stcompra === "conc" &&
+      row.stusado === "n" &&
       !expiredForGeneration &&
       row.tpvoucher !== "escol" &&
       visitDiffDays <= 0,
@@ -188,6 +197,8 @@ function mapVoucherExport(row: VoucherRow): VoucherExportVoucher {
       type: row.tpvoucher,
     }),
     visitDate: normalizeDate(row.dtagenda),
+    validUntil: normalizeDate(row.dtvalidade),
+    originalDate: normalizeDate(row.original_date ?? null),
     unitValue: row.vlunicompra,
     agendaType: row.tpagenda,
     schoolName: row.nmescola,
@@ -206,9 +217,7 @@ function mapVoucherExport(row: VoucherRow): VoucherExportVoucher {
 function mapPurchase(
   row: PurchaseRow,
   vouchers: UserVoucher[],
-  today: Date,
 ): UserVoucherPurchase {
-  const purchaseAgeDays = daysBetween(row.dtcompra, today);
   const unusedVoucherCount = Number(row.unused_voucher_count);
   const paymentStatus = row.status;
 
@@ -237,8 +246,7 @@ function mapPurchase(
     canGenerateVoucher:
       row.tpcompra === "ponli" &&
       row.stcompra === "conc" &&
-      unusedVoucherCount > 0 &&
-      purchaseAgeDays <= 90,
+      vouchers.some((voucher) => voucher.canSelectForVoucher),
     canCancelReservation:
       row.tpcompra === "reser" &&
       row.stcompra !== "canc" &&
@@ -347,6 +355,8 @@ async function getVouchersByPurchaseIds(purchaseIds: number[]) {
         to_char(voucher.dtuso, 'YYYY-MM-DD') AS dtuso,
         voucher.voucherenviado,
         to_char(voucher.dtvalidade, 'YYYY-MM-DD') AS dtvalidade,
+        to_char(reschedule.original_date, 'YYYY-MM-DD') AS original_date,
+        reschedule.reason AS reschedule_reason,
         to_char(agenda.dtagenda, 'YYYY-MM-DD') AS dtagenda,
         agenda.tpagenda,
         voucher.idescola,
@@ -359,6 +369,7 @@ async function getVouchersByPurchaseIds(purchaseIds: number[]) {
         voucher.turma_letra,
         voucher.descricao AS descricao
       FROM voucher
+      LEFT JOIN estancia_voucher_reschedules reschedule ON reschedule.voucher_id = voucher.idvoucher
       JOIN agenda ON agenda.idagenda = voucher.idagenda
       LEFT JOIN clientes ON clientes.idcliente = voucher.idescola
       WHERE voucher.idcompra = ANY($1::int[])
@@ -389,7 +400,6 @@ function mapPurchaseRows(
       (vouchersByPurchaseId.get(purchase.idcompra) ?? []).map((voucher) =>
         mapVoucher(voucher, purchase, today),
       ),
-      today,
     ),
   );
 }
@@ -560,6 +570,8 @@ export async function getUserVoucherRescheduleData(
         to_char(voucher.dtuso, 'YYYY-MM-DD') AS dtuso,
         voucher.voucherenviado,
         to_char(voucher.dtvalidade, 'YYYY-MM-DD') AS dtvalidade,
+        to_char(reschedule.original_date, 'YYYY-MM-DD') AS original_date,
+        reschedule.reason AS reschedule_reason,
         to_char(agenda.dtagenda, 'YYYY-MM-DD') AS dtagenda,
         agenda.tpagenda,
         voucher.idescola,
@@ -574,6 +586,7 @@ export async function getUserVoucherRescheduleData(
         agenda.idagenda
       FROM voucher
       JOIN compra ON compra.idcompra = voucher.idcompra
+      LEFT JOIN estancia_voucher_reschedules reschedule ON reschedule.voucher_id = voucher.idvoucher
       JOIN agenda ON agenda.idagenda = voucher.idagenda
       LEFT JOIN clientes ON clientes.idcliente = voucher.idescola
       WHERE voucher.idvoucher = $1

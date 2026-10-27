@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authenticateOperationsRequest = vi.fn();
 const authorizePainelApiAccess = vi.fn();
-const upsertPainelAgendaRange = vi.fn();
+const saveCalendarDate = vi.fn();
+const requirePainelApiAccess = vi.fn();
+class CalendarError extends Error {}
 const getPainelAgendaDay = vi.fn();
 const asPainelAgendaError = vi.fn();
 
@@ -11,11 +13,12 @@ vi.mock("@/lib/ops-auth", () => ({
 }));
 
 vi.mock("@/lib/painel-api-auth", () => ({
-  authorizePainelApiAccess,
+  authorizePainelApiAccess, requirePainelApiAccess,
 }));
 
+vi.mock("@/lib/operational-calendar", () => ({ saveCalendarDate, CalendarError, getCalendarRule: vi.fn().mockResolvedValue(null) }));
+
 vi.mock("@/lib/painel-agenda", () => ({
-  upsertPainelAgendaRange,
   getPainelAgendaDay,
   asPainelAgendaError,
 }));
@@ -25,6 +28,7 @@ describe("painel/agenda BFF route", () => {
     vi.clearAllMocks();
     authenticateOperationsRequest.mockReturnValue({ ok: true });
     authorizePainelApiAccess.mockResolvedValue({ ok: true, legacyResources: ["vis_agenda"] });
+    requirePainelApiAccess.mockResolvedValue({ok:true,session:{actorName:"Operador real",actorCpf:"123"}});
     asPainelAgendaError.mockImplementation((error: unknown) => error);
   });
 
@@ -54,12 +58,12 @@ describe("painel/agenda BFF route", () => {
     expect(response.status).toBe(403);
     expect(authenticateOperationsRequest).toHaveBeenCalledWith(
       expect.any(Request),
-      { requiredPermission: "ops.read" },
+      { requiredPermission: "ops.purchases" },
     );
   });
 
-  it("upserts an agenda range", async () => {
-    upsertPainelAgendaRange.mockResolvedValue({
+  it("routes a legacy single date through the validated calendar service", async () => {
+    saveCalendarDate.mockResolvedValue({
       ok: true,
       message: "Agenda salva.",
       touchedDates: ["2026-04-27"],
@@ -89,20 +93,13 @@ describe("painel/agenda BFF route", () => {
     );
     const body = await response.json();
 
-    expect(authorizePainelApiAccess).toHaveBeenCalledWith(
+    expect(requirePainelApiAccess).toHaveBeenCalledWith(
       expect.any(Request),
       "vis_agenda",
     );
-    expect(upsertPainelAgendaRange).toHaveBeenCalledWith(
-      expect.objectContaining({
-        agendaId: null,
-        startDate: "2026-04-27",
-        endDate: "2026-04-27",
-        priceTableId: 2,
-        informationId: 3,
-        type: "padra",
-        status: "abe",
-      }),
+    expect(saveCalendarDate).toHaveBeenCalledWith(
+      expect.objectContaining({agendaId:null,date:"2026-04-27",status:"abe",validity:"day",passportIds:[],addonIds:[]}),
+      {name:"Operador real",cpf:"123"},
     );
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);

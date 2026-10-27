@@ -3,12 +3,10 @@
 import { useRouter } from "next/navigation";
 import {
   useEffect,
-  useMemo,
   useState,
-  type Dispatch,
   type FormEvent,
-  type SetStateAction,
 } from "react";
+import { OperationalEventEditor } from "@/components/operational-event-editor";
 import { PainelModal } from "@/components/painel-modal";
 import type {
   EstanciaContentData,
@@ -28,24 +26,12 @@ type DeleteTarget = {
   title: string;
 };
 
-type EventMode = "date" | "link";
-type EventPageMode = "without-page" | "with-page";
 type HomeHeroMode = "with-link" | "without-link";
 
 const ATTRACTION_TITLE_LIMIT = 36;
 const ATTRACTION_DESCRIPTION_LIMIT = 160;
 const EVENT_TITLE_LIMIT = 52;
 const EVENT_DESCRIPTION_LIMIT = 220;
-const EVENT_PAGE_TITLE_LIMIT = 80;
-
-type EventDatePayload = {
-  agenda?: {
-    priceTableId?: number | null;
-    informationId?: number | null;
-  } | null;
-  selectedPassportIds?: string[];
-  selectedAddonIds?: string[];
-};
 
 function itemTitle(item: EditableItem) {
   if (item.section === "home") {
@@ -57,23 +43,6 @@ function itemTitle(item: EditableItem) {
   }
 
   return item.item ? "Editar evento" : "Adicionar evento";
-}
-
-function resolveEventMode(event: ManagedEvent | null | undefined): EventMode {
-  const href = event?.href?.trim() ?? "";
-
-  return /(?:\?|&)date=\d{4}-\d{2}-\d{2}(?:&|$)/.test(href) ? "date" : "link";
-}
-
-function resolveEventDate(event: ManagedEvent | null | undefined) {
-  const href = event?.href?.trim() ?? "";
-  const match = href.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/);
-
-  return match?.[1] ?? "";
-}
-
-function resolveEventPageMode(event: ManagedEvent | null | undefined): EventPageMode {
-  return event?.pageEnabled ? "with-page" : "without-page";
 }
 
 function resolveHomeHeroMode(item: ManagedHomeImage | null | undefined): HomeHeroMode {
@@ -96,15 +65,15 @@ function resolveTextLimits(section: "attraction" | "event") {
 
 function ImagePicker({ name, label }: { name: string; label: string }) {
   return (
-    <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+    <label className="grid gap-2 text-sm font-semibold text-[var(--panel-ink)]">
       {label}
       <input
         name={name}
         type="file"
         accept="image/*"
-        className="rounded-[8px] border border-dashed border-[#9bbd91] bg-white px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-[#17342d] file:px-4 file:py-2 file:text-sm file:font-black file:text-white"
+        className="rounded-[8px] border border-dashed border-[var(--panel-line)] bg-[var(--panel-card)] px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-[var(--panel-primary)] file:px-4 file:py-2 file:text-sm file:font-black file:text-[var(--panel-on-primary)]"
       />
-      <span className="text-xs font-medium text-[#6a806e]">
+      <span className="text-xs font-medium text-[var(--panel-muted)]">
         Clique em escolher arquivo para enviar a imagem.
         {name === "mobileImage"
           ? " Se nao enviar a versao mobile, a imagem desktop sera usada no celular."
@@ -125,8 +94,8 @@ function CurrentImagePreview({
 }) {
   return (
     <div className="grid gap-2">
-      <p className="text-sm font-semibold text-[#17351f]">{label}</p>
-      <div className="overflow-hidden rounded-[8px] border border-[#dbe7d7] bg-[#eef3e8]">
+      <p className="text-sm font-semibold text-[var(--panel-ink)]">{label}</p>
+      <div className="overflow-hidden rounded-[8px] border border-[var(--panel-line)] bg-[var(--panel-head)]">
         <img
           src={src}
           alt={alt}
@@ -134,7 +103,7 @@ function CurrentImagePreview({
           loading="lazy"
         />
       </div>
-      <p className="text-xs font-medium text-[#6a806e]">
+      <p className="text-xs font-medium text-[var(--panel-muted)]">
         O navegador nao reabre esse campo com um arquivo ja selecionado. Para trocar
         a imagem, escolha um novo arquivo abaixo.
       </p>
@@ -146,7 +115,7 @@ function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <button
       disabled={pending}
-      className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white disabled:opacity-60"
+      className="rounded-full bg-[var(--panel-primary)] px-5 py-3 text-sm font-black text-[var(--panel-on-primary)] disabled:opacity-60"
     >
       {pending ? "Salvando..." : "Salvar"}
     </button>
@@ -173,7 +142,7 @@ function MoveButtons({
         onClick={onMoveUp}
         disabled={!canMoveUp || busy}
         aria-label="Mover para cima"
-        className="rounded-full border border-[#dbe7d7] px-3 py-2 text-xs font-black text-[#17351f] disabled:cursor-not-allowed disabled:opacity-45"
+        className="rounded-full border border-[var(--panel-line)] px-3 py-2 text-xs font-black text-[var(--panel-ink)] disabled:cursor-not-allowed disabled:opacity-45"
       >
         ↑
       </button>
@@ -182,7 +151,7 @@ function MoveButtons({
         onClick={onMoveDown}
         disabled={!canMoveDown || busy}
         aria-label="Mover para baixo"
-        className="rounded-full border border-[#dbe7d7] px-3 py-2 text-xs font-black text-[#17351f] disabled:cursor-not-allowed disabled:opacity-45"
+        className="rounded-full border border-[var(--panel-line)] px-3 py-2 text-xs font-black text-[var(--panel-ink)] disabled:cursor-not-allowed disabled:opacity-45"
       >
         ↓
       </button>
@@ -194,8 +163,6 @@ export function PainelSiteManager({
   content,
   initialEditEventId = null,
   initialOpenCreateEvent = false,
-  defaultPriceTableId,
-  defaultInformationId,
 }: {
   content: EstanciaContentData;
   initialEditEventId?: string | null;
@@ -204,22 +171,6 @@ export function PainelSiteManager({
   defaultInformationId?: number | null;
 }) {
   const router = useRouter();
-  const passports = useMemo(
-    () => content.products.filter((product) => product.type === "passport"),
-    [content.products],
-  );
-  const addons = useMemo(
-    () => content.products.filter((product) => product.type === "addon"),
-    [content.products],
-  );
-  const defaultPassportIds = useMemo(
-    () => passports.map((product) => product.id),
-    [passports],
-  );
-  const defaultAddonIds = useMemo(
-    () => addons.map((product) => product.id),
-    [addons],
-  );
   const initialEditing = (() => {
     if (initialEditEventId) {
       const item = content.events.find((event) => event.id === initialEditEventId) ?? null;
@@ -229,10 +180,6 @@ export function PainelSiteManager({
       }
     }
 
-    if (initialOpenCreateEvent) {
-      return { section: "event", item: null } satisfies EditableItem;
-    }
-
     return null;
   })();
   const [editing, setEditing] = useState<EditableItem | null>(initialEditing);
@@ -240,139 +187,14 @@ export function PainelSiteManager({
   const [pending, setPending] = useState(false);
   const [movingKey, setMovingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [eventMode, setEventMode] = useState<EventMode>("date");
-  const [eventPageMode, setEventPageMode] = useState<EventPageMode>("without-page");
-  const [eventDateValue, setEventDateValue] = useState("");
-  const [eventHrefValue, setEventHrefValue] = useState("");
-  const [eventPageTitleValue, setEventPageTitleValue] = useState("");
-  const [eventPageContentValue, setEventPageContentValue] = useState("");
-  const [selectedPassportIds, setSelectedPassportIds] = useState<string[]>(defaultPassportIds);
-  const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>(defaultAddonIds);
-  const [eventPriceTableId, setEventPriceTableId] = useState<number | null>(
-    defaultPriceTableId ?? null,
-  );
-  const [eventInformationId, setEventInformationId] = useState<number | null>(
-    defaultInformationId ?? null,
-  );
-  const [eventAvailabilityLoading, setEventAvailabilityLoading] = useState(false);
   const [homeHeroMode, setHomeHeroMode] = useState<HomeHeroMode>("without-link");
   const [homeHeroHrefValue, setHomeHeroHrefValue] = useState("");
-  const currentEvent =
-    editing?.section === "event" ? (editing.item as ManagedEvent | null) : null;
-
   useEffect(() => {
-    if (editing?.section === "event") {
-      const nextMode = resolveEventMode(currentEvent);
-      setEventMode(currentEvent ? nextMode : "date");
-      setEventPageMode(currentEvent ? resolveEventPageMode(currentEvent) : "without-page");
-      setEventDateValue(resolveEventDate(currentEvent));
-      setEventHrefValue(
-        currentEvent && nextMode === "link" ? currentEvent.href ?? "" : "",
-      );
-      setEventPageTitleValue(currentEvent?.pageTitle ?? "");
-      setEventPageContentValue(currentEvent?.pageContent ?? "");
-      setSelectedPassportIds(defaultPassportIds);
-      setSelectedAddonIds(defaultAddonIds);
-      setEventPriceTableId(defaultPriceTableId ?? null);
-      setEventInformationId(defaultInformationId ?? null);
-      return;
-    }
-
-    if (editing?.section === "home") {
-      setHomeHeroMode(resolveHomeHeroMode(editing.item));
-      setHomeHeroHrefValue(editing.item?.href ?? "");
-    }
-  }, [
-    currentEvent,
-    defaultAddonIds,
-    defaultInformationId,
-    defaultPassportIds,
-    defaultPriceTableId,
-    editing,
-  ]);
-
-  useEffect(() => {
-    if (editing?.section !== "event" || eventMode !== "date" || !eventDateValue) {
-      return;
-    }
-
-    const controller = new AbortController();
-
-    async function loadEventDateDetails() {
-      setEventAvailabilityLoading(true);
-
-      try {
-        const response = await fetch(
-          `/api/painel/agenda?date=${encodeURIComponent(eventDateValue)}`,
-          {
-            signal: controller.signal,
-          },
-        );
-        const payload = (await response.json().catch(() => null)) as
-          | { ok?: boolean; data?: EventDatePayload; error?: { message?: string } }
-          | null;
-
-        if (!response.ok || !payload?.ok) {
-          throw new Error(payload?.error?.message || "Nao foi possivel carregar a data.");
-        }
-
-        setSelectedPassportIds(
-          payload.data?.selectedPassportIds?.length
-            ? payload.data.selectedPassportIds
-            : defaultPassportIds,
-        );
-        setSelectedAddonIds(
-          payload.data?.selectedAddonIds?.length
-            ? payload.data.selectedAddonIds
-            : defaultAddonIds,
-        );
-        setEventPriceTableId(
-          payload.data?.agenda?.priceTableId ?? defaultPriceTableId ?? null,
-        );
-        setEventInformationId(
-          payload.data?.agenda?.informationId ?? defaultInformationId ?? null,
-        );
-      } catch (loadError) {
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        setSelectedPassportIds(defaultPassportIds);
-        setSelectedAddonIds(defaultAddonIds);
-        setEventPriceTableId(defaultPriceTableId ?? null);
-        setEventInformationId(defaultInformationId ?? null);
-        setError(
-          loadError instanceof Error
-            ? loadError.message
-            : "Nao foi possivel carregar a data do evento.",
-        );
-      } finally {
-        if (!controller.signal.aborted) {
-          setEventAvailabilityLoading(false);
-        }
-      }
-    }
-
-    void loadEventDateDetails();
-
-    return () => controller.abort();
-  }, [
-    defaultAddonIds,
-    defaultInformationId,
-    defaultPassportIds,
-    defaultPriceTableId,
-    editing,
-    eventDateValue,
-    eventMode,
-  ]);
+    if (initialOpenCreateEvent) router.replace("/painel/site/eventos/novo");
+  }, [initialOpenCreateEvent, router]);
 
   function openCreateEvent() {
-    setEditing({ section: "event", item: null });
-    setEventMode("date");
-    setEventPageMode("without-page");
-    setEventPageTitleValue("");
-    setEventPageContentValue("");
-    setError(null);
+    router.push("/painel/site/eventos/novo");
   }
 
   function openCreateHome() {
@@ -394,18 +216,6 @@ export function PainelSiteManager({
     setError(null);
   }
 
-  function toggleSelection(
-    value: string,
-    selectedValues: string[],
-    setSelectedValues: Dispatch<SetStateAction<string[]>>,
-  ) {
-    setSelectedValues(
-      selectedValues.includes(value)
-        ? selectedValues.filter((item) => item !== value)
-        : [...selectedValues, value],
-    );
-  }
-
   async function submitForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
@@ -413,33 +223,6 @@ export function PainelSiteManager({
 
     try {
       const formData = new FormData(event.currentTarget);
-
-      if (editing?.section === "event") {
-        formData.set("eventMode", eventMode);
-        formData.set("eventPageMode", eventPageMode);
-        formData.set("eventDate", eventDateValue);
-        formData.set("href", eventHrefValue);
-        formData.set("pageTitle", eventPageTitleValue);
-        formData.set("pageContent", eventPageContentValue);
-        formData.delete("passportIds");
-        formData.delete("addonIds");
-
-        for (const id of selectedPassportIds) {
-          formData.append("passportIds", id);
-        }
-
-        for (const id of selectedAddonIds) {
-          formData.append("addonIds", id);
-        }
-
-        if (eventPriceTableId) {
-          formData.set("priceTableId", String(eventPriceTableId));
-        }
-
-        if (eventInformationId) {
-          formData.set("informationId", String(eventInformationId));
-        }
-      }
 
       if (editing?.section === "home") {
         if (homeHeroMode === "with-link" && !homeHeroHrefValue.trim()) {
@@ -551,11 +334,11 @@ export function PainelSiteManager({
       <section className="panel-section p-5">
         <p className="panel-eyebrow">Imagens da hero</p>
         <div className="mt-4 flex items-center justify-between gap-3">
-          <h3 className="text-[24px] font-black text-[#17351f]">Banners publicados</h3>
+          <h3 className="text-[24px] font-black text-[var(--panel-ink)]">Banners publicados</h3>
           <button
             type="button"
             onClick={openCreateHome}
-            className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white"
+            className="rounded-full bg-[var(--panel-primary)] px-5 py-3 text-sm font-black text-[var(--panel-on-primary)]"
           >
             Adicionar imagem
           </button>
@@ -564,9 +347,9 @@ export function PainelSiteManager({
           {content.homeImages.map((item, index) => (
             <article
               key={item.id}
-              className="min-w-[320px] rounded-[8px] border border-[#dbe7d7] bg-white p-4"
+              className="min-w-[320px] rounded-[8px] border border-[var(--panel-line)] bg-[var(--panel-card)] p-4"
             >
-              <div className="h-36 overflow-hidden rounded-[8px] bg-[#eef3e8]">
+              <div className="h-36 overflow-hidden rounded-[8px] bg-[var(--panel-head)]">
                 <img
                   src={item.desktopSrc}
                   alt={item.alt}
@@ -576,15 +359,15 @@ export function PainelSiteManager({
               </div>
               <div className="mt-3 flex items-start justify-between gap-3">
                 <div>
-                  <h4 className="text-lg font-black text-[#17351f]">{item.alt}</h4>
-                  <p className="text-sm text-[#5f7564]">
+                  <h4 className="text-lg font-black text-[var(--panel-ink)]">{item.alt}</h4>
+                  <p className="text-sm text-[var(--panel-muted)]">
                     {item.active ? "Publicado" : "Oculto"}
                   </p>
-                  <p className="text-xs text-[#6a806e]">
+                  <p className="text-xs text-[var(--panel-muted)]">
                     {item.href?.trim() ? "Com link" : "Sem link"}
                   </p>
                 </div>
-                <span className="rounded-full bg-[#eef5eb] px-3 py-1 text-xs font-black text-[#2d6b37]">
+                <span className="rounded-full bg-[var(--panel-head)] px-3 py-1 text-xs font-black text-[var(--panel-ok)]">
                   #{item.sortOrder}
                 </span>
               </div>
@@ -599,7 +382,7 @@ export function PainelSiteManager({
                 <button
                   type="button"
                   onClick={() => openEditHome(item)}
-                  className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]"
+                  className="rounded-full border border-[var(--panel-line)] px-4 py-2 text-xs font-black text-[var(--panel-ink)]"
                 >
                   Editar
                 </button>
@@ -612,7 +395,7 @@ export function PainelSiteManager({
                       title: item.alt,
                     })
                   }
-                  className="rounded-full border border-[#f0c3bc] px-4 py-2 text-xs font-black text-[#a33b31]"
+                  className="rounded-full border border-[var(--panel-resch-bg)] px-4 py-2 text-xs font-black text-[var(--panel-resch)]"
                 >
                   Excluir
                 </button>
@@ -643,7 +426,7 @@ export function PainelSiteManager({
         <ContentList
           section="event"
           title="Eventos"
-          buttonLabel="Adicionar evento"
+          buttonLabel="Novo evento"
           items={content.events}
           movingKey={movingKey}
           onEdit={openEditEvent}
@@ -660,7 +443,9 @@ export function PainelSiteManager({
         open={Boolean(editing)}
         onClose={() => setEditing(null)}
       >
-        {editing ? (
+        {editing?.section === "event" && editing.item ? (
+          <OperationalEventEditor key={editing.item.id} event={editing.item} products={content.products} presentation="modal" onSaved={() => {setEditing(null); router.replace("/painel/site"); router.refresh();}} />
+        ) : editing ? (
           <form onSubmit={submitForm} className="grid gap-4">
             <input type="hidden" name="section" value={editing.section} />
             {editing.item ? <input type="hidden" name="id" value={editing.item.id} /> : null}
@@ -670,14 +455,14 @@ export function PainelSiteManager({
                   <input
                     name="alt"
                     defaultValue={editing.item?.alt ?? ""}
-                    className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                    className="rounded-[8px] border border-[var(--panel-line)] px-4 py-3"
                   />
                 </Field>
 
-                <div className="grid gap-3 rounded-[10px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
+                <div className="grid gap-3 rounded-[10px] border border-[var(--panel-line)] bg-[var(--panel-bg)] p-4">
                   <div>
-                    <p className="text-sm font-black text-[#17351f]">Link da hero</p>
-                    <p className="mt-1 text-xs leading-5 text-[#5f7564]">
+                    <p className="text-sm font-black text-[var(--panel-ink)]">Link da hero</p>
+                    <p className="mt-1 text-xs leading-5 text-[var(--panel-muted)]">
                       Defina se essa imagem da hero pode ser clicada na home.
                     </p>
                   </div>
@@ -687,8 +472,8 @@ export function PainelSiteManager({
                       onClick={() => setHomeHeroMode("with-link")}
                       className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
                         homeHeroMode === "with-link"
-                          ? "border-[#17342d] bg-[#17342d] text-white"
-                          : "border-[#dbe7d7] bg-white text-[#17351f]"
+                          ? "border-[var(--panel-primary)] bg-[var(--panel-primary)] text-[var(--panel-on-primary)]"
+                          : "border-[var(--panel-line)] bg-[var(--panel-card)] text-[var(--panel-ink)]"
                       }`}
                     >
                       Com link
@@ -698,8 +483,8 @@ export function PainelSiteManager({
                       onClick={() => setHomeHeroMode("without-link")}
                       className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
                         homeHeroMode === "without-link"
-                          ? "border-[#17342d] bg-[#17342d] text-white"
-                          : "border-[#dbe7d7] bg-white text-[#17351f]"
+                          ? "border-[var(--panel-primary)] bg-[var(--panel-primary)] text-[var(--panel-on-primary)]"
+                          : "border-[var(--panel-line)] bg-[var(--panel-card)] text-[var(--panel-ink)]"
                       }`}
                     >
                       Sem link
@@ -714,7 +499,7 @@ export function PainelSiteManager({
                       value={homeHeroHrefValue}
                       onChange={(event) => setHomeHeroHrefValue(event.target.value)}
                       placeholder="https://site.com.br ou /pagina"
-                      className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                      className="rounded-[8px] border border-[var(--panel-line)] px-4 py-3"
                     />
                   </Field>
                 ) : null}
@@ -743,222 +528,37 @@ export function PainelSiteManager({
 
                   return (
                     <>
-                      {editing.section === "event" ? (
-                        <div className="grid gap-3 rounded-[10px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
-                          <div>
-                            <p className="text-sm font-black text-[#17351f]">Tipo do evento</p>
-                            <p className="mt-1 text-xs leading-5 text-[#5f7564]">
-                              Escolha se o botao vai abrir uma data promocional da agenda ou um
-                              link externo.
-                            </p>
-                          </div>
-                          <div className="grid gap-2 sm:grid-cols-2">
-                            <button
-                              type="button"
-                              onClick={() => setEventMode("date")}
-                              className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
-                                eventMode === "date"
-                                  ? "border-[#17342d] bg-[#17342d] text-white"
-                                  : "border-[#dbe7d7] bg-white text-[#17351f]"
-                              }`}
-                            >
-                              Data
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEventMode("link");
-                                setEventPageMode("without-page");
-                              }}
-                              className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
-                                eventMode === "link"
-                                  ? "border-[#17342d] bg-[#17342d] text-white"
-                                  : "border-[#dbe7d7] bg-white text-[#17351f]"
-                              }`}
-                            >
-                              Link externo
-                            </button>
-                          </div>
-                        </div>
-                      ) : null}
-
                       <Field label="Titulo">
                         <div className="grid gap-2">
                           <input
                             name="title"
                             maxLength={limits.title}
                             defaultValue={editing.item?.title ?? ""}
-                            className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                            className="rounded-[8px] border border-[var(--panel-line)] px-4 py-3"
                           />
-                          <p className="text-xs font-medium text-[#6a806e]">
+                          <p className="text-xs font-medium text-[var(--panel-muted)]">
                             Maximo de {limits.title} caracteres para manter o layout correto.
                           </p>
                         </div>
                       </Field>
 
-                      <Field label={editing.section === "event" ? "Resumo" : "Descricao"}>
+                      <Field label="Descricao">
                         <div className="grid gap-2">
                           <textarea
                             name="description"
                             maxLength={limits.description}
                             defaultValue={editing.item?.description ?? ""}
                             rows={4}
-                            className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
+                            className="rounded-[8px] border border-[var(--panel-line)] px-4 py-3"
                           />
-                          <p className="text-xs font-medium text-[#6a806e]">
-                            {editing.section === "event"
-                              ? `Maximo de ${limits.description} caracteres para manter o resumo equilibrado na listagem do site.`
-                              : `Maximo de ${limits.description} caracteres para manter a imagem e o texto equilibrados no site.`}
+                          <p className="text-xs font-medium text-[var(--panel-muted)]">
+                            Maximo de {limits.description} caracteres para manter a imagem e o texto equilibrados no site.
                           </p>
                         </div>
                       </Field>
                     </>
                   );
                 })()}
-
-                {editing.section === "event" ? (
-                  <>
-                    {eventMode === "date" ? (
-                      <>
-                        <Field label="Data do evento">
-                          <input
-                            name="eventDateVisible"
-                            type="date"
-                            value={eventDateValue}
-                            onChange={(event) => setEventDateValue(event.target.value)}
-                            className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
-                          />
-                        </Field>
-
-                        <div className="grid gap-3 rounded-[10px] border border-[#dbe7d7] bg-[#fbfdf9] p-4">
-                          <div>
-                            <p className="text-sm font-black text-[#17351f]">Pagina do evento</p>
-                            <p className="mt-1 text-xs leading-5 text-[#5f7564]">
-                              Escolha se este evento com data continua apenas na agenda ou se tera
-                              uma pagina propria dentro do site.
-                            </p>
-                          </div>
-                          <div className="grid gap-2 sm:grid-cols-2">
-                            <button
-                              type="button"
-                              onClick={() => setEventPageMode("without-page")}
-                              className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
-                                eventPageMode === "without-page"
-                                  ? "border-[#17342d] bg-[#17342d] text-white"
-                                  : "border-[#dbe7d7] bg-white text-[#17351f]"
-                              }`}
-                            >
-                              Sem pagina
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEventPageMode("with-page")}
-                              className={`rounded-[8px] border px-4 py-3 text-sm font-black ${
-                                eventPageMode === "with-page"
-                                  ? "border-[#17342d] bg-[#17342d] text-white"
-                                  : "border-[#dbe7d7] bg-white text-[#17351f]"
-                              }`}
-                            >
-                              Com pagina
-                            </button>
-                          </div>
-                        </div>
-
-                        {eventPageMode === "with-page" ? (
-                          <>
-                            <Field label="Titulo da pagina">
-                              <div className="grid gap-2">
-                                <input
-                                  value={eventPageTitleValue}
-                                  onChange={(event) => setEventPageTitleValue(event.target.value)}
-                                  maxLength={EVENT_PAGE_TITLE_LIMIT}
-                                  className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
-                                />
-                                <p className="text-xs font-medium text-[#6a806e]">
-                                  Maximo de {EVENT_PAGE_TITLE_LIMIT} caracteres para o topo da
-                                  pagina do evento.
-                                </p>
-                              </div>
-                            </Field>
-
-                            <Field label="Descricao completa">
-                              <div className="grid gap-2">
-                                <textarea
-                                  value={eventPageContentValue}
-                                  onChange={(event) =>
-                                    setEventPageContentValue(event.target.value)
-                                  }
-                                  rows={10}
-                                  className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
-                                />
-                                <p className="text-xs font-medium text-[#6a806e]">
-                                  Campo livre para montar a pagina propria do evento com mais
-                                  detalhes, paragrafos e listas.
-                                </p>
-                              </div>
-                            </Field>
-                          </>
-                        ) : null}
-
-                        <MultiSelectGrid
-                          title="Tipo de passaportes"
-                          description="Escolha quais passaportes ficam disponiveis para esta data promocional."
-                          items={passports.map((product) => ({
-                            id: product.id,
-                            title: product.title,
-                            subtitle: product.subtitle,
-                          }))}
-                          loading={eventAvailabilityLoading}
-                          selectedIds={selectedPassportIds}
-                          onToggle={(id) =>
-                            toggleSelection(
-                              id,
-                              selectedPassportIds,
-                              setSelectedPassportIds,
-                            )
-                          }
-                          onSelectAll={() => setSelectedPassportIds(defaultPassportIds)}
-                        />
-
-                        <MultiSelectGrid
-                          title="Adicionais"
-                          description="Escolha os adicionais liberados para a data promocional."
-                          items={addons.map((product) => ({
-                            id: product.id,
-                            title: product.title,
-                            subtitle: product.subtitle,
-                          }))}
-                          loading={eventAvailabilityLoading}
-                          selectedIds={selectedAddonIds}
-                          onToggle={(id) =>
-                            toggleSelection(id, selectedAddonIds, setSelectedAddonIds)
-                          }
-                          onSelectAll={() => setSelectedAddonIds(defaultAddonIds)}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <Field label="Link externo">
-                          <input
-                            name="hrefVisible"
-                            value={eventHrefValue}
-                            onChange={(event) => setEventHrefValue(event.target.value)}
-                            placeholder="https://site.com.br ou /agenda"
-                            className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
-                          />
-                        </Field>
-                      </>
-                    )}
-
-                    <Field label="Texto do botao">
-                      <input
-                        name="buttonLabel"
-                        defaultValue={currentEvent?.buttonLabel ?? "Compre seu ingresso!"}
-                        className="rounded-[8px] border border-[#dbe7d7] px-4 py-3"
-                      />
-                    </Field>
-                  </>
-                ) : null}
 
                 {editing.item?.imageSrc ? (
                   <CurrentImagePreview
@@ -971,7 +571,7 @@ export function PainelSiteManager({
               </>
             )}
 
-            <label className="flex items-center gap-2 text-sm font-black text-[#17351f]">
+            <label className="flex items-center gap-2 text-sm font-black text-[var(--panel-ink)]">
               <input
                 name="active"
                 type="checkbox"
@@ -981,7 +581,7 @@ export function PainelSiteManager({
             </label>
 
             {error ? (
-              <p className="rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
+              <p className="rounded-[8px] border border-[var(--panel-resch)] bg-[var(--panel-resch-bg)] px-4 py-3 text-sm text-[var(--panel-resch)]">
                 {error}
               </p>
             ) : null}
@@ -995,11 +595,12 @@ export function PainelSiteManager({
         open={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
       >
-        <p className="text-sm leading-7 text-[#5f7564]">
+        <p className="text-sm leading-7 text-[var(--panel-muted)]">
           Tem certeza que deseja excluir <strong>{deleteTarget?.title}</strong>?
         </p>
+        {deleteTarget?.section === "event" && content.events.find(item => item.id === deleteTarget.id)?.href.includes("date=") ? <p className="mt-3 text-sm text-[var(--panel-muted)]">A data será fechada. As compras e os vouchers serão preservados.</p> : null}
         {error ? (
-          <p className="mt-3 rounded-[8px] border border-[#f1b1aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d3d31]">
+          <p className="mt-3 rounded-[8px] border border-[var(--panel-resch)] bg-[var(--panel-resch-bg)] px-4 py-3 text-sm text-[var(--panel-resch)]">
             {error}
           </p>
         ) : null}
@@ -1008,14 +609,14 @@ export function PainelSiteManager({
             type="button"
             onClick={confirmDelete}
             disabled={pending}
-            className="rounded-full bg-[#b24239] px-5 py-3 text-sm font-black text-white disabled:opacity-60"
+            className="rounded-full bg-[#b24239] px-5 py-3 text-sm font-black text-[var(--panel-on-primary)] disabled:opacity-60"
           >
             {pending ? "Excluindo..." : "Excluir"}
           </button>
           <button
             type="button"
             onClick={() => setDeleteTarget(null)}
-            className="rounded-full border border-[#dbe7d7] px-5 py-3 text-sm font-black text-[#17351f]"
+            className="rounded-full border border-[var(--panel-line)] px-5 py-3 text-sm font-black text-[var(--panel-ink)]"
           >
             Cancelar
           </button>
@@ -1027,83 +628,10 @@ export function PainelSiteManager({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="grid gap-2 text-sm font-semibold text-[#17351f]">
+    <label className="grid gap-2 text-sm font-semibold text-[var(--panel-ink)]">
       {label}
       {children}
     </label>
-  );
-}
-
-function MultiSelectGrid({
-  title,
-  description,
-  items,
-  loading,
-  selectedIds,
-  onToggle,
-  onSelectAll,
-}: {
-  title: string;
-  description: string;
-  items: Array<{ id: string; title: string; subtitle?: string | null }>;
-  loading: boolean;
-  selectedIds: string[];
-  onToggle: (id: string) => void;
-  onSelectAll: () => void;
-}) {
-  return (
-    <section className="grid gap-3 rounded-[10px] border border-[#dbe7d7] bg-white p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-black text-[#17351f]">{title}</p>
-          <p className="mt-1 text-xs leading-5 text-[#5f7564]">{description}</p>
-        </div>
-        <button
-          type="button"
-          onClick={onSelectAll}
-          className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-xs font-semibold text-[#17351f]"
-        >
-          Marcar todos
-        </button>
-      </div>
-
-      {loading ? (
-        <p className="text-xs text-[#5f7564]">Carregando configuracao desta data...</p>
-      ) : null}
-
-      <div className="grid gap-2 md:grid-cols-2">
-        {items.map((item) => {
-          const checked = selectedIds.includes(item.id);
-
-          return (
-            <label
-              key={item.id}
-              className={`rounded-[8px] border px-3 py-3 text-sm ${
-                checked
-                  ? "border-[#17342d] bg-[#f4faf2] text-[#17351f]"
-                  : "border-[#dbe7d7] bg-white text-[#17351f]"
-              }`}
-            >
-              <span className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => onToggle(item.id)}
-                />
-                <span className="min-w-0">
-                  <span className="block font-black">{item.title}</span>
-                  {item.subtitle ? (
-                    <span className="mt-1 block text-xs leading-5 text-[#5f7564]">
-                      {item.subtitle}
-                    </span>
-                  ) : null}
-                </span>
-              </span>
-            </label>
-          );
-        })}
-      </div>
-    </section>
   );
 }
 
@@ -1136,7 +664,7 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
           <button
             type="button"
             onClick={onCreate}
-            className="rounded-full bg-[#17342d] px-5 py-3 text-sm font-black text-white"
+            className="rounded-full bg-[var(--panel-primary)] px-5 py-3 text-sm font-black text-[var(--panel-on-primary)]"
           >
             {buttonLabel}
           </button>
@@ -1146,22 +674,22 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
         {items.map((item, index) => (
           <div
             key={item.id}
-            className="rounded-[10px] border border-[#dbe7d7] bg-white p-4"
+            className="rounded-[10px] border border-[var(--panel-line)] bg-[var(--panel-card)] p-4"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-lg font-black text-[#17351f]">{item.title}</p>
-                <p className="mt-2 text-sm leading-6 text-[#5f7564]">{item.description}</p>
+                <p className="text-lg font-black text-[var(--panel-ink)]">{item.title}</p>
+                <p className="mt-2 text-sm leading-6 text-[var(--panel-muted)]">{item.description}</p>
               </div>
-              <span className="rounded-full bg-[#eef5eb] px-3 py-1 text-xs font-black text-[#2d6b37]">
+              <span className="rounded-full bg-[var(--panel-head)] px-3 py-1 text-xs font-black text-[var(--panel-ok)]">
                 #{item.sortOrder}
               </span>
             </div>
             {"buttonLabel" in item ? (
-              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-[#17351f]">
-                <span className="rounded-full border border-[#dbe7d7] px-3 py-1">
-                  Botao: {item.buttonLabel}
-                </span>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-[var(--panel-ink)]">
+                <span className="calendar-chip">{item.href.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/) ? `Data do site · ${item.href.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/)?.[1]?.split("-").reverse().join("/")}` : "Link externo"}</span>
+                <span className="calendar-chip">{item.pageEnabled ? "Com página":"Sem página"}</span>
+                <span className="calendar-chip">Botão: {item.buttonLabel}</span>
               </div>
             ) : null}
             <div className="mt-4 flex flex-wrap gap-2">
@@ -1175,14 +703,14 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
               <button
                 type="button"
                 onClick={() => onEdit(item)}
-                className="rounded-full border border-[#dbe7d7] px-4 py-2 text-xs font-black text-[#17351f]"
+                className="rounded-full border border-[var(--panel-line)] px-4 py-2 text-xs font-black text-[var(--panel-ink)]"
               >
                 Editar
               </button>
               <button
                 type="button"
                 onClick={() => onDelete(item)}
-                className="rounded-full border border-[#f0c3bc] px-4 py-2 text-xs font-black text-[#a33b31]"
+                className="rounded-full border border-[var(--panel-resch-bg)] px-4 py-2 text-xs font-black text-[var(--panel-resch)]"
               >
                 Excluir
               </button>

@@ -16,6 +16,8 @@ export type VoucherPdfVoucher = {
   number: string | null;
   typeLabel: string;
   visitDate: string | null;
+  validUntil?: string | null;
+  originalDate?: string | null;
   unitValue: string | null;
   schoolName: string | null;
   participantName: string | null;
@@ -218,7 +220,9 @@ function VoucherDocument({
               <View>
                 <Text style={styles.sectionTitle}>Passaporte</Text>
                 <Text style={styles.primaryValue}>{voucher.typeLabel}</Text>
-                <Text>Valido para a visita de {formatDate(voucher.visitDate)}.</Text>
+                <Text>Data da visita: {formatDate(voucher.visitDate)}.</Text>
+                {voucher.originalDate ? <Text>Reagendado de {formatDate(voucher.originalDate)}.</Text> : null}
+                {voucher.validUntil ? <Text>Válido até {formatDate(voucher.validUntil)}.</Text> : null}
                 <Text>Valor unitario: {formatCurrency(voucher.unitValue)}.</Text>
               </View>
 

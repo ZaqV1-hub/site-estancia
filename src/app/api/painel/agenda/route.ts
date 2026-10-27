@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import {
   asPainelAgendaError,
   getPainelAgendaDay,
-  upsertPainelAgendaRange,
   type PainelAgendaMutationInput,
 } from "@/lib/painel-agenda";
 import { authenticateOperationsRequest } from "@/lib/ops-auth";
-import { authorizePainelApiAccess } from "@/lib/painel-api-auth";
+import { CalendarError, getCalendarRule, saveCalendarDate } from "@/lib/operational-calendar";
+import { requirePainelApiAccess, authorizePainelApiAccess } from "@/lib/painel-api-auth";
 
 export const runtime = "nodejs";
 
@@ -146,38 +146,25 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = authenticateOperationsRequest(request, {
-    requiredPermission: "ops.read",
-  });
-
-  if (!auth.ok) {
-    return auth.response;
-  }
-
-  const painelAuth = await authorizePainelApiAccess(request, "vis_agenda");
-
-  if (!painelAuth.ok) {
-    return painelAuth.response;
-  }
-
+  const auth = authenticateOperationsRequest(request, { requiredPermission: "ops.purchases" });
+  if (!auth.ok) return auth.response;
+  const access = await requirePainelApiAccess(request, "vis_agenda");
+  if (!access.ok) return access.response;
   const payload = await readPayload(request);
-
+  if (!payload || payload.startDate !== payload.endDate || payload.type !== "padra") {
+    return errorResponse("calendar_single_date_required", "Use o calendário para configurar uma data de day use; eventos são criados no Site.", 400);
+  }
+  const normalized = parseInput(payload);
   try {
-    const data = await upsertPainelAgendaRange(parseInput(payload));
-
-    return NextResponse.json({
-      ok: true,
-      data,
-    });
+    const currentRule = normalized.agendaId ? await getCalendarRule(normalized.startDate) : null;
+    const data = await saveCalendarDate({ agendaId: normalized.agendaId, date: normalized.startDate,
+      status: normalized.status as "abe" | "fec", validity: currentRule?.validity ?? "day",
+      passportIds: normalized.passportIds ?? [], addonIds: normalized.addonIds ?? [] },
+      { name: access.session.actorName, cpf: access.session.actorCpf });
+    return NextResponse.json({ ok: true, data });
   } catch (error) {
-    const operationError = asPainelAgendaError(error);
-
-    console.error("painel-agenda-upsert-failed", error);
-
-    return errorResponse(
-      operationError.code,
-      operationError.message,
-      operationError.status,
-    );
+    if (error instanceof CalendarError) return errorResponse(error.code, error.message, error.status);
+    console.error("legacy-agenda-save-failed", error);
+    return errorResponse("calendar_save_failed", "Não foi possível salvar esta data.", 500);
   }
 }

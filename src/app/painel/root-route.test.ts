@@ -1,6 +1,6 @@
-import React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { renderToStaticMarkup } from "react-dom/server";
 
 const redirect = vi.fn();
 const requirePainelSession = vi.fn();
@@ -23,35 +23,22 @@ describe("/painel root route", () => {
     vi.clearAllMocks();
   });
 
-  it("renders the authenticated painel home instead of redirecting to login", async () => {
+  it.each([1, 2])("redirects manager and employee role %s to the calendar", async (roleId) => {
     requirePainelSession.mockResolvedValue({
       actorName: "Operador Teste",
       actorCpf: "52998224725",
       role: "operator",
       permissions: ["ops.read", "ops.vouchers", "ops.purchases", "ops.cash"],
-      legacyRoleId: 2,
+      legacyRoleId: roleId,
       legacyRoleName: "Funcionario",
-      legacyResources: ["vis_bilhet", "vis_compra"],
+      legacyResources: ["vis_agenda", "vis_bilhet", "vis_compra"],
     });
-    loadPainelHomePageData.mockResolvedValue({
-      emailErrorCount: 9,
-      revenue: {
-        total: 100,
-        site: 40,
-        boxOffice: 60,
-      },
-      urls: [],
-    });
-
     const page = (await import("@/app/painel/(protected)/page")).default;
-    const element = await page();
-    const html = renderToStaticMarkup(React.createElement(React.Fragment, null, element));
+    await page();
 
     expect(requirePainelSession).toHaveBeenCalledWith("/painel");
-    expect(loadPainelHomePageData).toHaveBeenCalled();
-    expect(redirect).not.toHaveBeenCalled();
-    expect(html).toContain("Visao geral");
-    expect(html).toContain("Valor arrecadado no dia");
+    expect(loadPainelHomePageData).not.toHaveBeenCalled();
+    expect(redirect).toHaveBeenCalledWith("/painel/agenda");
   });
 
   it("redirects box office users directly to the bilheteria module", async () => {
@@ -70,5 +57,18 @@ describe("/painel root route", () => {
 
     expect(redirect).toHaveBeenCalledWith("/painel/bilheteria");
     expect(loadPainelHomePageData).not.toHaveBeenCalled();
+  });
+  it("shows an explicit empty state when no allowed module remains",async()=>{
+    requirePainelSession.mockResolvedValue({legacyRoleId:2,legacyResources:[]});
+    const page=(await import("@/app/painel/(protected)/page")).default;
+    const html=renderToStaticMarkup(await page());
+    expect(redirect).not.toHaveBeenCalled();
+    expect(html).toContain("Nenhum módulo disponível");
+  });
+  it("uses an allowed module instead of looping when agenda access is revoked",async()=>{
+    requirePainelSession.mockResolvedValue({legacyRoleId:2,legacyResources:["vis_compra"]});
+    const page=(await import("@/app/painel/(protected)/page")).default;
+    await page();
+    expect(redirect).toHaveBeenCalledWith("/painel/compras");
   });
 });

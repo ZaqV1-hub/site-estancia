@@ -1,3 +1,5 @@
+import { getCalendarRule } from "@/lib/operational-calendar";
+import { resolveCalendarValidityDate } from "@/lib/calendar-validity";
 import {
   getPublicAgendaReservationById,
   isAgendaDateExpired,
@@ -293,7 +295,12 @@ function isB2cLineItemSelection(
   return "lineItems" in selection;
 }
 
-function resolveVoucherValidityDate(agenda: PurchaseAgendaDetail, now = new Date()) {
+async function resolveVoucherValidityDate(agenda: PurchaseAgendaDetail, now = new Date()) {
+  const rule = await getCalendarRule(agenda.date);
+  if (rule?.configured) {
+    if (rule.status !== "abe") throw new PurchaseCreationError("agenda_closed", "Esta data está fechada para vendas.", 409);
+    return resolveCalendarValidityDate(agenda.date, rule.validity);
+  }
   if (agenda.type === "promo") {
     return agenda.date;
   }
@@ -323,6 +330,10 @@ export async function createOnlinePurchase(
       "Esta data nao esta mais disponivel.",
       409,
     );
+  }
+
+  if (!isB2cLineItemSelection(selection) && (await getCalendarRule(agenda.date))?.configured) {
+    throw new PurchaseCreationError("catalog_selection_required", "Selecione os passaportes do catálogo desta data.", 409);
   }
 
   if (isB2cLineItemSelection(selection)) {
@@ -398,7 +409,7 @@ export async function createOnlinePurchase(
       }
     }
 
-    const validityDate = resolveVoucherValidityDate(agenda);
+    const validityDate = await resolveVoucherValidityDate(agenda);
     const client = await pool.connect();
 
     try {
@@ -522,7 +533,7 @@ export async function createOnlinePurchase(
     quantities.normal +
     quantities.child +
     quantities.exempt;
-  const validityDate = resolveVoucherValidityDate(agenda);
+  const validityDate = await resolveVoucherValidityDate(agenda);
   const pool = getIngressoDbPool();
   const codindica = normalizeCodindica(codindicaInput);
   let codindicaTotals: ReturnType<typeof calculateCodindicaTotals> | null = null;

@@ -1,0 +1,5 @@
+import { describe, expect, it } from "vitest";
+import { renderPainelPurchaseSummaryPdf } from "@/lib/painel-purchase-summary-pdf";
+import type { PainelPurchaseDetail } from "@/lib/painel-compras";
+const summaryFixture = { purchaseId: 42, purchaseDate: "27/10/2026", typeLabel: "Compra no site", statusLabel: "Concluída", userName: "Ana da Silva", cpf: "12345678901", paymentLabel: "Pago", paymentMethodLabel: "Pix", paymentDate: "27/10/2026", paymentTime: "10:00", totalValue: "100,00", vouchers: [{ voucherId: 9, voucherNumber: "A123", voucherTypeLabel: "Passaporte Explorador", visitDate: "01/11/2026", validUntil: "07/11/2026", originalDate: "31/10/2026", unitValue: "100,00", used: "n" }] } as PainelPurchaseDetail;
+describe("purchase summary PDF", () => { it("renders an actual PDF with customer and rescheduled vouchers", async () => { const pdf = await renderPainelPurchaseSummaryPdf(summaryFixture); expect(pdf.subarray(0, 4).toString()).toBe("%PDF"); expect(pdf.byteLength).toBeGreaterThan(1000); }); });

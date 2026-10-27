@@ -1,3 +1,4 @@
+import { CalendarPurchaseActions } from "@/components/calendar-purchase-actions";
 import Link from "next/link";
 import { PainelCompraDetailActions } from "@/components/painel-compra-detail-actions";
 import {
@@ -303,7 +304,7 @@ export function PainelCompraDetailPage({
                         {voucher.voucherNumber ?? "-"}
                       </span>
                     </td>
-                    <td className="border border-[#d7d7d7] px-4 py-3">{voucher.visitDate ?? "-"}</td>
+                    <td className="border border-[#d7d7d7] px-4 py-3">{voucher.visitDate ?? "-"}{voucher.originalDate ? <span className="mt-1 block text-sm">Reagendado de {voucher.originalDate}</span> : null}{voucher.validUntil ? <span className="mt-1 block text-sm">Válido até {voucher.validUntil}</span> : null}{voucher.used === "n" && detail.status === "conc" ? <CalendarPurchaseActions purchaseId={detail.purchaseId} voucherIds={[voucher.voucherId]} /> : null}</td>
                     <td className="border border-[#d7d7d7] px-4 py-3">{voucher.voucherTypeLabel}</td>
                     <td className="border border-[#d7d7d7] px-4 py-3">
                       {voucher.schoolName && voucher.schoolTripHref ? (
@@ -339,6 +340,7 @@ export function PainelCompraDetailPage({
             </li>
           </ul>
         </div>
+        <CalendarPurchaseActions purchaseId={detail.purchaseId} voucherIds={detail.vouchers.filter((voucher) => voucher.used === "n" && detail.status === "conc").map((voucher) => voucher.voucherId)} history />
         <PainelCompraDetailActions
           actorCpf={actorCpf}
           actorName={actorName}

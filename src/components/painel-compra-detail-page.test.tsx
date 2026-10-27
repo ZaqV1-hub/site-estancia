@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { PainelCompraDetailPage } from "@/components/painel-compra-detail-page";
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+
 vi.mock("@/components/painel-compra-detail-actions", () => ({
   PainelCompraDetailActions: () =>
     React.createElement("div", null, "PainelCompraDetailActions"),

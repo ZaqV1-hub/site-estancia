@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createOperationalBoxOfficeSale } from "@/lib/ops-box-office-sales";
 
 const mocks = vi.hoisted(() => ({
+  getCalendarRule: vi.fn(),
   clientQuery: vi.fn(),
   release: vi.fn(),
   ensureOpsAuditLogTable: vi.fn(),
@@ -10,6 +11,10 @@ const mocks = vi.hoisted(() => ({
   processConfirmedPurchaseTickets: vi.fn(),
   randomInt: vi.fn(),
 }));
+
+vi.mock("@/lib/operational-calendar", () => ({ getCalendarRule: mocks.getCalendarRule }));
+
+vi.mock("@/lib/b2c-catalog", () => ({ listB2cProducts: async () => [{ id: "adult", title: "Passaporte", voucherType: "norma", type: "passport", active: true }, { id: "child", title: "Passaporte Infantil", voucherType: "infan", type: "passport", active: true }, { id: "exempt", title: "Isento", voucherType: "norma", type: "passport", active: true }] }));
 
 vi.mock("node:crypto", () => ({
   randomInt: mocks.randomInt,
@@ -40,6 +45,7 @@ vi.mock("@/lib/ticket-service", () => ({
 describe("ops-box-office-sales", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getCalendarRule.mockResolvedValue(null);
     let randomIndex = 0;
 
     mocks.randomInt.mockImplementation((minOrMax: number, max?: number) => {
@@ -64,7 +70,8 @@ describe("ops-box-office-sales", () => {
     });
   });
 
-  it("creates a sale with bulk voucher and payment writes", async () => {
+  it.each([false, true])("creates sale and applies only configured date validity (%s)", async (configured) => {
+    if (configured) mocks.getCalendarRule.mockResolvedValue({ configured: true, status: "abe", validity: "7d", passportIds: ["adult", "child", "exempt"], addonIds: [] });
     mocks.clientQuery.mockImplementation(async (sql: string, values?: unknown[]) => {
       if (sql === "BEGIN" || sql === "COMMIT" || sql === "ROLLBACK") {
         return { rows: [] };
@@ -119,6 +126,7 @@ describe("ops-box-office-sales", () => {
 
       if (sql.includes("INSERT INTO voucher")) {
         expect(sql.match(/\(/g)?.length).toBeGreaterThanOrEqual(5);
+        if (configured) expect(values?.filter((_, index) => index % 12 === 6)).toEqual(Array(5).fill("2026-07-31"));
         expect(values).toEqual([
           321,
           expect.stringMatching(/^A/),
@@ -597,5 +605,14 @@ describe("ops-box-office-sales", () => {
     expect(mocks.ensureOpsAuditLogTable).toHaveBeenCalled();
     expect(mocks.getOrCreateOpenCashPeriod).not.toHaveBeenCalled();
     expect(mocks.processConfirmedPurchaseTickets).toHaveBeenCalledWith(400);
+  });
+
+  it("rolls back configured sales containing unavailable catalog products", async () => {
+    mocks.getCalendarRule.mockResolvedValue({ configured: true, status: "abe", validity: "day", passportIds: ["child"], addonIds: [] });
+    mocks.clientQuery.mockImplementation(async (sql: string) => ({ rows: sql.includes("FROM agenda") ? [{ idagenda: 88, dtagenda: "2026-07-25", tpagenda: "padra", stagenda: "abe", vlnormalbil: "100.00", vlinfantbil: "70.00" }] : sql.includes("INSERT INTO compra") ? [{ idcompra: 321 }] : [] }));
+    await expect(createOperationalBoxOfficeSale({ agendaId: 88, items: [{ type: "norma", quantity: 1, label: "Passaporte" }], payments: [{ method: "pix", value: "100.00" }] })).rejects.toMatchObject({ code: "product_unavailable_for_date" });
+    expect(mocks.clientQuery).toHaveBeenCalledWith("ROLLBACK");
+    expect(mocks.clientQuery.mock.calls.some(([sql]) => sql.includes("INSERT INTO voucher"))).toBe(false);
+    expect(mocks.processConfirmedPurchaseTickets).not.toHaveBeenCalled();
   });
 });

@@ -17,6 +17,8 @@ export type UserVoucher = {
   participantName: string | null;
   sent: boolean;
   validUntil: string | null;
+  originalDate?: string | null;
+  rescheduleReason?: string | null;
   canSelectForVoucher: boolean;
   canReschedule: boolean;
   expiredForGeneration: boolean;

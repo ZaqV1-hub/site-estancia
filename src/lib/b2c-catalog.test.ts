@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   buildB2cCartSummary,
   getB2cProduct,
@@ -6,7 +6,15 @@ import {
   listB2cPassports,
 } from "@/lib/b2c-catalog";
 
-describe("b2c catalog", () => {
+vi.mock("@/lib/estancia-content-store", async () => {
+  const { DEFAULT_B2C_PRODUCTS } = await import("@/lib/b2c-catalog-defaults");
+  return {
+    getManagedB2cProducts: async (type?: "passport" | "addon") =>
+      DEFAULT_B2C_PRODUCTS.filter((product) => product.active && (!type || product.type === type)),
+  };
+});
+
+describe("b2c catalog with a deterministic stored catalog", () => {
   it("exposes the Estancia passport and addon catalog", async () => {
     expect((await listB2cPassports()).map((product) => product.id)).toEqual([
       "passaporte-explorador",

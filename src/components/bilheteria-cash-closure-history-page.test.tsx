@@ -24,7 +24,7 @@ const history = {
 };
 
 describe("BilheteriaCashClosureHistoryPage", () => {
-  it("matches the legacy closure history surface", () => {
+  it("renders the closure history heading and actions", () => {
     const html = renderToStaticMarkup(
       React.createElement(BilheteriaCashClosureHistoryPage, {
         actorName: "Gestor Teste",
@@ -32,7 +32,7 @@ describe("BilheteriaCashClosureHistoryPage", () => {
       }),
     );
 
-    expect(html).toContain("HISTORICO DE FECHAMENTOS");
+    expect(html).toContain("Historico de fechamentos");
     expect(html).toContain("Data do fechamento");
     expect(html).toContain("Acoes");
     expect(html).toContain("Visualizar");

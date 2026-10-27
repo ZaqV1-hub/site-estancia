@@ -1,3 +1,6 @@
+import { listB2cProducts } from "@/lib/b2c-catalog";
+import { getCalendarRule } from "@/lib/operational-calendar";
+import { resolveCalendarValidityDate } from "@/lib/calendar-validity";
 import { randomInt } from "node:crypto";
 import type { PoolClient } from "pg";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
@@ -198,7 +201,20 @@ function addMonths(date: Date, months: number) {
   return next;
 }
 
-function resolveVoucherValidityDate(agenda: BoxOfficeAgendaRow, now = new Date()) {
+async function resolveVoucherValidityDate(agenda: BoxOfficeAgendaRow, client: PoolClient, items: NormalizedSaleItem[], now = new Date()) {
+  const visitDate = String(agenda.dtagenda ?? "").slice(0, 10);
+  const rule = visitDate ? await getCalendarRule(visitDate, client) : null;
+  if (rule?.configured) {
+    if (rule.status !== "abe") throw new BoxOfficeSaleError("agenda_closed", "Esta data está fechada para vendas.", 409);
+    const products = await listB2cProducts();
+    for (const item of items) {
+      const product = products.find((product) => product.active && product.title === item.label && (product.voucherType === item.type || (item.type === "isent" && product.type === "passport")));
+      if (!product || !(product.type === "passport" ? rule.passportIds : rule.addonIds).includes(product.id)) {
+        throw new BoxOfficeSaleError("product_unavailable_for_date", "Selecione passaportes e adicionais do catálogo disponível nesta data.", 409);
+      }
+    }
+    return resolveCalendarValidityDate(visitDate, rule.validity);
+  }
   if (String(agenda.tpagenda ?? "").trim() === "promo" && agenda.dtagenda) {
     return String(agenda.dtagenda).slice(0, 10);
   }
@@ -1051,7 +1067,7 @@ export async function createOperationalBoxOfficeSale(
       client,
       purchaseId,
       agendaId,
-      resolveVoucherValidityDate(agenda),
+      await resolveVoucherValidityDate(agenda, client, items),
       voucherDrafts,
       voucherNumbers,
     );

@@ -18,7 +18,7 @@ describe("painel/bilheteria/reservations/[purchaseId]/pay BFF route", () => {
     vi.clearAllMocks();
     requirePainelApiAccess.mockResolvedValue({
       ok: true,
-      legacyResources: ["vis_bilhet", "vis_compra"],
+      legacyResources: ["vis_bilhet"],
       session: {
         actorName: "Operador Sessao",
         actorCpf: "52998224725",
@@ -27,15 +27,15 @@ describe("painel/bilheteria/reservations/[purchaseId]/pay BFF route", () => {
     asPainelBilheteriaError.mockImplementation((error: unknown) => error);
   });
 
-  it("requires ops.purchases permission", async () => {
+  it("requires bilheteria panel permission", async () => {
     requirePainelApiAccess.mockResolvedValueOnce({
       ok: false,
       response: Response.json(
         {
           ok: false,
           error: {
-            code: "operations_forbidden",
-            message: "Sessao operacional sem permissao para esta acao.",
+            code: "painel_forbidden",
+            message: "Sessao do painel sem permissao para este modulo.",
           },
         },
         { status: 403 },
@@ -56,9 +56,10 @@ describe("painel/bilheteria/reservations/[purchaseId]/pay BFF route", () => {
     );
 
     expect(response.status).toBe(403);
+    expect(payPainelBilheteriaReservation).not.toHaveBeenCalled();
     expect(requirePainelApiAccess).toHaveBeenCalledWith(
       expect.any(Request),
-      ["vis_compra", "vis_bilhet"],
+      ["vis_bilhet"],
     );
   });
 
@@ -99,7 +100,7 @@ describe("painel/bilheteria/reservations/[purchaseId]/pay BFF route", () => {
 
     expect(requirePainelApiAccess).toHaveBeenCalledWith(
       expect.any(Request),
-      ["vis_compra", "vis_bilhet"],
+      ["vis_bilhet"],
     );
     expect(payPainelBilheteriaReservation).toHaveBeenCalledWith({
       purchaseId: 10,

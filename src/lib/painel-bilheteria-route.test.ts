@@ -22,7 +22,7 @@ describe("painel-bilheteria-route", () => {
     vi.clearAllMocks();
   });
 
-  it("authorizes painel bilheteria routes with the cluster permissions", async () => {
+  it("requires bilheteria permission without granting access through purchases", async () => {
     authorizeOpsRouteAccess.mockResolvedValue({
       ok: false,
       response: new Response(null, { status: 403 }),
@@ -37,7 +37,7 @@ describe("painel-bilheteria-route", () => {
 
     expect(authorizeOpsRouteAccess).toHaveBeenCalledWith(request, {
       requiredPermission: "ops.purchases",
-      painelPermissions: ["vis_compra", "vis_bilhet"],
+      painelPermissions: ["vis_bilhet"],
     });
     expect(result).toEqual({
       ok: false,
@@ -140,7 +140,7 @@ describe("painel-bilheteria-route", () => {
 
     expect(requirePainelApiAccess).toHaveBeenCalledWith(
       expect.any(Request),
-      ["vis_compra", "vis_bilhet"],
+      ["vis_bilhet"],
     );
     expect(readRouteActor).toHaveBeenCalledWith({
       name: "Operador",

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { PainelBilheteriaWorkstation } from "@/components/painel-bilheteria-workstation";
 
 describe("PainelBilheteriaWorkstation", () => {
-  it("renders the three main legacy validation lanes", () => {
+  it("renders only B2C voucher and customer validation lanes", () => {
     const html = renderToStaticMarkup(
       React.createElement(PainelBilheteriaWorkstation, {
         actorName: "Operador Teste",
@@ -14,11 +14,11 @@ describe("PainelBilheteriaWorkstation", () => {
 
     expect(html).toContain("Validação via Voucher");
     expect(html).toContain("Validação via Dados do Cliente");
-    expect(html).toContain("Validação via Passeio");
+    expect(html).not.toContain("Validação via Passeio");
     expect(html).toContain("Consultar Ingresso");
     expect(html).toContain("Voucher");
     expect(html).toContain("RG ou CPF");
-    expect(html).toContain("Passeio");
+    expect(html).not.toContain("Passeio");
     expect(html).toContain("Inserir ID do Ingresso");
     expect(html).toContain("Imprimir QR-Code");
     expect(html).toContain("Enviar no WhatsApp");

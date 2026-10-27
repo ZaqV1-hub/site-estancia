@@ -193,7 +193,7 @@ export function PainelCompraVouchersPage({
                       <td className="border border-[#d7d7d7] px-4 py-3">
                         {item.voucherNumber ?? "-"}
                       </td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.visitDate ?? "-"}</td>
+                      <td className="border border-[#d7d7d7] px-4 py-3">{item.visitDate ?? "-"}{item.originalDate ? <span className="mt-1 block text-sm">Reagendado de {item.originalDate}</span> : null}{item.validUntil ? <span className="mt-1 block text-sm">Válido até {item.validUntil}</span> : null}<Link className="mt-1 block underline" href={`/painel/compras/${item.purchaseId}`}>Compra {item.purchaseId}</Link></td>
                       <td className="border border-[#d7d7d7] px-4 py-3">{item.ticketTypeLabel}</td>
                       <td className="border border-[#d7d7d7] px-4 py-3">{item.unitValue}</td>
                     </tr>

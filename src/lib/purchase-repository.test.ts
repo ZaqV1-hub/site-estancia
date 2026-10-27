@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createOnlinePurchase } from "@/lib/purchase-repository";
 
 const mocks = vi.hoisted(() => ({
+  getCalendarRule: vi.fn(),
   query: vi.fn(),
   clientQuery: vi.fn(),
   release: vi.fn(),
@@ -9,6 +10,8 @@ const mocks = vi.hoisted(() => ({
   getPublicAgendaReservationById: vi.fn(),
   isAgendaDateExpired: vi.fn(),
 }));
+
+vi.mock("@/lib/operational-calendar", () => ({ getCalendarRule: mocks.getCalendarRule }));
 
 vi.mock("@/lib/agenda-repository", () => ({
   getPublicAgendaReservationById: mocks.getPublicAgendaReservationById,
@@ -32,6 +35,7 @@ vi.mock("@/lib/voucher-number", () => ({
 describe("purchase-repository", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getCalendarRule.mockResolvedValue(null);
     mocks.getPublicAgendaReservationById.mockResolvedValue({
       id: 123,
       legacyEncodedId: "MTIz",
@@ -51,7 +55,8 @@ describe("purchase-repository", () => {
     });
   });
 
-  it("creates vouchers with B2C product descriptions from cart line items", async () => {
+  it.each([false, true])("creates B2C vouchers preserving descriptions and configured validity (%s)", async (configured) => {
+    if (configured) mocks.getCalendarRule.mockResolvedValue({ configured: true, status: "abe", validity: "7d" });
     const voucherInserts: Array<{ sql: string; values?: unknown[] }> = [];
 
     mocks.clientQuery.mockImplementation(async (sql: string, values?: unknown[]) => {
@@ -91,6 +96,7 @@ describe("purchase-repository", () => {
     });
 
     expect(voucherInserts).toHaveLength(6);
+    if (configured) expect(voucherInserts.every((insert) => insert.values?.[5] === "2026-07-26")).toBe(true);
     expect(voucherInserts.map((insert) => insert.sql)).toEqual(
       expect.arrayContaining([expect.stringContaining("descricao")]),
     );
@@ -102,5 +108,11 @@ describe("purchase-repository", () => {
       "Café da Manhã",
       "Café da Manhã",
     ]);
+  });
+
+  it("rejects ambiguous legacy quantities on configured dates", async () => {
+    mocks.getCalendarRule.mockResolvedValue({ configured: true, status: "abe", validity: "day" });
+    await expect(createOnlinePurchase("52998224725", 123, { normal: 1, child: 0, exempt: 0, discountedNormal: 0, discountedChild: 0 })).rejects.toMatchObject({ code: "catalog_selection_required" });
+    expect(mocks.clientQuery).not.toHaveBeenCalled();
   });
 });

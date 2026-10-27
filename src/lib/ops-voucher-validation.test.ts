@@ -54,6 +54,18 @@ describe("ops-voucher-validation", () => {
     vi.useRealTimers();
   });
 
+  it("rejects expired vouchers even with date confirmation", async () => {
+    query.mockImplementation(async (sql: string) => ({ rows: sql.includes("WHERE voucher.numvoucher = $1") ? [{ idvoucher: 9, idcompra: 4, numvoucher: "EXP", stusado: "n", tpcompra: "ponli", stcompra: "conc", payment_status: 3, dtagenda: "2026-04-20", dtvalidade: "2026-04-22", tpagenda: "padra" }] : [] }));
+    await expect(validateVoucherByNumber("EXP", true)).rejects.toMatchObject({ code: "voucher_expired" });
+    expect(query).toHaveBeenCalledWith("ROLLBACK");
+    expect(query.mock.calls.some(([sql]) => sql.includes("UPDATE voucher"))).toBe(false);
+  });
+
+  it("honors explicit validity beyond a promotional visit date", async () => {
+    query.mockImplementation(async (sql: string) => ({ rows: sql.includes("WHERE voucher.numvoucher = $1") ? [{ idvoucher: 9, idcompra: 4, numvoucher: "PROMO", stusado: "n", tpcompra: "ponli", stcompra: "conc", payment_status: 3, dtagenda: "2026-04-20", dtvalidade: "2026-04-26", tpagenda: "promo" }] : [] }));
+    await expect(validateVoucherByNumber("PROMO")).resolves.toMatchObject({ processedCount: 1 });
+  });
+
   it("validates a single online voucher by number", async () => {
     query.mockImplementation(async (sql: string) => {
       if (sql === "BEGIN" || sql === "COMMIT") {

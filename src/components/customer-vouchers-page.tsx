@@ -179,6 +179,8 @@ function VoucherRow({
             <p className="text-[11px] uppercase tracking-[0.16em] text-[#719168]">Visita</p>
             <p className="mt-2 text-[16px] font-bold text-[#17351f]">
               {formatDate(voucher.visitDate)}
+              {voucher.originalDate ? <span className="mt-1 block text-sm">Reagendado de {formatDate(voucher.originalDate)}</span> : null}
+              {voucher.validUntil ? <span className="mt-1 block text-sm">Válido até {formatDate(voucher.validUntil)}</span> : null}
             </p>
           </div>
           <div>
@@ -240,7 +242,9 @@ function VoucherRow({
           ) : null}
         </td>
         <td className="px-3 py-3 text-center">
-          <strong>{formatDate(voucher.visitDate)}</strong>
+          <strong>{formatDate(voucher.visitDate)}
+              {voucher.originalDate ? <span className="mt-1 block text-sm">Reagendado de {formatDate(voucher.originalDate)}</span> : null}
+              {voucher.validUntil ? <span className="mt-1 block text-sm">Válido até {formatDate(voucher.validUntil)}</span> : null}</strong>
         </td>
         <td className="px-3 py-3 text-center">
           <strong>{formatDate(voucher.useDate)}</strong>
@@ -332,6 +336,8 @@ function PurchaseTicket({
           <h3 className="mt-2 text-[26px] font-black text-[#17351f] md:text-[30px]">
             Pedido #{purchase.id}
           </h3>
+          {purchase.vouchers.some((voucher) => voucher.originalDate) ? <div role="status" className="mt-3 rounded-lg border border-current p-3 text-sm text-[#a8481a]"><strong>Visita reagendada.</strong>{Array.from(new Set(purchase.vouchers.filter((voucher) => voucher.originalDate).map((voucher) => `Nova visita: ${formatDate(voucher.visitDate)}. Data original: ${formatDate(voucher.originalDate ?? null)}. Validade: ${formatDate(voucher.validUntil)}.`))).map((notice) => <p key={notice}>{notice}</p>)}</div> : null}
+
           <div className="mt-4 flex flex-wrap gap-2">
             <span className={`inline-flex rounded-full px-3 py-1 text-[12px] font-black ${statusBadgeClass(purchase)}`}>
               {purchaseStatusLabel(purchase)}

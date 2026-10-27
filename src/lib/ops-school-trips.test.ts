@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createOpsSchoolTripDate,
   getOpsSchoolTripsScreenData,
@@ -25,12 +25,16 @@ vi.mock("@/lib/ops-audit-log", () => ({
 describe("ops-school-trips", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-06-01T12:00:00Z"));
     connect.mockResolvedValue({
       query,
       release,
     });
     registerOpsAuditLog.mockResolvedValue(701);
   });
+
+  afterEach(() => vi.useRealTimers());
 
   it("loads a selected school with its trip dates", async () => {
     query.mockImplementation(async (sql: string, values?: unknown[]) => {
@@ -168,6 +172,15 @@ describe("ops-school-trips", () => {
       auditLogId: 701,
       message: "Data de passeio vinculada com sucesso.",
     });
+  });
+
+  it("rejects past trip dates before connecting or writing", async () => {
+    await expect(createOpsSchoolTripDate({ schoolId: 12, visitDate: "31/05/2026" })).rejects.toMatchObject({
+      code: "ops_school_trip_invalid_date",
+      message: "A data informada nao pode ser anterior a hoje.",
+    });
+    expect(connect).not.toHaveBeenCalled();
+    expect(registerOpsAuditLog).not.toHaveBeenCalled();
   });
 
   it("updates the active status of a school trip date", async () => {

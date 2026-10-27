@@ -38,7 +38,7 @@ const summary = {
 };
 
 describe("BilheteriaCashFundPage", () => {
-  it("renders the legacy fund surface with manager actions", () => {
+  it("renders fund balances and manager actions", () => {
     const html = renderToStaticMarkup(
       React.createElement(BilheteriaCashFundPage, {
         actorCpf: "52998224725",
@@ -48,11 +48,11 @@ describe("BilheteriaCashFundPage", () => {
       }),
     );
 
-    expect(html).toContain("FUNDO DE CAIXA");
+    expect(html).toContain("Fundo de caixa");
     expect(html).toContain("Dinheiro do Fundo de Caixa");
     expect(html).toContain("Dinheiro total no caixa");
-    expect(html).toContain("FAZER FUNDO DE CAIXA");
-    expect(html).toContain("FAZER SANGRIA");
+    expect(html).toContain("Fazer fundo");
+    expect(html).toContain("Fazer sangria");
     expect(html).toContain("Editar lancamento");
     expect(html).toContain("Excluir lancamento");
   });

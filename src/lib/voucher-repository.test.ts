@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getUserVouchersPage, getUserVoucherRescheduleData } from "@/lib/voucher-repository";
+import { getUserVouchersPage, getUserVoucherRescheduleData, getUserVoucherExportData } from "@/lib/voucher-repository";
 
 const dbQuery = vi.fn();
 
@@ -109,5 +109,21 @@ describe("voucher-repository", () => {
     const result = await getUserVoucherRescheduleData("52998224725", 11);
 
     expect(result?.voucher.id).toBe(11);
+  });
+
+  it.each(["n", "inv"])("projects dates and blocks expired or invalid voucher generation (%s)", async (stusado) => {
+    vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-27T15:00:00Z"));
+    try {
+      dbQuery.mockResolvedValueOnce({ rows: [{ total: "1" }] }).mockResolvedValueOnce({ rows: [{ idcompra: 77, tpcompra: "ponli", dtcompra: "2026-10-01", stcompra: "conc", status: 3, voucher_count: "1", unused_voucher_count: "1" }] }).mockResolvedValueOnce({ rows: [{ idcompra: 77, idvoucher: 11, stusado, dtvalidade: "2026-10-26", dtagenda: "2026-10-20", original_date: "2026-10-10", reschedule_reason: "Chuva" }] });
+      const page = await getUserVouchersPage("52998224725", 10, 0);
+      expect(page.purchases[0]?.vouchers[0]).toMatchObject({ visitDate: "2026-10-20", originalDate: "2026-10-10", validUntil: "2026-10-26", rescheduleReason: "Chuva", expiredForGeneration: true, canSelectForVoucher: false });
+      expect(page.purchases[0]?.canGenerateVoucher).toBe(false);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("keeps original visit and validity in exported voucher data", async () => {
+    dbQuery.mockResolvedValueOnce({ rows: [{ total: "1" }] }).mockResolvedValueOnce({ rows: [{ idcompra: 77, tpcompra: "ponli", dtcompra: "2099-01-01", stcompra: "conc", status: 3, voucher_count: "1", unused_voucher_count: "1" }] }).mockResolvedValueOnce({ rows: [{ idcompra: 77, idvoucher: 11, stusado: "n", dtvalidade: "2099-11-07", dtagenda: "2099-11-01", original_date: "2099-10-01", tpagenda: "padra" }] }).mockResolvedValueOnce({ rows: [] });
+    const result = await getUserVoucherExportData("52998224725", 77, [11]);
+    expect(result?.vouchers[0]).toMatchObject({ visitDate: "2099-11-01", originalDate: "2099-10-01", validUntil: "2099-11-07" });
   });
 });

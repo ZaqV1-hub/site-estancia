@@ -83,6 +83,8 @@ describe("me/vouchers export BFF route", () => {
           type: "norma",
           typeLabel: "a partir de 10 anos",
           visitDate: "2026-07-25",
+          originalDate: "2026-07-20",
+          validUntil: "2026-07-31",
           unitValue: "120.00",
           agendaType: "padra",
           schoolName: null,
@@ -165,6 +167,8 @@ describe("me/vouchers export BFF route", () => {
       vouchers: [
         expect.objectContaining({
           id: 11,
+          originalDate: "2026-07-20",
+          validUntil: "2026-07-31",
           qrCodeDataUrl: "data:image/png;base64,qr11",
         }),
         expect.objectContaining({

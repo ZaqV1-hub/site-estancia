@@ -93,6 +93,7 @@ export function PainelCompraDetailActions({
           >
             Imprimir QR-Codes
           </a>
+          <a className="calendar-button" href={`/api/painel/compras/${purchaseId}/resumo`} rel="noreferrer" target="_blank">Gerar Resumo</a>
           <button
             className="calendar-button"
             disabled={voucherIds.length === 0}

@@ -61,6 +61,10 @@ describe("PainelComprasPage", () => {
     );
 
     expect(html).toContain("Todas as compras");
+    expect(html).toContain("Vouchers por data de visita");
+    expect(html).toContain("/painel/compras/vouchers?dtagenda%5Bde%5D=08%2F05%2F2026");
+    expect(html).toContain('aria-label="Status da compra"');
+    expect(html).toContain('calendar-purchase-status-conc');
     expect(html).toContain("Reagendadas");
     expect(html).toContain("Disponíveis");
     expect(html).toContain("Utilizadas");

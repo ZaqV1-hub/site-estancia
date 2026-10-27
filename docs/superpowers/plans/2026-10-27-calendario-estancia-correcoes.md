@@ -70,3 +70,19 @@ Execução concluída. Código final c5b8586 publicado passando por codex/develo
 - Evidências privadas: corrections-final-production-deploy.log, corrections-final-production-smoke.json, corrections-local-evidence.json e relatórios de revisão em .local/calendar-validation. Local continua em http://localhost:3002/painel com runtime standalone (PID63202 na conclusão).
 - Ocorrência local durante gravação do relatório: ENOSPC. Removido somente .next/dev667MB gerado nesta tarefa, com servidor de desenvolvimento parado; runtime standalone, fontes, dados e backups preservados. Espaço livre recuperado925MiB. Não foi realizada limpeza geral do Mac.
 - Pendência residual real: dependências anteriores com alertas de segurança, principalmente Next16.2.4 no Windows (CVE-2026-75604); permanece fora desta alteração de layout e fluxos, sem alegar remediação.
+
+
+## Complemento solicitado — compras no padrão do Rincão
+
+Usuário confirmou a apresentação Day use/Escolar conforme o Rincão: tela de detalhes mantém a estrutura atual; só o PDF alterna tabela compacta e cartões escolares. Demais itens: cores dos status da compra separadas da situação dos vouchers, botão Vouchers por data de visita reaproveitando consulta existente e intervalo da visita, linha cinza de voucher utilizado e Gerar Resumo nas ações. Identidade verde, regras de validade, reagendamentos e restrições de edição preservados.
+
+Base7f2fd44; desenvolvimento no checkout develop escolhido pelo usuário. Referência de código local new_rincao_site cfda28c, sem alterações nesse repo. Coordenador possui UI/CSS/contrato studentName/scripts/banco/build/portas/Git; workerPDF possui só gerador+testePDF; revisão independente somente leitura concluída. Nenhuma nova dependência da aplicação nem migração. Ferramenta de renderização PyMuPDF isolada em .local/pdf-tools.
+
+- [x] Regressões antes da implementação:4falhas esperadas de botão, status, aluno e voucher usado; depois53testes focados verdes.
+- [x] Implementar UI/consulta/dados escolares/PDF e revisão independente.
+- [x] Suíte801testes verdes e ESLint0erros/7avisos anteriores. Integração calendário15cenários passou; integração adicional5PDFs autenticados/HTML/status/consulta/exportação passou.
+- [x] Paginação e tipagem corrigidas. Rodapé sem lineHeight herdado; teste binário exige texto desenhado em todas as páginas. HTTP real/PyMuPDF confirmou paginação, aviso fiscal e limites em5PDFs (1/2/5páginas).
+- [x] Build standalone e reconferência visual/semântica: claro/escuro1440/390, tabela/cinzas/cores, intervalo de visita, escolares com24vouchers/múltiplas páginas e validade/original/uso/invalidado.
+- [ ] Passar pelo fluxo já autorizado develop → main → VM, com backup atualizado, health e reconferência no domínio; sem mutações ou envios reais.
+
+Estado: revisões concluídas, incluindo recheck do rodapé final. Suíte801/801, ESLint0erros/7avisos anteriores, TypeScript e build aprovados. Runtime standalone porta3002 sessão33669;15integrações calendário e5PDFs/HTML/status/consulta aprovados também no build compilado. Navegador1440/390 claro/escuro: status, cinza sem ações no usado, intervalo preservado, filtros mobile primeiro, exportação200, documento sem overflow. Backup fresco207091bytes/467entradas validado/cópia privada em C:\Users\Administrator\site-estancia-backups\20261027-rincao-purchases\database.dump. Sem migração/dependências novas. Próxima ação: pushdevelop, promovermain, deployVM e leitura no domínio.

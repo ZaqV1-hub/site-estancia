@@ -42,7 +42,7 @@ function renderSelect(
 ) {
   return (
     <select
-      className="w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
+      className="calendar-input"
       defaultValue={value ?? "-1"}
       name={name}
     >
@@ -135,67 +135,66 @@ export function PainelCompraVouchersPage({
   );
 
   return (
-    <section className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="rounded-[6px] bg-white px-4 py-6 shadow-[0_10px_28px_rgba(26,61,94,0.08)] md:px-8">
-        <div className="border-b border-[#d8d8d8] pb-3 text-sm text-[#909090]">
-          <Link className="text-[#1d68a2] underline" href="/painel">
+    <section className="calendar-voucher-list grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="calendar-card">
+        <div className="calendar-crumbs">
+          <Link className="calendar-text-link" href="/painel">
             Home
           </Link>{" "}
-          <span className="mx-2 text-[#b8b8b8]">&gt;</span>
-          <Link className="text-[#1d68a2] underline" href="/painel/compras">
+          <span className="calendar-muted">&gt;</span>
+          <Link className="calendar-text-link" href="/painel/compras">
             Lista de compras / reservas
           </Link>{" "}
-          <span className="mx-2 text-[#b8b8b8]">&gt;</span>
+          <span className="calendar-muted">&gt;</span>
           <span>Vouchers</span>
         </div>
 
-        <p className="my-6 border-t border-[#e3e8ed]" />
+        <p className="calendar-voucher-list-divider" />
 
         {result.items.length === 0 ? (
-          <h2 className="text-[24px] text-[#5a5a5a]">Nenhum voucher encontrado</h2>
+          <h2 className="calendar-heading">Nenhum voucher encontrado</h2>
         ) : (
           <>
             <div className="grid gap-3 lg:grid-cols-4 2xl:grid-cols-6">
               {indicatorCards(result.indicators).map((card) => (
                 <div
-                  className="rounded-[6px] border border-[#d9e3eb] bg-[#f7fbfe] px-4 py-3 text-center"
+                  className="calendar-card calendar-voucher-indicator"
                   key={card.label}
                 >
-                  <strong className="block text-xl text-[#205a7f]">{card.count}</strong>
-                  <span className="block text-xs uppercase tracking-[0.16em] text-[#607282]">
+                  <strong className="calendar-voucher-indicator-count">{card.count}</strong>
+                  <span className="calendar-eyebrow">
                     {card.label}
                   </span>
-                  <span className="mt-1 block text-sm text-[#3a5568]">
+                  <span className="calendar-muted">
                     {card.value === "-" ? "-" : `R$ ${card.value}`}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-6 overflow-x-auto border border-[#cfcfcf]">
-              <table className="min-w-full border-collapse text-[15px]">
-                <thead className="bg-[#5f84a3] text-left text-white">
+            <div className="calendar-table-scroll mt-6">
+              <table className="calendar-purchases-table">
+                <thead>
                   <tr>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">ID</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Voucher</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Data Visita</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Passaporte</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor</th>
+                    <th>ID</th>
+                    <th>Voucher</th>
+                    <th>Data Visita</th>
+                    <th>Passaporte</th>
+                    <th>Valor</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {result.items.map((item, index) => (
+                  {result.items.map((item) => (
                     <tr
-                      className={index % 2 === 1 ? "bg-[#fafafa]" : "bg-white"}
                       key={`${item.purchaseId}-${item.voucherId}`}
                     >
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.voucherId}</td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">
+                      <td>{item.voucherId}</td>
+                      <td>
                         {item.voucherNumber ?? "-"}
                       </td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.visitDate ?? "-"}{item.originalDate ? <span className="mt-1 block text-sm">Reagendado de {item.originalDate}</span> : null}{item.validUntil ? <span className="mt-1 block text-sm">Válido até {item.validUntil}</span> : null}<Link className="mt-1 block underline" href={`/painel/compras/${item.purchaseId}`}>Compra {item.purchaseId}</Link></td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.ticketTypeLabel}</td>
-                      <td className="border border-[#d7d7d7] px-4 py-3">{item.unitValue}</td>
+                      <td>{item.visitDate ?? "-"}{item.originalDate ? <span className="mt-1 block text-sm">Reagendado de {item.originalDate}</span> : null}{item.validUntil ? <span className="mt-1 block text-sm">Válido até {item.validUntil}</span> : null}<Link className="mt-1 block underline" href={`/painel/compras/${item.purchaseId}`}>Compra {item.purchaseId}</Link></td>
+                      <td>{item.ticketTypeLabel}</td>
+                      <td>{item.unitValue}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -208,7 +207,7 @@ export function PainelCompraVouchersPage({
           <div className="mt-5 flex flex-wrap justify-end gap-3">
             {previousHref ? (
               <Link
-                className="rounded-full border border-[#c9d8e3] px-4 py-2 text-sm font-semibold text-[#205a7f] hover:bg-[#edf5fa]"
+                className="calendar-button-secondary"
                 href={previousHref}
               >
                 Pagina anterior
@@ -216,7 +215,7 @@ export function PainelCompraVouchersPage({
             ) : null}
             {nextHref ? (
               <Link
-                className="rounded-full border border-[#c9d8e3] px-4 py-2 text-sm font-semibold text-[#205a7f] hover:bg-[#edf5fa]"
+                className="calendar-button-secondary"
                 href={nextHref}
               >
                 Proxima pagina
@@ -227,28 +226,28 @@ export function PainelCompraVouchersPage({
       </div>
 
       <aside className="grid content-start gap-5">
-        <div className="rounded-[6px] border border-[#d4dde5] bg-white p-5 shadow-[0_10px_28px_rgba(26,61,94,0.08)]">
-          <h2 className="text-lg font-semibold text-[#205a7f]">Acoes</h2>
+        <div className="calendar-card">
+          <h2 className="calendar-heading">Ações</h2>
           <ul className="mt-4 grid gap-3 text-sm">
             <li>
-              <a className="text-[#1d68a2] underline" href={exportHref}>
+              <a className="calendar-text-link" href={exportHref}>
                 Exportar (.xls)
               </a>
             </li>
             <li>
-              <Link className="text-[#1d68a2] underline" href="/painel/compras">
+              <Link className="calendar-text-link" href="/painel/compras">
                 Lista de compras / reservas
               </Link>
             </li>
           </ul>
         </div>
 
-        <div className="rounded-[6px] border border-[#d4dde5] bg-white p-5 shadow-[0_10px_28px_rgba(26,61,94,0.08)]">
+        <div className="calendar-card">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-[#205a7f]">Filtrar</h2>
+            <h2 className="calendar-heading">Filtrar</h2>
             {filtersActive ? (
               <Link
-                className="text-sm text-[#1d68a2] underline"
+                className="text-sm calendar-text-link"
                 href="/painel/compras/vouchers"
               >
                 Remover Filtros
@@ -256,10 +255,10 @@ export function PainelCompraVouchersPage({
             ) : null}
           </div>
           <form action="/painel/compras/vouchers" className="mt-4 grid gap-4" method="get">
-            <label className="grid gap-2 text-sm text-[#555]">
+            <label className="calendar-field">
               <span>Voucher</span>
               <input
-                className="border border-[#c8c8c8] px-3 py-2 text-sm text-[#444]"
+                className="calendar-input"
                 defaultValue={result.filters.voucherId ?? ""}
                 name="idvoucher"
                 type="text"
@@ -267,57 +266,57 @@ export function PainelCompraVouchersPage({
             </label>
 
             <div className="grid gap-2">
-              <label className="grid gap-2 text-sm text-[#555]">
+              <label className="calendar-field">
                 <span>Data da compra de</span>
-                <input className="border border-[#c8c8c8] px-3 py-2 text-sm text-[#444]" defaultValue={result.filters.purchaseDateFrom ?? ""} name="dtcompra[de]" type="text" />
+                <input className="calendar-input" defaultValue={result.filters.purchaseDateFrom ?? ""} name="dtcompra[de]" type="text" />
               </label>
-              <label className="grid gap-2 text-sm text-[#555]">
+              <label className="calendar-field">
                 <span>Data da compra ate</span>
-                <input className="border border-[#c8c8c8] px-3 py-2 text-sm text-[#444]" defaultValue={result.filters.purchaseDateTo ?? ""} name="dtcompra[ate]" type="text" />
+                <input className="calendar-input" defaultValue={result.filters.purchaseDateTo ?? ""} name="dtcompra[ate]" type="text" />
               </label>
             </div>
 
             <div className="grid gap-2">
-              <label className="grid gap-2 text-sm text-[#555]">
+              <label className="calendar-field">
                 <span>Data de uso de</span>
-                <input className="border border-[#c8c8c8] px-3 py-2 text-sm text-[#444]" defaultValue={result.filters.usedDateFrom ?? ""} name="dtuso[de]" type="text" />
+                <input className="calendar-input" defaultValue={result.filters.usedDateFrom ?? ""} name="dtuso[de]" type="text" />
               </label>
-              <label className="grid gap-2 text-sm text-[#555]">
+              <label className="calendar-field">
                 <span>Data de uso ate</span>
-                <input className="border border-[#c8c8c8] px-3 py-2 text-sm text-[#444]" defaultValue={result.filters.usedDateTo ?? ""} name="dtuso[ate]" type="text" />
+                <input className="calendar-input" defaultValue={result.filters.usedDateTo ?? ""} name="dtuso[ate]" type="text" />
               </label>
             </div>
 
             <div className="grid gap-2">
-              <label className="grid gap-2 text-sm text-[#555]">
+              <label className="calendar-field">
                 <span>Data de visita de</span>
-                <input className="border border-[#c8c8c8] px-3 py-2 text-sm text-[#444]" defaultValue={result.filters.visitDateFrom ?? ""} name="dtagenda[de]" type="text" />
+                <input className="calendar-input" defaultValue={result.filters.visitDateFrom ?? ""} name="dtagenda[de]" type="text" />
               </label>
-              <label className="grid gap-2 text-sm text-[#555]">
+              <label className="calendar-field">
                 <span>Data de visita ate</span>
-                <input className="border border-[#c8c8c8] px-3 py-2 text-sm text-[#444]" defaultValue={result.filters.visitDateTo ?? ""} name="dtagenda[ate]" type="text" />
+                <input className="calendar-input" defaultValue={result.filters.visitDateTo ?? ""} name="dtagenda[ate]" type="text" />
               </label>
             </div>
 
-            <label className="grid gap-2 text-sm text-[#555]">
+            <label className="calendar-field">
               <span>Passaporte</span>
               {renderSelect("tpvoucher", result.filters.voucherType, voucherTypeOptions)}
             </label>
-            <label className="grid gap-2 text-sm text-[#555]">
+            <label className="calendar-field">
               <span>Onde</span>
               {renderSelect("tpcompra", result.filters.purchaseLocation, purchaseLocationOptions)}
             </label>
-            <label className="grid gap-2 text-sm text-[#555]">
+            <label className="calendar-field">
               <span>Status</span>
               {renderSelect("stcompra", result.filters.purchaseStatus, purchaseStatusOptions)}
             </label>
-            <label className="grid gap-2 text-sm text-[#555]">
+            <label className="calendar-field">
               <span>Usado?</span>
               {renderSelect("stusado", result.filters.usedStatus, usedStatusOptions)}
             </label>
 
             <button
-              className="inline-flex items-center justify-center bg-[#8f8f8f] px-5 py-3 text-sm font-semibold text-white hover:bg-[#7c7c7c]"
+              className="calendar-button"
               type="submit"
             >
               Filtrar

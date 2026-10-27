@@ -195,6 +195,11 @@ export function PainelComprasPage({
     "/api/painel/compras/export",
   );
 
+  const voucherParams = new URLSearchParams();
+  if (result.filters.visitDateFrom) voucherParams.set("dtagenda[de]", result.filters.visitDateFrom);
+  if (result.filters.visitDateTo) voucherParams.set("dtagenda[ate]", result.filters.visitDateTo);
+  const vouchersHref = `/painel/compras/vouchers${voucherParams.size ? `?${voucherParams}` : ""}`;
+
   const financialFiltersActive = Boolean(result.filters.dateFrom || result.filters.dateTo ||
     result.filters.purchaseId || result.filters.type || result.filters.purchaseStatus ||
     result.filters.paymentMethod || result.filters.gatewayPaymentMethod ||
@@ -209,10 +214,13 @@ export function PainelComprasPage({
             <h1 className="calendar-heading">Todas as compras</h1>
             <p className="calendar-muted">A mesma lista de sempre, com filtro por data da visita. O calendário e a lista mostram os mesmos dados.</p>
           </div>
+          <div className="calendar-inline-actions">
+          <Link className="calendar-button-secondary" href={vouchersHref}>Vouchers por data de visita</Link>
           <nav className="calendar-view-switch" aria-label="Visualização da agenda">
             <Link href="/painel/agenda">Calendário</Link>
             <Link href={listHref} aria-current="page">Lista</Link>
           </nav>
+          </div>
         </header>
 
         <form action="/painel/compras" method="get">
@@ -289,7 +297,8 @@ export function PainelComprasPage({
                   <td>
                     <Link aria-label={`Ver detalhes da compra ${item.purchaseId}`} href={`/painel/compras/${item.purchaseId}`}>{item.purchaseId}</Link>
                     <small className="calendar-list-financial">{item.purchaseDate ?? "—"}</small>
-                    <small className="calendar-list-financial">{item.statusLabel} · {item.paymentMethodLabel} · {item.paymentLabel}</small>
+                    <small className="calendar-list-financial"><span aria-label="Status da compra" className={`calendar-purchase-status calendar-purchase-status-${item.status}`}>{item.statusLabel}</span></small>
+                    <small className="calendar-list-financial">{item.paymentMethodLabel} · {item.paymentLabel}</small>
                   </td>
                   <td>{item.userName && item.cpf ? <a href={buildLegacyUserHref(item.cpf)}>{item.userName}</a> : item.userName ?? "—"}<small>{item.cpf}</small></td>
                   <td className="calendar-nowrap">{item.visitDate ?? "—"}</td>

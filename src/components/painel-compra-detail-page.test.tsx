@@ -90,6 +90,8 @@ describe("PainelCompraDetailPage", () => {
     expect(html).toContain("/api/painel/compras/551/resumo");
     expect(html).toContain("/painel/bilheteria/compras/551/imprimir");
     expect(html).toContain("Enviar por WhatsApp");
+    expect(html).toContain("Gerar Resumo");
+    expect(html).toContain('aria-label="Status da compra"');
     expect(html).toContain("ID Pagamento");
     expect(html).toContain("pay-551");
     expect(html).toContain("O que aconteceu com esta compra");
@@ -138,6 +140,7 @@ describe("PainelCompraDetailPage", () => {
     expect(used).toContain("Reagendado de 01/05/2026");
     expect(used).toContain("Chuva");
     expect(used).toContain("09:12:00");
+    expect(used).toContain('class="calendar-voucher-used"');
     expect(used).not.toContain("Editar data / validade");
     const pending = render({ ...detail, status: "pend", vouchers: [passport] });
     expect(pending).not.toContain("Editar data / validade");

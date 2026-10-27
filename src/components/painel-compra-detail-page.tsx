@@ -138,7 +138,7 @@ export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageH
         <div><dt>Validade</dt><dd>{validity.join(" · ") || visits.join(" · ") || "Não informada"}</dd></div>
         <div><dt>Pessoas</dt><dd>{passports.filter((voucher) => voucher.used !== "inv").length}</dd></div>
         <div><dt>Valor total</dt><dd>R$ {detail.totalValue}</dd></div>
-        <div><dt>Situação</dt><dd><span className={`calendar-list-status calendar-list-status-${situation ?? "inactive"}`}>{situationLabel}</span></dd></div>
+        <div><dt>Situação</dt><dd><span className={situation ? `calendar-list-status calendar-list-status-${situation}` : `calendar-purchase-status calendar-purchase-status-${detail.status}`}>{situationLabel}</span></dd></div>
       </dl>
     </div>
 
@@ -146,7 +146,7 @@ export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageH
       <p className="calendar-eyebrow">Passaportes</p><h2>Vouchers de entrada</h2>
       {passports.length ? <div className="calendar-table-scroll calendar-purchase-table-wrap"><table className="calendar-purchases-table calendar-vouchers-table">
         <thead><tr><th>Voucher</th><th>Passaporte</th><th>Valor</th><th>Validade</th><th>Situação</th>{hasSchoolData ? <><th>Escola</th><th>Turma</th><th>Período</th></> : null}</tr></thead>
-        <tbody>{passports.map((voucher) => <tr key={voucher.voucherId}>
+        <tbody>{passports.map((voucher) => <tr key={voucher.voucherId} className={voucher.used === "s" ? "calendar-voucher-used" : undefined}>
           <td><span className="calendar-voucher-code">{voucher.voucherNumber ?? "-"}</span><small>ID {voucher.voucherId}</small></td>
           <td>{voucher.voucherTypeLabel}</td>
           <td className="calendar-nowrap">R$ {voucher.unitValue}</td>
@@ -165,7 +165,7 @@ export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageH
           <tbody>{items.map((item) => <tr key={item.key}><td>{item.label}<small>{item.visitDate}</small>{item.schoolName || item.className || item.periodName ? <small>{[item.schoolName, item.className, item.periodName].filter(Boolean).join(" · ")}</small> : null}</td><td>{item.quantity}</td><td className="calendar-nowrap">R$ {item.totalValue}</td></tr>)}</tbody>
         </table></div> : <p className="calendar-empty-state">Nenhum adicional nesta compra.</p>}
         <p className="calendar-hint">Passaportes R$ {formatMoneyLabel(passports.reduce((total, voucher) => total + parseMoneyLabel(voucher.unitValue), 0))} + adicionais R$ {formatMoneyLabel(addons.reduce((total, voucher) => total + parseMoneyLabel(voucher.unitValue), 0))} · Total da compra R$ {detail.totalValue}</p>
-        {addons.length ? <details className="calendar-addon-vouchers"><summary>Vouchers dos adicionais</summary><ul>{addons.map((voucher) => <li key={voucher.voucherId}><strong>{voucher.voucherTypeLabel} · {voucher.voucherNumber ?? `#${voucher.voucherId}`}</strong><div>{voucherDates(voucher)}</div><small>{voucherStatus(voucher)}{voucher.usedDate ? ` · ${voucher.usedDate} ${voucher.usedTime ?? ""}` : ""}</small>{voucherAction(voucher)}</li>)}</ul></details> : null}
+        {addons.length ? <details className="calendar-addon-vouchers"><summary>Vouchers dos adicionais</summary><ul>{addons.map((voucher) => <li key={voucher.voucherId} className={voucher.used === "s" ? "calendar-voucher-used" : undefined}><strong>{voucher.voucherTypeLabel} · {voucher.voucherNumber ?? `#${voucher.voucherId}`}</strong><div>{voucherDates(voucher)}</div><small>{voucherStatus(voucher)}{voucher.usedDate ? ` · ${voucher.usedDate} ${voucher.usedTime ?? ""}` : ""}</small>{voucherAction(voucher)}</li>)}</ul></details> : null}
       </div>
       <div className="calendar-card"><p className="calendar-eyebrow">Histórico</p><CalendarPurchaseActions key={detail.purchaseId} purchaseId={detail.purchaseId} voucherIds={[]} history historyVersion={JSON.stringify(detail.vouchers)} /></div>
     </div>
@@ -177,15 +177,12 @@ export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageH
           <div><dt>CPF</dt><dd>{formatCpf(detail.cpf)}</dd></div>
           <div><dt>Origem</dt><dd>{source}</dd></div>
           <div><dt>Data da compra</dt><dd>{detail.purchaseDate ?? "Não informada"}</dd></div>
-          <div><dt>Situação da compra</dt><dd>{detail.statusLabel}</dd></div>
+          <div><dt>Situação da compra</dt><dd><span aria-label="Status da compra" className={`calendar-purchase-status calendar-purchase-status-${detail.status}`}>{detail.statusLabel}</span></dd></div>
           <div><dt>Pagamento</dt><dd>{detail.paymentLabel}</dd></div><div><dt>Forma de pagamento</dt><dd>{detail.paymentMethodLabel}</dd></div>
           <div><dt>Data de pagamento</dt><dd>{detail.paymentDate ?? "-"}</dd></div><div><dt>Hora de pagamento</dt><dd>{detail.paymentTime ?? "-"}</dd></div>
           {detail.referralCode ? <div><dt>Código de indicação</dt><dd>{detail.referralCode}</dd></div> : null}
           {detail.gatewayPaymentId ? <><div><dt>ID Pagamento</dt><dd>{detail.gatewayPaymentId}</dd></div><div><dt>Status do gateway</dt><dd>{detail.gatewayStatusCode ? `Cielo ${detail.gatewayStatusCode} - ${detail.gatewayStatusLabel}` : "-"}</dd></div></> : null}
         </dl>
-        <div className="calendar-purchase-ticket-actions">
-          <a className="calendar-button-secondary" href={`/api/painel/compras/${detail.purchaseId}/resumo`} target="_blank" rel="noreferrer">Resumo da compra em PDF</a>
-        </div>
       </div>
       <PainelCompraDetailActions actorCpf={actorCpf} actorName={actorName} canManageHistory={canManageHistory} purchaseId={detail.purchaseId} voucherIds={detail.vouchers.map((voucher) => voucher.voucherId)} />
     </div>

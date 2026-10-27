@@ -1255,6 +1255,21 @@
   .calendar-purchases-table td > a { color: var(--panel-link); text-decoration: underline; font-weight: 600; }
   .calendar-purchases-table td small { display: block; font-size: 12px; color: var(--panel-muted); margin-top: 3px; }
   .calendar-purchases-table td .calendar-chip { margin-top: 4px; }
+  .estancia-panel { --panel-used-bg: #eeeeee; --panel-used-text: #59636c; }
+  @media (prefers-color-scheme: dark) { .estancia-panel { --panel-used-bg: #2c3330; --panel-used-text: #c1c9c4; } }
+  .calendar-voucher-list, .calendar-voucher-list > * { min-width: 0; }
+  @media (max-width:1279px) { .calendar-voucher-list > aside { order: -1; } }
+  .calendar-voucher-indicator { padding: 12px; text-align: center; }
+  .calendar-voucher-indicator :is(.calendar-eyebrow, .calendar-muted) { display: block; }
+  .calendar-voucher-indicator-count { display: block; color: var(--panel-ink); font-size: 22px; font-weight: 700; }
+  .calendar-voucher-list-divider { margin: 24px 0; border-color: var(--panel-line); }
+  .calendar-purchase-status { display: inline-flex; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; white-space: nowrap; background: var(--panel-head); color: var(--panel-ink); }
+  .calendar-purchase-status-conc { background: var(--panel-ok-bg); color: var(--panel-ok); }
+  .calendar-purchase-status-pend { background: var(--panel-warn-bg); color: var(--panel-warn); }
+  .calendar-purchase-status-canc { background: var(--panel-danger-bg); color: var(--panel-danger); }
+  .estancia-panel .calendar-vouchers-table tr.calendar-voucher-used td, .calendar-addon-vouchers li.calendar-voucher-used { background: var(--panel-used-bg); color: var(--panel-used-text); }
+  .calendar-voucher-used :is(small, .calendar-voucher-code, .calendar-chip) { color: var(--panel-used-text) !important; }
+  .calendar-voucher-used .calendar-chip { background: var(--panel-used-bg); }
   .calendar-nowrap { white-space: nowrap; }
   .calendar-number { text-align: right; font-variant-numeric: tabular-nums; }
   .calendar-editor { min-width: 0; }

@@ -74,6 +74,7 @@ export type PainelPurchaseDetailVoucher = {
   voucherType: string;
   voucherTypeLabel: string;
   schoolName: string | null;
+  studentName?: string | null;
   className: string | null;
   periodName: string | null;
   unitValue: string;
@@ -294,6 +295,7 @@ type PainelPurchaseDetailVoucherRow = {
   idagenda: number | null;
   idescola: number | null;
   nmescola: string | null;
+  nomealuno: string | null;
   turma: string | null;
   periodo: string | null;
   vlunicompra: string | number | null;
@@ -1468,6 +1470,7 @@ export async function getPainelPurchaseDetail(
         reschedule.original_date::text AS original_date,
         reschedule.reason AS reschedule_reason,
         voucher.idescola,
+        voucher.nomealuno,
         clientes.nome AS nmescola,
         voucher.turma,
         voucher.periodo,
@@ -1523,6 +1526,7 @@ export async function getPainelPurchaseDetail(
       voucherTypeLabel:
         String(voucher.descricao ?? "").trim() || formatVoucherTypeLabel(voucher.tpvoucher),
       schoolName: voucher.nmescola,
+      studentName: voucher.nomealuno ?? null,
       className: voucher.turma,
       periodName: voucher.periodo,
       unitValue: formatMoneyLabel(voucher.vlunicompra),

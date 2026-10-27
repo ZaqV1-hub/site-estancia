@@ -46,17 +46,18 @@ export function OperationalDateEditor({ date = "", rule, products, today }: { da
   }
 
   return <div className="calendar-page calendar-editor">
-    <header className="calendar-page-header"><div><p className="calendar-eyebrow">Agenda · Day use</p><h1 className="calendar-heading">{rule ? "Editar data" : "Abrir data"}</h1><p className="calendar-muted">Escolha os produtos e a regra dos vouchers desta visita.</p></div><Link href={returnHref} className="calendar-button-secondary">Cancelar</Link></header>
+    <nav className="calendar-crumbs" aria-label="Navegação da data"><Link href="/painel/agenda">Agenda</Link><span>›</span><b>{rule ? "Editar data" : "Abrir data de day use"}</b></nav>
     <form onSubmit={handleSubmit} className="calendar-card calendar-form">
+      <p className="calendar-eyebrow">Day use</p><h1 className="calendar-heading">{rule ? "Editar data de day use" : "Abrir data de day use"}{visitDate && ` · ${visitDate.split("-").reverse().join("/")}`}</h1><p className="calendar-page-sub">Configure a data, os passaportes e os adicionais disponíveis. Os preços vêm do cadastro de cada passaporte, sem tabela de preço.</p>
       <fieldset disabled={pending} className="calendar-form-fields">
-        <div className="calendar-form-grid"><label className="calendar-field">Data<input className="calendar-input" type="date" value={visitDate} required min={!rule ? new Date(new Date(`${today}T12:00:00Z`).getTime() + 86_400_000).toISOString().slice(0, 10) : undefined} readOnly={!!rule} onChange={(e) => setVisitDate(e.target.value)} /></label><label className="calendar-field">Status<select className="calendar-input" value={status} onChange={(e) => setStatus(e.target.value as "abe" | "fec")}><option value="abe">Aberta</option><option value="fec">Fechada</option></select></label></div>
+        <div className="calendar-form-grid"><label className="calendar-field">Data<input className="calendar-input" type="date" value={visitDate} required min={!rule ? new Date(new Date(`${today}T12:00:00Z`).getTime() + 86_400_000).toISOString().slice(0, 10) : undefined} readOnly={!!rule} onChange={(e) => setVisitDate(e.target.value)} /></label><label className="calendar-field">Status da data<select className="calendar-input" value={status} onChange={(e) => setStatus(e.target.value as "abe" | "fec")}><option value="abe">Aberta</option><option value="fec">Fechada</option></select></label></div>
         {rule?.status === "lot" && status === "fec" && <p className="calendar-catalog-note" role="status">Esta data estava lotada. As vendas ficam fechadas; selecione Aberta para reabrir.</p>}
         <CalendarProductFields products={products} passportIds={passportIds} addonIds={addonIds} onPassportsChange={setPassportIds} onAddonsChange={setAddonIds} isEvent={false} />
         <label className="calendar-field calendar-validity-field">Validade dos vouchers<select className="calendar-input" value={validity} onChange={(e) => setValidity(e.target.value as CalendarValidity)}>{Object.entries(calendarValidityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <p className="calendar-muted">{validity === "day" || validity === "1d" ? "Quem não usar na data da visita perde o ingresso." : "O prazo começa na data da visita e inclui esse dia."} Alterações valem para próximas compras; vouchers já vendidos mantêm suas condições.</p>
         <p className="calendar-catalog-note">Os preços de site e bilheteria vêm do catálogo. <Link href="/painel/passaportes-itens">Gerenciar passaportes e itens</Link></p>
         {error && <p role="alert" className="calendar-error">{error}</p>}
-        <div className="calendar-actions"><Link className="calendar-button-secondary" href={returnHref}>Cancelar</Link><button type="submit" className="calendar-button" disabled={pending}>{pending ? "Salvando…" : rule ? "Salvar alterações" : "Abrir data"}</button></div>
+        <div className="calendar-actions"><button type="submit" className="calendar-button" disabled={pending}>{pending ? "Salvando…" : rule ? "Salvar alterações" : "Publicar data"}</button><Link className="calendar-button-secondary" href={returnHref}>Voltar</Link></div>
       </fieldset>
     </form>
   </div>;

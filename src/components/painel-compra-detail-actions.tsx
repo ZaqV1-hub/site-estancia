@@ -82,11 +82,11 @@ export function PainelCompraDetailActions({
 
   return (
     <>
-      <div className="rounded-[6px] border border-[#d4dde5] bg-white p-5 shadow-[0_10px_28px_rgba(26,61,94,0.08)]">
-        <h2 className="text-lg font-semibold text-[#205a7f]">Microacoes</h2>
-        <div className="mt-4 grid gap-3 text-sm">
+      <div className="calendar-card">
+        <p className="calendar-eyebrow">Ingressos</p><h2>Ações</h2>
+        <div className="calendar-purchase-ticket-actions">
           <a
-            className="inline-flex items-center justify-center rounded-full bg-[#246b99] px-4 py-2 font-semibold text-white"
+            className="calendar-button-secondary"
             href={`/painel/bilheteria/compras/${purchaseId}/imprimir`}
             rel="noreferrer"
             target="_blank"
@@ -94,7 +94,7 @@ export function PainelCompraDetailActions({
             Imprimir QR-Codes
           </a>
           <button
-            className="inline-flex items-center justify-center rounded-full bg-[#25D366] px-4 py-2 font-semibold text-white disabled:opacity-60"
+            className="calendar-button"
             disabled={voucherIds.length === 0}
             onClick={() => setWhatsappOpen(true)}
             type="button"
@@ -104,44 +104,44 @@ export function PainelCompraDetailActions({
         </div>
 
         {whatsappSuccess ? (
-          <div className="mt-4 rounded-[18px] border border-[#b9dec6] bg-[#eefaf2] px-4 py-3 text-sm text-[#286445]">
+          <div className="calendar-success">
             {whatsappSuccess}
           </div>
         ) : null}
       </div>
 
       {whatsappOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#12334a]/40 px-4">
-          <div className="w-full max-w-[520px] rounded-[28px] bg-white p-6 shadow-[0_24px_80px_rgba(18,51,74,0.24)]">
-            <div className="flex items-center justify-between gap-4">
-              <h3 className="text-[32px] font-semibold text-[#205a7f]">
+        <div className="calendar-modal-overlay">
+          <div className="calendar-card calendar-whatsapp-dialog">
+            <div className="calendar-section-header">
+              <h3 id="whatsapp-dialog-title">
                 Enviar ingressos por WhatsApp
               </h3>
               <button
-                className="rounded-full border border-[#d6e0e8] px-4 py-2 text-sm font-semibold text-[#4c6a81]"
+                className="calendar-button-secondary"
                 onClick={() => setWhatsappOpen(false)}
                 type="button"
               >
                 Fechar
               </button>
             </div>
-            <label className="mt-6 grid gap-2 text-sm font-semibold text-[#345062]">
+            <label className="calendar-field">
               Telefone com DDD
               <input
-                className="rounded-[18px] border border-[#c9d8e3] bg-white px-4 py-3 text-base text-[#1b3447]"
+                className="calendar-input"
                 onChange={(event) => setWhatsappPhone(event.target.value)}
                 placeholder="11999999999"
-                type="text"
+                type="tel"
                 value={whatsappPhone}
               />
             </label>
             {whatsappError ? (
-              <div className="mt-4 rounded-[18px] border border-[#f0bbb1] bg-[#fff2ef] px-4 py-3 text-sm text-[#9f3d2f]">
+              <div className="calendar-error">
                 {whatsappError}
               </div>
             ) : null}
             <button
-              className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#25D366] px-5 py-4 text-lg font-semibold text-white disabled:opacity-60"
+              className="calendar-button"
               disabled={sendingWhatsapp || whatsappPhone.trim() === ""}
               onClick={() => void handleSendWhatsapp()}
               type="button"

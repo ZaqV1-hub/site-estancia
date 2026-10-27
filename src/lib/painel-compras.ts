@@ -3,6 +3,8 @@ import {
   getNativeCieloCheckoutStatus,
   isCieloEcommerceConfigured,
 } from "@/lib/cielo-ecommerce";
+import { readEstanciaContent } from "@/lib/estancia-content-store";
+import { buildCalendarPurchases, resolveCalendarVoucherProduct, type CalendarVoucherRow } from "@/lib/operational-calendar";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 import { normalizePaymentReconciliationPayload } from "@/lib/payment-reconciliation";
 import {
@@ -11,6 +13,10 @@ import {
 } from "@/lib/painel-compras-format";
 
 export type PainelPurchaseListFilters = {
+  calendar?: string | null;
+  origin?: string | null;
+  voucherStatus?: string | null;
+  search?: string | null;
   purchaseId: string | null;
   type: string | null;
   purchaseStatus: string | null;
@@ -27,6 +33,10 @@ export type PainelPurchaseListFilters = {
 };
 
 export type PainelPurchaseListItem = {
+  people?: number;
+  originLabel?: string;
+  voucherStatus?: "rescheduled" | "available" | "used" | "inactive";
+  voucherStatusLabel?: string;
   purchaseId: number;
   purchaseDate: string | null;
   paymentDate: string | null;
@@ -41,6 +51,7 @@ export type PainelPurchaseListItem = {
   cpf: string | null;
   userName: string | null;
   totalValue: string;
+  visitValue?: string;
 };
 
 export type PainelPurchaseListResult = {
@@ -53,6 +64,7 @@ export type PainelPurchaseListResult = {
 };
 
 export type PainelPurchaseDetailVoucher = {
+  kind?: "passport" | "addon";
   voucherId: number;
   voucherNumber: string | null;
   visitDate: string | null;
@@ -234,6 +246,9 @@ type PainelPurchaseVoucherFilterInput = Record<string, unknown> & {
 type PainelPurchaseListWhereInput = Partial<PainelPurchaseListFilters>;
 
 type PainelPurchaseListRow = {
+  voucher_count?: string | number;
+  rescheduled?: boolean | null;
+  all_used?: boolean | null;
   idcompra: number;
   dtcompra: string | null;
   dtagenda: string | null;
@@ -467,6 +482,10 @@ function normalizeWhereFilters(
   filters: PainelPurchaseListWhereInput,
 ): PainelPurchaseListFilters {
   return {
+    calendar: filters.calendar === "1" ? "1" : null,
+    origin: ["site", "bilheteria"].includes(String(filters.origin)) ? String(filters.origin) : null,
+    voucherStatus: ["rescheduled", "available", "used"].includes(String(filters.voucherStatus)) ? String(filters.voucherStatus) : null,
+    search: normalizePainelCompraScalarFilterValue(filters.search),
     purchaseId: normalizePainelCompraScalarFilterValue(filters.purchaseId),
     type: normalizePainelCompraScalarFilterValue(filters.type),
     purchaseStatus: normalizePainelCompraScalarFilterValue(filters.purchaseStatus),
@@ -706,7 +725,14 @@ function buildPurchaseListItem(row: PainelPurchaseListRow): PainelPurchaseListIt
   const type = String(row.tpcompra ?? "").trim();
   const status = String(row.stcompra ?? "").trim();
 
+  const voucherStatus = status !== "conc" || !Number(row.voucher_count)
+    ? "inactive" : row.rescheduled ? "rescheduled" : row.all_used ? "used" : "available";
+
   return {
+    people: 0,
+    originLabel: type === "ponli" ? "Site" : "Bilheteria",
+    voucherStatus,
+    voucherStatusLabel: { rescheduled: "Reagendado", available: "Disponível", used: "Utilizado", inactive: formatPurchaseStatusLabel(status) }[voucherStatus],
     purchaseId: Number(row.idcompra),
     purchaseDate: formatDateLabel(row.dtcompra),
     paymentDate: formatDateLabel(row.dtpagamento),
@@ -730,6 +756,10 @@ export function normalizePainelPurchaseListFilters(
   const paymentMethod = normalizePainelCompraScalarFilterValue(input.payment);
 
   return {
+    calendar: input.calendar === "1" ? "1" : null,
+    origin: ["site", "bilheteria"].includes(String(input.origin)) ? String(input.origin) : null,
+    voucherStatus: ["rescheduled", "available", "used"].includes(String(input.voucherStatus)) ? String(input.voucherStatus) : null,
+    search: normalizePainelCompraScalarFilterValue(input.search),
     purchaseId: normalizePainelCompraScalarFilterValue(input.idcompra),
     type: normalizePainelCompraScalarFilterValue(input.tpcompra),
     purchaseStatus: normalizePainelCompraScalarFilterValue(input.stcompra),
@@ -786,6 +816,13 @@ export function decodeLegacyPurchaseId(encoded: string) {
   }
 }
 
+function buildPurchaseVisitDateClauses(filters: PainelPurchaseListWhereInput, agendaAlias: string) {
+  return [
+    filters.visitDateFrom && `${agendaAlias}.dtagenda >= TO_DATE('${filters.visitDateFrom}', 'DD/MM/YYYY')`,
+    filters.visitDateTo && `${agendaAlias}.dtagenda <= TO_DATE('${filters.visitDateTo}', 'DD/MM/YYYY')`,
+  ].filter((clause): clause is string => Boolean(clause));
+}
+
 export function buildPainelPurchaseListWhere(
   filters: PainelPurchaseListWhereInput,
 ) {
@@ -796,6 +833,40 @@ export function buildPainelPurchaseListWhere(
 
   if (purchaseId) {
     clauses.push(`compra.idcompra = ${purchaseId}`);
+  }
+
+  if (normalizedFilters.origin) {
+    clauses.push(normalizedFilters.origin === "site"
+      ? "compra.tpcompra = 'ponli'" : "compra.tpcompra IN ('bilhe', 'reser')");
+  }
+
+  if (normalizedFilters.voucherStatus) {
+    const condition = normalizedFilters.voucherStatus === "rescheduled" ? "a.rescheduled"
+      : normalizedFilters.voucherStatus === "used" ? "NOT a.rescheduled AND a.all_used"
+      : "NOT a.rescheduled AND NOT a.all_used";
+    clauses.push(`(compra.stcompra = 'conc' AND ${condition})`);
+  }
+
+  if (normalizedFilters.calendar) {
+    clauses.push("compra.stcompra = 'conc'", "compra.tpcompra IN ('ponli', 'reser', 'bilhe')");
+  }
+
+  if (normalizedFilters.visitDateFrom || normalizedFilters.visitDateTo || normalizedFilters.calendar) {
+    const dates = buildPurchaseVisitDateClauses(normalizedFilters, "visit_agenda");
+    if (normalizedFilters.calendar) dates.push("visit_agenda.tpagenda IN ('padra', 'promo')");
+    clauses.push(`EXISTS (
+      SELECT 1 FROM voucher visit_voucher
+      JOIN agenda visit_agenda ON visit_agenda.idagenda = visit_voucher.idagenda
+      WHERE visit_voucher.idcompra = compra.idcompra
+        AND visit_voucher.stusado IS DISTINCT FROM 'inv'
+        AND ${dates.join(" AND ")}
+    )`);
+  }
+
+  if (normalizedFilters.search) {
+    const searchId = normalizePurchaseId(normalizedFilters.search);
+    const name = `usuario.nmusuario ILIKE '%${escapeSqlLikeLiteral(normalizedFilters.search)}%'`;
+    clauses.push(searchId ? `(compra.idcompra = ${searchId} OR ${name})` : name);
   }
 
   if (normalizedFilters.type) {
@@ -959,6 +1030,20 @@ export async function listPainelPurchases(input: {
   const whereClause = sql ? `WHERE ${sql}` : "";
   const pool = getIngressoDbPool();
   const paginationClause = allRows ? "" : `LIMIT ${perPage} OFFSET ${offset}`;
+  const visitDates = buildPurchaseVisitDateClauses(filters, "agenda");
+  if (filters.calendar) visitDates.push("agenda.tpagenda IN ('padra', 'promo')");
+  const voucherSummaryJoin = `LEFT JOIN LATERAL (
+    SELECT MIN(agenda.dtagenda) AS dtagenda,
+      COUNT(*) AS voucher_count,
+      BOOL_OR(reschedule.voucher_id IS NOT NULL) AS rescheduled,
+      BOOL_AND(COALESCE(voucher.stusado, 'n') = 's') AS all_used
+    FROM voucher
+    JOIN agenda ON agenda.idagenda = voucher.idagenda
+    LEFT JOIN estancia_voucher_reschedules reschedule ON reschedule.voucher_id = voucher.idvoucher
+    WHERE voucher.idcompra = compra.idcompra
+      AND voucher.stusado IS DISTINCT FROM 'inv'
+      ${visitDates.length ? `AND ${visitDates.join(" AND ")}` : ""}
+  ) AS a ON true`;
 
   const rowsResult = await pool.query<PainelPurchaseListRow>(
     `
@@ -966,6 +1051,7 @@ export async function listPainelPurchases(input: {
         compra.idcompra,
         compra.dtcompra::text AS dtcompra,
         a.dtagenda::text AS dtagenda,
+        a.voucher_count, a.rescheduled, a.all_used,
         compra.tpcompra,
         compra.stcompra,
         compra.formapag,
@@ -979,12 +1065,7 @@ export async function listPainelPurchases(input: {
         pagpagseguro.status
       FROM compra
       LEFT JOIN usuario ON usuario.cpf = compra.cpf
-      LEFT JOIN LATERAL (
-        SELECT MIN(agenda.dtagenda) AS dtagenda
-        FROM voucher
-        JOIN agenda ON agenda.idagenda = voucher.idagenda
-        WHERE voucher.idcompra = compra.idcompra
-      ) AS a ON true
+      ${voucherSummaryJoin}
       LEFT JOIN LATERAL (
         SELECT
           pagamento.idpagseguro,
@@ -1006,12 +1087,7 @@ export async function listPainelPurchases(input: {
       SELECT COUNT(*)::text AS total
       FROM compra
       LEFT JOIN usuario ON usuario.cpf = compra.cpf
-      LEFT JOIN LATERAL (
-        SELECT MIN(agenda.dtagenda) AS dtagenda
-        FROM voucher
-        JOIN agenda ON agenda.idagenda = voucher.idagenda
-        WHERE voucher.idcompra = compra.idcompra
-      ) AS a ON true
+      ${voucherSummaryJoin}
       LEFT JOIN LATERAL (
         SELECT
           pagamento.idpagseguro,
@@ -1029,8 +1105,51 @@ export async function listPainelPurchases(input: {
   const total = Number(countResult.rows[0]?.total ?? 0);
   const effectivePerPage = allRows ? Math.max(total, rowsResult.rows.length, 1) : perPage;
 
+  const items = rowsResult.rows.map(buildPurchaseListItem);
+  if (items.length) {
+    const [voucherResult, content] = await Promise.all([
+      pool.query<CalendarVoucherRow>(`
+        SELECT v.idvoucher, v.idcompra, c.cpf, u.nmusuario, u.email, c.tpcompra, c.stcompra,
+          to_char(a.dtagenda, 'YYYY-MM-DD') AS date, v.numvoucher, v.tpvoucher, v.descricao,
+          v.vlunicompra::text, v.vldesc::text, c.vltotcompra::text, v.stusado,
+          to_char(v.dtvalidade, 'YYYY-MM-DD') AS dtvalidade,
+          to_char(m.original_date, 'YYYY-MM-DD') AS original_date, m.reason
+        FROM voucher v
+        JOIN compra c ON c.idcompra = v.idcompra
+        JOIN agenda a ON a.idagenda = v.idagenda
+        LEFT JOIN usuario u ON u.cpf = c.cpf
+        LEFT JOIN estancia_voucher_reschedules m ON m.voucher_id = v.idvoucher
+        WHERE v.idcompra = ANY($1::bigint[])
+          ${filters.calendar ? "AND a.tpagenda IN ('padra', 'promo')" : ""}
+        ORDER BY v.idcompra, v.idvoucher
+      `, [items.map((item) => item.purchaseId)]),
+      readEstanciaContent(),
+    ]);
+    const vouchersByPurchase = new Map<number, CalendarVoucherRow[]>();
+    for (const voucher of voucherResult.rows) {
+      const vouchers = vouchersByPurchase.get(Number(voucher.idcompra)) ?? [];
+      vouchers.push(voucher);
+      vouchersByPurchase.set(Number(voucher.idcompra), vouchers);
+    }
+    const isoDate = (date: string | null) => date ? date.split("/").reverse().join("-") : null;
+    const from = isoDate(filters.visitDateFrom);
+    const to = isoDate(filters.visitDateTo);
+    for (const item of items) {
+      const vouchers = vouchersByPurchase.get(item.purchaseId) ?? [];
+      // Pending/canceled rows still need classification, while their financial status stays untouched.
+      const classificationRows = item.status === "conc" ? vouchers : vouchers.map((voucher) => ({ ...voucher, stcompra: "conc" }));
+      const dates = [...new Set(vouchers.map((voucher) => voucher.date))]
+        .filter((date) => date && (!from || date >= from) && (!to || date <= to));
+      const visits = dates.flatMap((date) => buildCalendarPurchases(classificationRows, content.products, date));
+      item.people = visits.reduce((sum, visit) => sum + visit.people, 0);
+      if ((from || to) && item.status === "conc") {
+        item.visitValue = formatMoneyLabel(visits.reduce((sum, visit) => sum + visit.valueCents, 0) / 100);
+      }
+    }
+  }
+
   return {
-    items: rowsResult.rows.map(buildPurchaseListItem),
+    items,
     total,
     page,
     perPage: effectivePerPage,
@@ -1366,6 +1485,8 @@ export async function getPainelPurchaseDetail(
     [purchaseId],
   );
 
+  const content = voucherResult.rows.length ? await readEstanciaContent() : null;
+
   return {
     purchaseId: purchase.idcompra,
     purchaseDate: formatDateLabel(purchase.dtcompra),
@@ -1391,6 +1512,7 @@ export async function getPainelPurchaseDetail(
         ? formatGatewayStatusLabel(purchase.status)
         : null,
     vouchers: voucherResult.rows.map((voucher) => ({
+      kind: resolveCalendarVoucherProduct(voucher, content?.products ?? []).kind,
       voucherId: voucher.idvoucher,
       voucherNumber: voucher.numvoucher,
       visitDate: formatDateLabel(voucher.dtagenda),

@@ -28,10 +28,11 @@ export function CalendarProductFields({ products, passportIds, addonIds, onPassp
       const onChange = kind === "passport" ? onPassportsChange : onAddonsChange;
       const allSelected = available.length > 0 && available.every((p) => selected.includes(p.id));
       return <fieldset key={kind} className="calendar-product-fieldset">
-        <legend>{kind === "passport" ? "Passaportes à venda nesta data" : "Itens adicionais"}</legend>
-        <label className="calendar-check calendar-select-all"><input type="checkbox" checked={allSelected} disabled={!available.length} onChange={(e) => onChange(e.target.checked ? available.map((p) => p.id) : [])} /> Selecionar todos</label>
+        <legend className="sr-only">{kind === "passport" ? "Passaportes à venda nesta data" : "Adicionais disponíveis na data"}</legend>
+        <h2>{kind === "passport" ? "Passaportes à venda nesta data" : "Adicionais disponíveis na data"}</h2>
         <div className="calendar-product-grid">
-          {available.map((product) => <label key={product.id} className={`calendar-product-option ${selected.includes(product.id) ? "is-selected" : ""}`}>
+          <label className="calendar-product-option calendar-select-all"><input type="checkbox" checked={allSelected} disabled={!available.length} onChange={(e) => onChange(e.target.checked ? available.map((p) => p.id) : [])} /><strong>Selecionar todos</strong></label>
+          {available.map((product) => <label key={product.id} className={`calendar-product-option ${isEventOnlyProduct(product) ? "is-special" : ""}`}>
             <input type="checkbox" value={product.id} checked={selected.includes(product.id)} onChange={(e) => onChange(e.target.checked ? [...selected, product.id] : selected.filter((id) => id !== product.id))} />
             <span><strong>{product.title}</strong><span className="calendar-product-prices">Site {money(getB2cSitePrice(product))}<br />Bilheteria {money(getB2cBoxOfficePrice(product))}</span>{isEventOnlyProduct(product) && <span className="calendar-chip calendar-event-chip">Exclusivo de evento</span>}</span>
           </label>)}

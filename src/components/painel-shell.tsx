@@ -37,18 +37,18 @@ type PainelNavItem = {
 
 const navItems: PainelNavItem[] = [
   {
-    href: "/painel/site",
-    label: "Site",
-    icon: "site",
-    roles: [1, 2],
-    resources: ["vis_info", "vis_param"],
-  },
-  {
     href: "/painel/agenda",
     label: "Agenda",
     icon: "calendar",
     roles: [1, 2],
     resources: ["vis_agenda"],
+  },
+  {
+    href: "/painel/site",
+    label: "Site",
+    icon: "site",
+    roles: [1, 2],
+    resources: ["vis_info", "vis_param"],
   },
   {
     href: "/painel/passaportes-itens",
@@ -245,10 +245,10 @@ export function PainelShell({
 
   const sidebar = <>
     <div className="painel-brand"><EstanciaLogo href="/painel" compact light className="painel-logo" /></div>
-    <div className="painel-operator"><p>Operador</p><strong>{actorName || actorCpf || "Sessão operacional"}</strong><span>{legacyRoleName || role}</span><small>CPF {actorCpf || "—"}</small></div>
+    <div className="painel-operator"><p>Operador</p><strong>{actorName || actorCpf || "Sessão operacional"}</strong><span>{legacyRoleName || role}</span><small>CPF ••• ••• ••• ••</small></div>
     <nav className="painel-navigation" aria-label="Navegação do painel">{visibleItems.map((item) => {
       const active = isPainelShellNavItemActive(pathname, item);
-      return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={active ? "is-active" : ""} onClick={() => drawer.current?.close()}><PanelIcon name={item.icon} /><span>{item.label}</span></Link>;
+      return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={active ? "is-active" : ""} onClick={() => drawer.current?.close()}><PanelIcon name={item.icon} /><span>{item.label}</span>{item.href === "/painel/agenda" && <small className="painel-home-badge">Início</small>}</Link>;
     })}</nav>
     <div className="painel-session"><button type="button" onClick={() => void handleLogout()} disabled={pendingLogout}>{pendingLogout ? "Saindo…" : "Encerrar sessão"}</button>{logoutError && <p role="alert">{logoutError}</p>}</div>
   </>;
@@ -257,7 +257,7 @@ export function PainelShell({
     <aside className="painel-sidebar">{sidebar}</aside>
     <dialog ref={drawer} className="painel-drawer" aria-label="Menu do painel" onClick={(event) => { if (event.target === event.currentTarget) drawer.current?.close(); }}><div className="painel-drawer-content"><button type="button" className="painel-drawer-close" aria-label="Fechar menu" onClick={() => drawer.current?.close()}>×</button>{sidebar}</div></dialog>
     <main className="painel-main">
-      <header className="painel-topbar"><div><button className="calendar-icon-button painel-menu-button" type="button" aria-label="Abrir menu" onClick={() => drawer.current?.showModal()}>☰</button><button className="calendar-icon-button" type="button" aria-label="Voltar" onClick={() => { if (pathname === "/painel/agenda" || pathname === "/painel/bilheteria") router.push(legacyRoleId === 3 ? "/painel/bilheteria" : "/painel/agenda"); else router.back(); }}>‹</button><span>Painel operacional</span></div><Link href="/" className="painel-site-link" target="_blank" rel="noreferrer">Ver site ↗</Link></header>
+      <header className="painel-topbar"><div><button className="calendar-icon-button painel-menu-button" type="button" aria-label="Abrir menu" onClick={() => drawer.current?.showModal()}>☰</button><button className="calendar-icon-button" type="button" aria-label="Voltar" onClick={() => { if (pathname === "/painel/agenda" || pathname === "/painel/bilheteria") router.push(legacyRoleId === 3 ? "/painel/bilheteria" : "/painel/agenda"); else router.back(); }}>‹</button><span className="painel-topbar-title">Painel operacional</span></div></header>
       <div className="painel-content">{children}</div>
     </main>
   </div>;

@@ -19,6 +19,7 @@ describe("day report", () => {
     expect(html).toContain("Regra desta data");
     expect(html).toContain("/painel/site/eventos/festa/editar");
     expect(html).not.toContain("Não vendido");
+    expect(html).toContain('aria-label="Editar vouchers da compra 23"');
   });
   it("shows the configured event page text in the date report", () => {
     const html=renderToStaticMarkup(<OperationalDayReport data={{...data,event:{id:"festa",title:"Festa da família",pageTitle:"Um dia no parque",pageContent:"Primeiro parágrafo.\n\nSegundo parágrafo.",pageEnabled:true}}} />);

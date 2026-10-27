@@ -65,6 +65,11 @@ function buildComprasHref(
 ) {
   const params = new URLSearchParams();
 
+  if (filters.calendar) params.set("calendar", filters.calendar);
+  if (filters.origin) params.set("origin", filters.origin);
+  if (filters.voucherStatus) params.set("voucherStatus", filters.voucherStatus);
+  if (filters.search) params.set("search", filters.search);
+
   if (filters.dateFrom) {
     params.set("dtcompra[de]", filters.dateFrom);
   }
@@ -125,14 +130,15 @@ function renderSelect(
   name: string,
   value: string | null,
   options: ReadonlyArray<{ value: string; label: string }>,
+  allLabel = "Todos",
 ) {
   return (
     <select
-      className="estancia-field w-full rounded-[8px] px-3 py-2 text-sm"
+      className="calendar-input"
       defaultValue={value ?? "-1"}
       name={name}
     >
-      <option value="-1">Todos</option>
+      <option value="-1">{allLabel}</option>
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
@@ -143,7 +149,7 @@ function renderSelect(
 }
 
 function hasActiveFilters(filters: PainelPurchaseListResult["filters"]) {
-  return Object.values(filters).some((value) => value != null && value !== "");
+  return Object.entries(filters).some(([key, value]) => key !== "calendar" && value != null && value !== "");
 }
 
 function toDateInputValue(value: string | null) {
@@ -181,6 +187,7 @@ export function PainelComprasPage({
     result.page < result.totalPages
       ? buildComprasHref(result.filters, result.page + 1)
       : null;
+  const listHref = result.filters.calendar ? "/painel/compras?calendar=1" : "/painel/compras";
   const canRefreshPurchases = actorCpf === "00000000191";
   const filtersActive = hasActiveFilters(result.filters);
   const exportHref = buildComprasHref(result.filters, 1).replace(
@@ -188,246 +195,130 @@ export function PainelComprasPage({
     "/api/painel/compras/export",
   );
 
+  const financialFiltersActive = Boolean(result.filters.dateFrom || result.filters.dateTo ||
+    result.filters.purchaseId || result.filters.type || result.filters.purchaseStatus ||
+    result.filters.paymentMethod || result.filters.gatewayPaymentMethod ||
+    result.filters.ticketPaymentMethod || result.filters.gatewayStatus || result.filters.cpf || result.filters.userName);
+
   return (
-    <section className="grid gap-3">
-      <div className="panel-section p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+    <section className="calendar-page calendar-purchase-list">
+      <div className="calendar-card">
+        <header className="calendar-page-header">
           <div>
-            <p className="panel-eyebrow">Compras</p>
-            <h1 className="mt-1 text-[24px] font-black text-[#17351f]">
-              Lista de compras e reservas
-            </h1>
-            <p className="mt-1 text-sm text-[#5f7564]">
-              Operador: {actorName || actorCpf || "Sessao operacional"}
-            </p>
+            <p className="calendar-eyebrow">Compras</p>
+            <h1 className="calendar-heading">Todas as compras</h1>
+            <p className="calendar-muted">A mesma lista de sempre, com filtro por data da visita. O calendário e a lista mostram os mesmos dados.</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-xs font-semibold text-[#17351f]"
-              href={exportHref}
-            >
-              Exportar
-            </Link>
-            {filtersActive ? (
-              <Link
-                className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-xs font-semibold text-[#17351f]"
-                href="/painel/compras"
-              >
-                Limpar filtros
-              </Link>
-            ) : null}
-          </div>
-        </div>
-      </div>
+          <nav className="calendar-view-switch" aria-label="Visualização da agenda">
+            <Link href="/painel/agenda">Calendário</Link>
+            <Link href={listHref} aria-current="page">Lista</Link>
+          </nav>
+        </header>
 
-      <form action="/painel/compras" className="panel-section p-4" method="get">
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            De
-            <input
-              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
-              defaultValue={toDateInputValue(result.filters.dateFrom ?? null)}
-              name="dtcompra[de]"
-              type="date"
-            />
-          </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            Ate
-            <input
-              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
-              defaultValue={toDateInputValue(result.filters.dateTo ?? null)}
-              name="dtcompra[ate]"
-              type="date"
-            />
-          </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            Data agendada de
-            <input
-              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
-              defaultValue={toDateInputValue(result.filters.visitDateFrom ?? null)}
-              name="dtagenda[de]"
-              type="date"
-            />
-          </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            Data agendada ate
-            <input
-              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
-              defaultValue={toDateInputValue(result.filters.visitDateTo ?? null)}
-              name="dtagenda[ate]"
-              type="date"
-            />
-          </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            ID
-            <input
-              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
-              defaultValue={result.filters.purchaseId ?? ""}
-              min={0}
-              name="idcompra"
-              type="number"
-            />
-          </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            Tipo
-            {renderSelect("tpcompra", result.filters.type, typeOptions)}
-          </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            Status
-            {renderSelect("stcompra", result.filters.purchaseStatus, purchaseStatusOptions)}
-          </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            Forma de pgto
-            {renderSelect(
-              "payment",
-              result.filters.paymentMethod ??
-                (result.filters.gatewayPaymentMethod
-                  ? `gateway:${result.filters.gatewayPaymentMethod}`
-                  : result.filters.ticketPaymentMethod
-                    ? `ticket:${result.filters.ticketPaymentMethod}`
-                    : null),
-              paymentMethodOptions,
-            )}
-          </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            Pagamento
-            {renderSelect("status", result.filters.gatewayStatus, gatewayStatusOptions)}
-          </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            CPF
-            <input
-              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
-              defaultValue={result.filters.cpf ?? ""}
-              name="cpf"
-              type="text"
-            />
-          </label>
-          <label className="grid gap-1 text-[13px] font-semibold text-[#17351f]">
-            Usuario
-            <input
-              className="estancia-field rounded-[8px] px-3 py-2 text-sm"
-              defaultValue={result.filters.userName ?? ""}
-              name="nmusuario"
-              type="text"
-            />
-          </label>
-        </div>
+        <form action="/painel/compras" method="get">
+          {result.filters.calendar && <input name="calendar" type="hidden" value="1" />}
+          <div className="calendar-list-controls">
+            <div className="calendar-list-range">
+              <label className="calendar-field">Data da visita de
+                <input className="calendar-input" defaultValue={toDateInputValue(result.filters.visitDateFrom)} name="dtagenda[de]" type="date" />
+              </label>
+              <label className="calendar-field">Até
+                <input className="calendar-input" defaultValue={toDateInputValue(result.filters.visitDateTo)} name="dtagenda[ate]" type="date" />
+              </label>
+            </div>
+            <label className="calendar-field">Origem
+              {renderSelect("origin", result.filters.origin ?? null, [{ value: "site", label: "Site" }, { value: "bilheteria", label: "Bilheteria" }], "Todas as origens")}
+            </label>
+            <label className="calendar-field">Situação
+              {renderSelect("voucherStatus", result.filters.voucherStatus ?? null, [
+                { value: "rescheduled", label: "Reagendadas" }, { value: "available", label: "Disponíveis" }, { value: "used", label: "Utilizadas" },
+              ], "Todas as situações")}
+            </label>
+            <label className="calendar-field">Buscar compra
+              <input className="calendar-input" defaultValue={result.filters.search ?? ""} name="search" placeholder="Buscar por ID ou comprador" type="search" />
+            </label>
+            <button className="calendar-button" type="submit">Filtrar</button>
+          </div>
 
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm text-[#5f7564]">
-            {result.total} registro(s) no total
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {canRefreshPurchases ? (
-              <span className="rounded-[8px] border border-[#dbe7d7] bg-[#f7fbf5] px-3 py-2 text-xs text-[#5f7564]">
-                Atualizacao manual em fase futura
-              </span>
-            ) : null}
-            <button
-              className="estancia-button inline-flex items-center justify-center rounded-[8px] px-4 py-2 text-sm"
-              type="submit"
-            >
-              Filtrar
-            </button>
-          </div>
-        </div>
-      </form>
+          <details className="calendar-list-advanced" open={financialFiltersActive}>
+            <summary>Filtros financeiros e da compra</summary>
+            <div className="calendar-list-advanced-grid">
+              <label className="calendar-field">Compra de
+                <input className="calendar-input" defaultValue={toDateInputValue(result.filters.dateFrom)} name="dtcompra[de]" type="date" />
+              </label>
+              <label className="calendar-field">Compra até
+                <input className="calendar-input" defaultValue={toDateInputValue(result.filters.dateTo)} name="dtcompra[ate]" type="date" />
+              </label>
+              <label className="calendar-field">ID
+                <input className="calendar-input" defaultValue={result.filters.purchaseId ?? ""} min={1} name="idcompra" type="number" />
+              </label>
+              <label className="calendar-field">Tipo
+                {renderSelect("tpcompra", result.filters.type, typeOptions)}
+              </label>
+              <label className="calendar-field">Status financeiro
+                {renderSelect("stcompra", result.filters.purchaseStatus, purchaseStatusOptions)}
+              </label>
+              <label className="calendar-field">Forma de pgto
+                {renderSelect("payment", result.filters.paymentMethod ??
+                  (result.filters.gatewayPaymentMethod ? `gateway:${result.filters.gatewayPaymentMethod}` :
+                    result.filters.ticketPaymentMethod ? `ticket:${result.filters.ticketPaymentMethod}` : null), paymentMethodOptions)}
+              </label>
+              <label className="calendar-field">Pagamento
+                {renderSelect("status", result.filters.gatewayStatus, gatewayStatusOptions)}
+              </label>
+              <label className="calendar-field">CPF
+                <input className="calendar-input" defaultValue={result.filters.cpf ?? ""} name="cpf" type="text" />
+              </label>
+              <label className="calendar-field">Usuário
+                <input className="calendar-input" defaultValue={result.filters.userName ?? ""} name="nmusuario" type="text" />
+              </label>
+            </div>
+          </details>
+        </form>
 
-      <div className="panel-section overflow-hidden p-0">
-        {result.items.length === 0 ? (
-          <div className="px-4 py-6 text-sm text-[#5f7564]">
-            Nenhuma compra encontrada.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-[#f7fbf5] text-left text-[#35503b]">
-                <tr>
-                  <th className="px-3 py-2.5 text-xs font-semibold">ID</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold">Data</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold">Data agendada</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold">Tipo</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold">Status</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold">Forma</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold">Pagamento</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold">CPF</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold">Usuario</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold text-right">Valor</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold text-center">Detalhes</th>
+        {result.items.length === 0 ? <p className="calendar-muted">Nenhuma compra encontrada.</p> : (
+          <div className="calendar-table-scroll">
+            <table className="calendar-purchases-table">
+              <thead><tr>
+                <th scope="col">Compra</th><th scope="col">Comprador</th><th scope="col">Data da visita</th>
+                <th scope="col">Origem</th><th className="calendar-number" scope="col">Pessoas</th>
+                <th className="calendar-number" scope="col">Valor</th><th scope="col">Situação</th>
+              </tr></thead>
+              <tbody>{result.items.map((item) => (
+                <tr key={item.purchaseId}>
+                  <td>
+                    <Link aria-label={`Ver detalhes da compra ${item.purchaseId}`} href={`/painel/compras/${item.purchaseId}`}>{item.purchaseId}</Link>
+                    <small className="calendar-list-financial">{item.purchaseDate ?? "—"}</small>
+                    <small className="calendar-list-financial">{item.statusLabel} · {item.paymentMethodLabel} · {item.paymentLabel}</small>
+                  </td>
+                  <td>{item.userName && item.cpf ? <a href={buildLegacyUserHref(item.cpf)}>{item.userName}</a> : item.userName ?? "—"}<small>{item.cpf}</small></td>
+                  <td className="calendar-nowrap">{item.visitDate ?? "—"}</td>
+                  <td><span className="calendar-list-origin">{item.originLabel ?? item.typeLabel}</span></td>
+                  <td className="calendar-number">{item.people ?? "—"}</td>
+                  <td className="calendar-number calendar-nowrap">R$ {item.visitValue ?? item.totalValue}
+                    {item.visitValue && item.visitValue !== item.totalValue && <small>Total da compra: R$ {item.totalValue}</small>}
+                  </td>
+                  <td><span className={`calendar-list-status calendar-list-status-${item.voucherStatus ?? "inactive"}`}>{item.voucherStatusLabel ?? item.statusLabel}</span></td>
                 </tr>
-              </thead>
-              <tbody>
-                {result.items.map((item, index) => (
-                  <tr
-                    className={index % 2 === 1 ? "bg-[#fbfdf9]" : "bg-white"}
-                    key={item.purchaseId}
-                  >
-                    <td className="px-3 py-3 align-top font-semibold text-[#17351f]">
-                      <Link
-                        className="underline decoration-[#9bc08f] underline-offset-2"
-                        href={`/painel/compras/${item.purchaseId}`}
-                      >
-                        {item.purchaseId}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-3 align-top">{item.purchaseDate ?? "-"}</td>
-                    <td className="px-3 py-3 align-top">{item.visitDate ?? "-"}</td>
-                    <td className="px-3 py-3 align-top">{item.typeLabel}</td>
-                    <td className="px-3 py-3 align-top">{item.statusLabel}</td>
-                    <td className="px-3 py-3 align-top">{item.paymentMethodLabel}</td>
-                    <td className="px-3 py-3 align-top">{item.paymentLabel}</td>
-                    <td className="px-3 py-3 align-top">{item.cpf ?? "-"}</td>
-                    <td className="px-3 py-3 align-top">
-                      {item.userName && item.cpf ? (
-                        <a
-                          className="underline decoration-[#9bc08f] underline-offset-2"
-                          href={buildLegacyUserHref(item.cpf)}
-                        >
-                          {item.userName}
-                        </a>
-                      ) : (
-                        item.userName ?? "-"
-                      )}
-                    </td>
-                    <td className="px-3 py-3 align-top text-right font-semibold text-[#17351f]">
-                      {item.totalValue}
-                    </td>
-                    <td className="px-3 py-3 align-top text-center">
-                      <Link
-                        className="inline-flex rounded-[8px] border border-[#dbe7d7] px-3 py-1.5 text-xs font-semibold text-[#17351f]"
-                        href={`/painel/compras/${item.purchaseId}`}
-                      >
-                        Ver detalhes
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+              ))}</tbody>
             </table>
           </div>
         )}
-      </div>
 
-      {result.totalPages > 1 ? (
-        <div className="flex flex-wrap justify-end gap-2">
-          {previousHref ? (
-            <Link
-              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-sm font-semibold text-[#17351f]"
-              href={previousHref}
-            >
-              Pagina anterior
-            </Link>
-          ) : null}
-          {nextHref ? (
-            <Link
-              className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-sm font-semibold text-[#17351f]"
-              href={nextHref}
-            >
-              Proxima pagina
-            </Link>
-          ) : null}
-        </div>
-      ) : null}
+        <footer className="calendar-list-footer">
+          <div>
+            <p className="calendar-muted">{result.total} {result.total === 1 ? "compra encontrada" : "compras encontradas"}</p>
+            <small className="calendar-muted">Operador: {actorName || actorCpf || "Sessão operacional"}</small>
+          </div>
+          <div className="calendar-list-actions">
+            <Link className="calendar-button-secondary" href={exportHref}>Exportar</Link>
+            {filtersActive && <Link className="calendar-button-secondary" href={listHref}>Limpar filtros</Link>}
+            {previousHref && <Link className="calendar-button-secondary" href={previousHref}>Página anterior</Link>}
+            {nextHref && <Link className="calendar-button-secondary" href={nextHref}>Próxima página</Link>}
+          </div>
+        </footer>
+        {canRefreshPurchases && <p className="calendar-muted">Atualizacao manual em fase futura</p>}
+      </div>
     </section>
   );
 }

@@ -13,6 +13,9 @@ describe("calendar panel shell", () => {
     expect(html).toContain("Encerrar sessão");
     expect(html).toContain("Abrir menu");
     expect(html).not.toContain("Visão geral");
+    const navigation = html.match(/<nav[^>]*>([\s\S]*?)<\/nav>/)?.[1] ?? "";
+    expect(navigation.indexOf('href="/painel/agenda"')).toBeLessThan(navigation.indexOf('href="/painel/site"'));
+    expect(navigation).toContain("Início");
   });
   it("preserves ticket-only navigation restrictions", () => {
     const html = renderToStaticMarkup(<PainelShell actorName="Bilheteiro" actorCpf={null} role="operator" permissions={[]} legacyRoleId={3} legacyResources={getLegacyPanelResources(3)}>Conteúdo</PainelShell>);

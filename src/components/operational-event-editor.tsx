@@ -5,6 +5,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { CalendarProductFields } from "@/components/calendar-product-fields";
 import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
 import type { ManagedEvent } from "@/lib/estancia-content-store";
+import { calendarEventDate } from "@/lib/calendar-event-link";
 import { editableCalendarStatus, isEventOnlyProduct } from "@/lib/calendar-validity";
 import { calendarValidityLabels, type CalendarRule, type CalendarValidity } from "@/lib/operational-calendar-contracts";
 type Props = {
@@ -15,14 +16,16 @@ type Props = {
     fromCalendar?: boolean;
     presentation?: "page" | "modal";
     onSaved?: () => void;
+    onCancel?: () => void;
 };
-function Field({ label, children }: {
+function Field({ label, counter, children }: {
     label: string;
+    counter?: string;
     children: ReactNode;
-}) { return <label className="calendar-field">{label}{children}</label>; }
-export function OperationalEventEditor({ products, event = null, rule = null, initialDate = "", fromCalendar = false, presentation = "page", onSaved }: Props) {
+}) { return <label className="calendar-field"><span className="calendar-field-label">{label}{counter && <span className="calendar-counter">{counter}</span>}</span>{children}</label>; }
+export function OperationalEventEditor({ products, event = null, rule = null, initialDate = "", fromCalendar = false, presentation = "page", onSaved, onCancel }: Props) {
     const router = useRouter();
-    const eventDate = event?.href.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/)?.[1] ?? "";
+    const eventDate = calendarEventDate(event) ?? "";
     const [mode, setMode] = useState(event ? (eventDate ? "date" : "link") : "date");
     const [step, setStep] = useState(1);
     const [title, setTitle] = useState(event?.title ?? "");
@@ -40,11 +43,11 @@ export function OperationalEventEditor({ products, event = null, rule = null, in
     const [validity, setValidity] = useState<CalendarValidity>(rule?.validity ?? "day");
     const [status, setStatus] = useState(editableCalendarStatus(rule?.status));
     const [currentRule, setCurrentRule] = useState(rule);
-    const [loadingRule, setLoadingRule] = useState(presentation === "modal" && Boolean(eventDate));
+    const [loadingRule, setLoadingRule] = useState(presentation === "modal" && Boolean(eventDate) && !rule);
     const [error, setError] = useState<string | null>(null);
     const [pending, setPending] = useState(false);
     useEffect(() => {
-        if (presentation !== "modal" || !event || !eventDate)
+        if (presentation !== "modal" || !event || !eventDate || rule)
             return;
         const controller = new AbortController();
         fetch(`/api/painel/calendar-events?id=${encodeURIComponent(event.id)}`, { signal: controller.signal }).then(async (response) => {
@@ -52,16 +55,29 @@ export function OperationalEventEditor({ products, event = null, rule = null, in
             if (!response.ok || !payload.ok)
                 throw new Error(payload.error?.message || "Não foi possível carregar a regra da data.");
             setCurrentRule(payload.data.rule);
+            if (payload.data.rule) setValidity(payload.data.rule.validity);
         }).catch(error => { if (!controller.signal.aborted)
             setError(error instanceof Error ? error.message : "Não foi possível carregar a data."); }).finally(() => { if (!controller.signal.aborted)
             setLoadingRule(false); });
         return () => controller.abort();
-    }, [event, eventDate, presentation]);
+    }, [event, eventDate, presentation, rule]);
     const isModal = presentation === "modal";
     const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
     async function submit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setError(null);
+        if (title !== event?.title && title.trim().normalize("NFC").length > 52) {
+            setError("Ajuste o título para até 52 caracteres antes de salvar.");
+            return;
+        }
+        if (description !== event?.description && description.trim().normalize("NFC").length > 220) {
+            setError("Ajuste o resumo para até 220 caracteres antes de salvar.");
+            return;
+        }
+        if (isModal && mode === "date" && (loadingRule || !currentRule)) {
+            setError("Aguarde a regra da data. Se ela não existir, configure a data em Mais detalhes.");
+            return;
+        }
         if (!isModal && step === 1 && mode === "date") {
             if (!event && !image) {
                 setError("Envie uma imagem para o evento.");
@@ -99,86 +115,86 @@ export function OperationalEventEditor({ products, event = null, rule = null, in
             setPending(false);
         }
     }
-    return <div className={isModal ? "calendar-page" : "calendar-page calendar-card"}>
-  {!isModal && <>
-        <p className="calendar-eyebrow">Site · Eventos</p>
-        <h2 className="calendar-heading">{event ? "Editar evento" : "Novo evento"}</h2>
-        <ol className="calendar-actions" aria-label="Etapas do evento">
-        <li aria-current={step === 1 ? "step" : undefined}>1 · Configuração do evento</li>{mode === "date" && <li aria-current={step === 2 ? "step" : undefined}>2 · Data do evento</li>}</ol>
-        </>}
-  {!isModal && rule?.status === "lot" && status === "fec" && <p className="calendar-catalog-note" role="status">Esta data estava lotada. As vendas ficam fechadas; selecione Aberta para reabrir.</p>}
-  <form onSubmit={submit} className="grid gap-5">
-   <div hidden={!isModal && step !== 1} style={{ display: !isModal && step !== 1 ? "none" : undefined }} className="grid gap-5">
-    {!isModal && !fromCalendar && !event && <Field label="Tipo do evento">
-        <select className="calendar-input" value={mode} onChange={e => setMode(e.target.value)}>
-        <option value="date">Data do site</option>
-        <option value="link">Link externo</option>
-        </select>
-        </Field>}
-    {fromCalendar && <p className="calendar-muted">Data do site · criada pelo calendário</p>}
-    <Field label={`Título (${title.length}/52)`}>
-    <input className="calendar-input" required maxLength={52} value={title} onChange={e => setTitle(e.target.value)}/>
-    </Field>
-    <Field label={`Resumo (${description.length}/220)`}>
-    <textarea className="calendar-input" required maxLength={220} rows={3} value={description} onChange={e => setDescription(e.target.value)}/>
-    </Field>
-    {mode === "date" && !isModal && <Field label="Data do evento">
-        <input className="calendar-input" type="date" required value={date} min={event ? undefined : today} readOnly={Boolean(event) || fromCalendar} onChange={e => setDate(e.target.value)}/>
-        </Field>}
-    {mode === "link" && <Field label="Link externo">
-        <input className="calendar-input" type="url" required value={href} placeholder="https://" onChange={e => setHref(e.target.value)}/>
-        </Field>}
-    {mode === "date" && <>
-        <Field label="Página do evento">
-        <select className="calendar-input" value={String(pageEnabled)} onChange={e => setPageEnabled(e.target.value === "true")}>
-        <option value="false">Sem página</option>
-        <option value="true">Com página</option>
-        </select>
-        </Field>
-    {pageEnabled && <>
-            <Field label="Título da página">
-            <input className="calendar-input" maxLength={80} value={pageTitle} placeholder={title} onChange={e => setPageTitle(e.target.value)}/>
-            </Field>
-            <Field label="Texto da página">
-            <textarea className="calendar-input" required rows={8} maxLength={40000} value={pageContent} onChange={e => setPageContent(e.target.value)}/>
-            </Field>
-            </>}</>}
-    <Field label="Texto do botão">
-    <input className="calendar-input" maxLength={80} value={buttonLabel} onChange={e => setButtonLabel(e.target.value)}/>
-    </Field>
-    {event?.imageSrc && <img src={event.imageSrc} alt={event.title} className="h-40 w-full rounded-md object-cover"/>}
-    <Field label="Imagem">
-    <input className="calendar-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required={!event && step === 1} onChange={e => setImage(e.target.files?.[0] ?? null)}/>
-    <span className="calendar-muted">JPG, PNG, WebP ou GIF · até 10 MB</span>
-    </Field>
-    <label className="calendar-actions">
-    <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)}/> Publicar no site</label>
-   </div>
-   {!isModal && step === 2 && <>
-        <h3 className="calendar-heading">Data do evento · {date.split("-").reverse().join("/")}</h3>
-        <CalendarProductFields products={products} passportIds={passportIds} addonIds={addonIds} onPassportsChange={setPassportIds} onAddonsChange={setAddonIds} isEvent/>
-    <div className="calendar-form-grid">
-        <Field label="Status da data">
-        <select className="calendar-input" value={status} onChange={e => setStatus(e.target.value as "abe" | "fec")}>
-        <option value="abe">Aberta</option>
-        <option value="fec">Fechada</option>
-        </select>
-        </Field>
-        <Field label="Validade dos vouchers">
-        <select className="calendar-input" value={validity} onChange={e => setValidity(e.target.value as CalendarValidity)}>{Object.entries(calendarValidityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
-        </Field>
+    return <div className="calendar-event-page">
+        {!isModal && <nav className="calendar-breadcrumbs" aria-label="Navegação estrutural"><Link href="/painel/site">Site</Link><span aria-hidden="true">›</span><span>{event ? "Editar evento" : "Novo evento"}</span></nav>}
+        <div className={isModal ? "calendar-page calendar-event-modal" : "calendar-page calendar-card calendar-event-wizard"}>
+            {!isModal && <>
+                <p className="calendar-eyebrow calendar-event-label">Evento</p>
+                <h2 className="calendar-heading">{event ? `Editar ${event.title}` : "Novo evento"}</h2>
+                <p className="calendar-muted">{mode === "date" ? "Configure o evento e escolha os ingressos para a data." : "Configure o evento e o link que será aberto no site."}</p>
+                <ol className="calendar-event-steps" aria-label="Etapas do evento">
+                    <li className={step === 1 ? "is-current" : "is-complete"} aria-current={step === 1 ? "step" : undefined}><span>{step > 1 ? "✓" : "1"}</span>Configuração do evento</li>
+                    {mode === "date" && <li className={step === 2 ? "is-current" : ""} aria-current={step === 2 ? "step" : undefined}><span>2</span>Data do evento</li>}
+                </ol>
+            </>}
+            {!isModal && rule?.status === "lot" && status === "fec" && <p className="calendar-catalog-note" role="status">Esta data estava lotada. As vendas ficam fechadas; selecione Aberta para reabrir.</p>}
+            <form onSubmit={submit} className="calendar-event-form">
+                <div hidden={!isModal && step !== 1} style={{ display: !isModal && step !== 1 ? "none" : undefined }} className="calendar-event-form">
+                    {!isModal && !fromCalendar && !event && <section className="calendar-event-section">
+                        <h3>Tipo do evento</h3>
+                        <p className="calendar-muted">Escolha se o botão vai abrir uma data do site ou um link externo.</p>
+                        <div className="calendar-segmented" role="group" aria-label="Tipo do evento">
+                            <button type="button" aria-pressed={mode === "date"} onClick={() => setMode("date")}>Data do site</button>
+                            <button type="button" aria-pressed={mode === "link"} onClick={() => setMode("link")}>Link externo</button>
+                        </div>
+                    </section>}
+                    {fromCalendar && <p className="calendar-event-notice">Criado pelo calendário: o evento já abre como data do site, na data escolhida.</p>}
+                    {isModal && <p className="calendar-muted">{eventDate ? `Data do site · ${eventDate.split("-").reverse().join("/")}` : "Link externo"}</p>}
+                    <Field label="Título" counter={`(${title.length}/52)`}>
+                        <input className="calendar-input" required maxLength={Math.max(52, event?.title.length ?? 0)} value={title} onChange={e => { setTitle(e.target.value); e.currentTarget.setCustomValidity(e.target.value !== event?.title && e.target.value.trim().normalize("NFC").length > 52 ? "Ajuste o título para até 52 caracteres." : ""); }} />
+                    </Field>
+                    {!isModal && <p className="calendar-muted">Máximo de 52 caracteres para manter o layout do site.</p>}
+                    <Field label="Resumo" counter={`(${description.length}/220)`}>
+                        <textarea className="calendar-input" required maxLength={Math.max(220, event?.description.length ?? 0)} rows={3} value={description} onChange={e => { setDescription(e.target.value); e.currentTarget.setCustomValidity(e.target.value !== event?.description && e.target.value.trim().normalize("NFC").length > 220 ? "Ajuste o resumo para até 220 caracteres." : ""); }} />
+                    </Field>
+                    {(event?.description.length ?? 0) > 220 && <p className="calendar-catalog-note">Resumo legado preservado. Ao editar este texto, ajuste-o para até 220 caracteres antes de salvar.</p>}
+                    {!isModal && <p className="calendar-muted">Máximo de 220 caracteres para manter o resumo equilibrado na listagem.</p>}
+                    {mode === "date" && !isModal && <Field label="Data do evento"><input className="calendar-input" type="date" required value={date} min={event ? undefined : today} readOnly={Boolean(event) || fromCalendar} onChange={e => setDate(e.target.value)} /></Field>}
+                    {mode === "link" && <Field label="Link externo"><input className="calendar-input" type="url" required value={href} placeholder="https://" onChange={e => setHref(e.target.value)} /></Field>}
+                    {mode === "date" && <section className={isModal ? "calendar-event-form" : "calendar-event-section"}>
+                        {isModal ? <Field label="Página do evento"><select className="calendar-input" value={String(pageEnabled)} onChange={e => setPageEnabled(e.target.value === "true")}><option value="false">Sem página</option><option value="true">Com página</option></select></Field> : <>
+                            <h3>Página do evento</h3><p className="calendar-muted">Escolha se o evento fica só na agenda ou se terá página própria no site.</p>
+                            <div className="calendar-segmented" role="group" aria-label="Página do evento"><button type="button" aria-pressed={!pageEnabled} onClick={() => setPageEnabled(false)}>Sem página</button><button type="button" aria-pressed={pageEnabled} onClick={() => setPageEnabled(true)}>Com página</button></div>
+                        </>}
+                        {pageEnabled && <>
+                            <Field label="Título da página"><input className="calendar-input" maxLength={80} value={pageTitle} placeholder={title} onChange={e => setPageTitle(e.target.value)} /></Field>
+                            <Field label="Texto da página"><textarea className="calendar-input" required rows={isModal ? 3 : 8} maxLength={40000} value={pageContent} onChange={e => setPageContent(e.target.value)} /></Field>
+                        </>}
+                    </section>}
+                    {isModal && eventDate && <>
+                        <Field label="Validade dos ingressos"><select className="calendar-input" value={validity} disabled={loadingRule || !currentRule} onChange={e => setValidity(e.target.value as CalendarValidity)}>{Object.entries(calendarValidityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+                        <p className="calendar-muted">Vale apenas para próximas emissões. Os vouchers já emitidos mantêm a validade atual.</p>
+                        {loadingRule ? <p className="calendar-muted" role="status">Carregando regra da data…</p> : currentRule ? <div className="calendar-event-products">
+                            <p className="calendar-muted">Passaportes: {currentRule.passportIds.map(id => products.find(p => p.id === id)?.title ?? id).join(", ") || "Nenhum"}</p>
+                            <p className="calendar-muted">Adicionais: {currentRule.addonIds.map(id => products.find(p => p.id === id)?.title ?? id).join(", ") || "Nenhum"}</p>
+                            <p className="calendar-muted">Data {currentRule.status === "fec" ? "fechada" : currentRule.status === "lot" ? "lotada" : "aberta"}</p>
+                        </div> : <p className="calendar-error">Configure a data em Mais detalhes antes de salvar.</p>}
+                    </>}
+                    <div className="calendar-form-grid">
+                        <Field label="Texto do botão"><input className="calendar-input" maxLength={80} value={buttonLabel} onChange={e => setButtonLabel(e.target.value)} /></Field>
+                        <Field label="Imagem"><input className="calendar-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required={!event && step === 1} onChange={e => setImage(e.target.files?.[0] ?? null)} /><span className="calendar-muted">JPG, PNG, WebP ou GIF · até 10 MB</span></Field>
+                    </div>
+                    {event?.imageSrc && <img src={event.imageSrc} alt={event.title} className="calendar-event-image" />}
+                    <label className="calendar-actions"><input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} /> Publicar no site</label>
+                </div>
+                {!isModal && step === 2 && <>
+                    <p className="calendar-event-notice">Data do evento · {date.split("-").reverse().join("/")}</p>
+                    <CalendarProductFields products={products} passportIds={passportIds} addonIds={addonIds} onPassportsChange={setPassportIds} onAddonsChange={setAddonIds} isEvent />
+                    <div className="calendar-form-grid">
+                        <Field label="Status da data"><select className="calendar-input" value={status} onChange={e => setStatus(e.target.value as "abe" | "fec")}><option value="abe">Aberta</option><option value="fec">Fechada</option></select></Field>
+                        <Field label="Validade dos ingressos"><select className="calendar-input" value={validity} onChange={e => setValidity(e.target.value as CalendarValidity)}>{Object.entries(calendarValidityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+                    </div>
+                    <Link className="calendar-button-secondary" href="/painel/passaportes-itens">Criar ou editar passaportes</Link>
+                </>}
+                {isModal && <p className="calendar-muted">Imagem, título, resumo, texto do botão e página são configurados nesta janela. Passaportes, adicionais, relatório e movimentação ficam em Mais detalhes.</p>}
+                {error && <p className="calendar-error" role="alert">{error}</p>}
+                <div className="calendar-actions calendar-event-footer">
+                    {isModal && eventDate && <Link href={`/painel/agenda/${eventDate}`} className="calendar-button-secondary calendar-event-details">Mais detalhes</Link>}
+                    {isModal && onCancel && <button type="button" className="calendar-button-secondary" onClick={onCancel}>Cancelar</button>}
+                    <button type="submit" className="calendar-button" disabled={pending || (isModal && Boolean(eventDate) && (loadingRule || !currentRule))}>{pending ? "Salvando…" : isModal ? "Salvar evento" : step === 1 && mode === "date" ? "Continuar" : "Publicar evento"}</button>
+                    {!isModal && (step === 2 ? <button type="button" className="calendar-button-secondary" onClick={() => setStep(1)}>Voltar ao passo 1</button> : <Link href={fromCalendar ? "/painel/agenda" : "/painel/site"} className="calendar-button-secondary">Cancelar</Link>)}
+                </div>
+            </form>
         </div>
-        <Link className="calendar-button-secondary" href="/painel/passaportes-itens">Criar ou editar passaportes</Link>
-        </>}
-   {isModal && eventDate && <section className="calendar-card">
-        <h3 className="font-bold">Regra desta data</h3>{loadingRule ? <p className="calendar-muted">Carregando…</p> : currentRule ? <>
-            <p>Validade: {calendarValidityLabels[currentRule.validity]} · {currentRule.status === "fec" ? "Fechada" : currentRule.status === "lot" ? "Lotada" : "Aberta"}</p>
-            <p className="calendar-muted">Passaportes: {currentRule.passportIds.map(id => products.find(p => p.id === id)?.title ?? id).join(", ") || "Nenhum"}</p>
-            <p className="calendar-muted">Adicionais: {currentRule.addonIds.map(id => products.find(p => p.id === id)?.title ?? id).join(", ") || "Nenhum"}</p>
-            </> : <p className="calendar-muted">Configure a oferta e a validade na agenda.</p>}<Link href={`/painel/agenda/${eventDate}`} className="calendar-button-secondary">Mais detalhes</Link>
-        </section>}
-   {error && <p className="calendar-error" role="alert">{error}</p>}
-   <div className="calendar-actions">{!isModal && step === 2 && <button type="button" className="calendar-button-secondary" onClick={() => setStep(1)}>Voltar</button>}<button type="submit" className="calendar-button" disabled={pending}>{pending ? "Salvando…" : isModal ? "Salvar evento" : step === 1 && mode === "date" ? "Continuar" : "Publicar evento"}</button>{!isModal && <Link href={fromCalendar ? "/painel/agenda" : "/painel/site"} className="calendar-button-secondary">Cancelar</Link>}</div>
-  </form>
- </div>;
+    </div>;
 }

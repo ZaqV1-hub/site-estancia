@@ -1,5 +1,6 @@
 import type { PoolClient } from "pg";
 import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
+import { calendarEventDate } from "@/lib/calendar-event-link";
 import { assertCalendarDate, getSaoPauloToday, isEventOnlyProduct, resolveCalendarValidityDate } from "@/lib/calendar-validity";
 import { ensureCalendarTables } from "@/lib/calendar-schema";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
@@ -31,6 +32,13 @@ function normalizeTitle(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
+export function resolveCalendarVoucherProduct(row: Pick<CalendarVoucherRow, "descricao" | "tpvoucher">, products: B2cProduct[]) {
+  const title = row.descricao?.trim() || ({ norma: "Passaporte", infan: "Passaporte 6 a 11 anos", isent: "Isento 0 a 5 anos", corte: "Cortesia", escol: "Escolar" }[row.tpvoucher ?? ""] ?? "Adicional");
+  const product = products.find((candidate) => normalizeTitle(candidate.title) === normalizeTitle(title));
+  const kind: B2cProduct["type"] = product?.type ?? (/passaporte|isento|cortesia/i.test(title) || ["norma", "infan", "isent", "corte", "escol"].includes(row.tpvoucher ?? "") ? "passport" : "addon");
+  return { title, productId: product?.id ?? null, kind };
+}
+
 function cents(value: string | null) {
   const number = Number(value ?? 0);
   return Number.isFinite(number) ? Math.round(number * 100) : 0;
@@ -58,10 +66,8 @@ export function buildCalendarPurchases(rows: CalendarVoucherRow[], products: B2c
     for (let index=0;index<unallocated && remainders.length;index++) values[remainders[index%remainders.length].index]++;
     const vouchers = allVouchers.flatMap((row, index) => {
       if (row.date !== date || row.stusado === "inv") return [];
-      const title = row.descricao?.trim() || ({ norma: "Passaporte", infan: "Passaporte 6 a 11 anos", isent: "Isento 0 a 5 anos", corte: "Cortesia" }[row.tpvoucher ?? ""] ?? "Adicional");
-      const product = products.find((candidate) => normalizeTitle(candidate.title) === normalizeTitle(title));
-      const kind = product?.type ?? (/passaporte|isento|cortesia/i.test(title) || ["norma", "infan", "isent", "corte"].includes(row.tpvoucher ?? "") ? "passport" : "addon");
-      return [{ id: Number(row.idvoucher), number: row.numvoucher, type: row.tpvoucher ?? "", productId: product?.id ?? null,
+      const { title, productId, kind } = resolveCalendarVoucherProduct(row, products);
+      return [{ id: Number(row.idvoucher), number: row.numvoucher, type: row.tpvoucher ?? "", productId,
         title, kind, valueCents: values[index], used: row.stusado === "s", invalid: false,
         validUntil: row.dtvalidade, originalDate: row.original_date, rescheduleReason: row.reason }];
     });
@@ -107,13 +113,25 @@ const ruleSelect = `SELECT a.idagenda, to_char(a.dtagenda,'YYYY-MM-DD') AS date,
   a.tpagenda,a.stagenda,a.nmpromocional,r.kind,r.validity,r.passport_ids,r.addon_ids,r.event_id,r.event_title
   FROM agenda a LEFT JOIN estancia_calendar_rules r ON r.agenda_id=a.idagenda`;
 
-async function mapRule(row: RuleRow, client?: PoolClient): Promise<CalendarRule> {
+async function mapRule(row: RuleRow, client?: PoolClient, content?: EstanciaContentData): Promise<CalendarRule> {
   const availability = row.passport_ids !== null ? { passportIds: row.passport_ids, addonIds: row.addon_ids ?? [] }
     : client ? await legacyAvailabilityInTransaction(row.date, client)
     : await getAgendaProductAvailability(row.date);
-  return { configured: row.validity !== null, agendaId: Number(row.idagenda), date: row.date, type: row.kind === "event" || row.tpagenda === "promo" ? "event" : "dayuse",
+  const rule: CalendarRule = { configured: row.validity !== null, agendaId: Number(row.idagenda), date: row.date, type: row.kind === "event" || row.tpagenda === "promo" ? "event" : "dayuse",
     status: row.stagenda, validity: row.validity ?? (row.tpagenda === "promo" ? "day" : "6m"), passportIds: availability.passportIds,
     addonIds: availability.addonIds, eventId: row.event_id, eventTitle: row.event_title ?? row.nmpromocional };
+  if (!rule.eventId && row.kind !== "dayuse") {
+    const site = content ?? (client
+      ? (await client.query<{content_json:EstanciaContentData}>("SELECT content_json FROM estancia_site_content WHERE content_key='main'")).rows[0]?.content_json
+      : await readEstanciaContent());
+    const matches = site?.events.filter((event) => calendarEventDate(event) === row.date) ?? [];
+    if (matches.length === 1) {
+      rule.type = "event";
+      rule.eventId = matches[0].id;
+      rule.eventTitle = matches[0].title;
+    }
+  }
+  return rule;
 }
 
 async function legacyAvailabilityInTransaction(date: string, client: PoolClient) {
@@ -132,15 +150,7 @@ export async function getCalendarRule(date: string, client?: PoolClient): Promis
   const result = await (client ?? getIngressoDbPool()).query<RuleRow>(`${ruleSelect}
     WHERE a.dtagenda=$1::date AND a.tpagenda IN ('padra','promo') ORDER BY a.idagenda LIMIT 1`, [date]);
   if (!result.rows[0]) return null;
-  const rule=await mapRule(result.rows[0],client);
-  if (rule.type==="event" && !rule.eventId) {
-    const content=client
-      ? (await client.query<{content_json:EstanciaContentData}>("SELECT content_json FROM estancia_site_content WHERE content_key='main'")).rows[0]?.content_json
-      : await readEstanciaContent();
-    const event=content?.events.find((event)=>event.href.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/)?.[1]===date);
-    if (event) {rule.eventId=event.id;rule.eventTitle=event.title;}
-  }
-  return rule;
+  return mapRule(result.rows[0],client);
 }
 
 async function loadVoucherRows(start: string, end: string) {
@@ -173,7 +183,7 @@ export async function getCalendarMonth(month: number, year: number): Promise<Cal
       AND a.tpagenda IN ('padra','promo') ORDER BY a.dtagenda,a.idagenda`, [start,end]),
     loadVoucherRows(start,end), readEstanciaContent(),
   ]);
-  const rules = await Promise.all(result.rows.map((row)=>mapRule(row)));
+  const rules = await Promise.all(result.rows.map((row)=>mapRule(row, undefined, content)));
   return { month,year,today:getSaoPauloToday(),days:rules.map((rule)=>({ date:rule.date,rule,
     summary:summarizeCalendarPurchases(buildCalendarPurchases(rows,content.products,rule.date)) })) };
 }
@@ -191,7 +201,8 @@ export async function listOpenCalendarDestinations(): Promise<CalendarRule[]> {
   await ensureCalendarTables();
   const result = await getIngressoDbPool().query<RuleRow>(`${ruleSelect}
     WHERE a.dtagenda>$1::date AND a.stagenda='abe' AND a.tpagenda IN ('padra','promo') ORDER BY a.dtagenda`, [getSaoPauloToday()]);
-  return Promise.all(result.rows.map((row)=>mapRule(row)));
+  const content = await readEstanciaContent();
+  return Promise.all(result.rows.map((row)=>mapRule(row, undefined, content)));
 }
 
 export async function saveCalendarDate(input: SaveCalendarDateInput, actor: CalendarActor, transactionClient?: PoolClient): Promise<CalendarRule> {
@@ -242,7 +253,8 @@ export async function saveCalendarDate(input: SaveCalendarDateInput, actor: Cale
     if (oldRow && !["padra","promo"].includes(oldRow.tpagenda)) {
       throw new CalendarError("calendar_b2c_only", "Esta agenda não é uma data de day use ou evento.",409);
     }
-    if (oldRow && (oldRow.tpagenda==="promo") !== (type==="event")) {
+    const currentRule = oldRow ? await getCalendarRule(input.date, client) : null;
+    if (oldRow && (currentRule?.type !== type || (currentRule.eventId && currentRule.eventId !== input.eventId))) {
       throw new CalendarError("calendar_event_type_locked", "Use a configuração do evento no Site; o tipo de uma data publicada não pode ser alterado.",409);
     }
     if (!agendaId) {

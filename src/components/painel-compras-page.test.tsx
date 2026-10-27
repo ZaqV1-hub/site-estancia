@@ -13,11 +13,15 @@ describe("PainelComprasPage", () => {
           total: 1,
           page: 1,
           perPage: 30,
-          totalPages: 1,
+          totalPages: 2,
           filters: {
             purchaseId: null,
             type: "ponli",
             purchaseStatus: null,
+            calendar: "1",
+            origin: "site",
+            voucherStatus: "rescheduled",
+            search: "DEV",
             paymentMethod: null,
             ticketPaymentMethod: null,
             gatewayPaymentMethod: null,
@@ -45,18 +49,42 @@ describe("PainelComprasPage", () => {
               cpf: "12345678901",
               userName: "DEV",
               totalValue: "80,00",
+              visitValue: "40,00",
+              people: 2,
+              originLabel: "Site",
+              voucherStatus: "rescheduled",
+              voucherStatusLabel: "Reagendado",
             },
           ],
         },
       }),
     );
 
-    expect(html).toContain("Lista de compras e reservas");
+    expect(html).toContain("Todas as compras");
+    expect(html).toContain("Reagendadas");
+    expect(html).toContain("Disponíveis");
+    expect(html).toContain("Utilizadas");
+    expect(html).toContain('name="origin"');
+    expect(html).toContain('name="voucherStatus"');
+    expect(html).toContain('name="search"');
+    expect(html).toContain("Comprador");
+    expect(html).toContain("Data da visita");
+    expect(html).toContain("Pessoas");
+    expect(html).toContain("R$ 40,00");
+    expect(html).toContain("Total da compra: R$ 80,00");
+    expect(html).toContain("Reagendado");
+    expect(html).toContain("origin=site");
+    expect(html).toContain("calendar=1");
+    expect(html).toContain('name="calendar"');
+    expect(html).toContain('href="/painel/compras?calendar=1"');
+    expect(html).toContain("voucherStatus=rescheduled");
+    expect(html).toContain("search=DEV");
+    expect(html).not.toMatch(/#[0-9a-f]{3,8}/i);
     expect(html).toContain("Forma de pgto");
     expect(html).toContain("Pagamento");
     expect(html).toContain(">Compra<");
-    expect(html).toContain("Data agendada de");
-    expect(html).toContain("Data agendada");
+    expect(html).toContain("Data da visita de");
+    expect(html).toContain("Data da visita");
     expect(html).toContain("Limpar filtros");
     expect(html).toContain("Filtrar");
     expect(html).toContain("Bilheteria");

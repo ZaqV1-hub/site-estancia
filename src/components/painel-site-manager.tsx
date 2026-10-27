@@ -8,6 +8,7 @@ import {
 } from "react";
 import { OperationalEventEditor } from "@/components/operational-event-editor";
 import { PainelModal } from "@/components/painel-modal";
+import { calendarEventDate } from "@/lib/calendar-event-link";
 import type {
   EstanciaContentData,
   ManagedAttraction,
@@ -189,6 +190,7 @@ export function PainelSiteManager({
   const [error, setError] = useState<string | null>(null);
   const [homeHeroMode, setHomeHeroMode] = useState<HomeHeroMode>("without-link");
   const [homeHeroHrefValue, setHomeHeroHrefValue] = useState("");
+  const [activeSection, setActiveSection] = useState<"event" | "home" | "attraction">("event");
   useEffect(() => {
     if (initialOpenCreateEvent) router.replace("/painel/site/eventos/novo");
   }, [initialOpenCreateEvent, router]);
@@ -331,7 +333,20 @@ export function PainelSiteManager({
 
   return (
     <>
-      <section className="panel-section p-5">
+      {activeSection === "event" && <section role="region" id="site-panel-event" aria-labelledby="site-tab-event">
+        <ContentList
+          section="event"
+          title="Eventos do site"
+          buttonLabel="Novo evento"
+          items={content.events}
+          movingKey={movingKey}
+          onEdit={openEditEvent}
+          onCreate={openCreateEvent}
+          onDelete={(item) => setDeleteTarget({ section: "event", id: item.id, title: item.title })}
+          onMove={(id, direction) => moveItem("event", id, direction)}
+        />
+      </section>}
+      {activeSection === "home" && <section className="panel-section p-5" role="region" id="site-panel-home" aria-labelledby="site-tab-home">
         <p className="panel-eyebrow">Imagens da hero</p>
         <div className="mt-4 flex items-center justify-between gap-3">
           <h3 className="text-[24px] font-black text-[var(--panel-ink)]">Banners publicados</h3>
@@ -403,9 +418,9 @@ export function PainelSiteManager({
             </article>
           ))}
         </div>
-      </section>
+      </section>}
 
-      <section className="grid gap-5 xl:grid-cols-2">
+      {activeSection === "attraction" && <section role="region" id="site-panel-attraction" aria-labelledby="site-tab-attraction">
         <ContentList
           section="attraction"
           title="Atracoes"
@@ -423,20 +438,11 @@ export function PainelSiteManager({
           }
           onMove={(id, direction) => moveItem("attraction", id, direction)}
         />
-        <ContentList
-          section="event"
-          title="Eventos"
-          buttonLabel="Novo evento"
-          items={content.events}
-          movingKey={movingKey}
-          onEdit={openEditEvent}
-          onCreate={openCreateEvent}
-          onDelete={(item) =>
-            setDeleteTarget({ section: "event", id: item.id, title: item.title })
-          }
-          onMove={(id, direction) => moveItem("event", id, direction)}
-        />
-      </section>
+      </section>}
+
+      <div className="calendar-site-tabs calendar-segmented" role="group" aria-label="Conteúdo do site">
+        {([['event', 'Eventos'], ['home', 'Banners'], ['attraction', 'Atrações']] as const).map(([section, label]) => <button key={section} id={`site-tab-${section}`} type="button" aria-pressed={activeSection === section} aria-controls={`site-panel-${section}`} onClick={() => setActiveSection(section)}>{label}</button>)}
+      </div>
 
       <PainelModal
         title={editing ? itemTitle(editing) : ""}
@@ -444,7 +450,7 @@ export function PainelSiteManager({
         onClose={() => setEditing(null)}
       >
         {editing?.section === "event" && editing.item ? (
-          <OperationalEventEditor key={editing.item.id} event={editing.item} products={content.products} presentation="modal" onSaved={() => {setEditing(null); router.replace("/painel/site"); router.refresh();}} />
+          <OperationalEventEditor key={editing.item.id} event={editing.item} products={content.products} presentation="modal" onCancel={() => setEditing(null)} onSaved={() => {setEditing(null); router.replace("/painel/site"); router.refresh();}} />
         ) : editing ? (
           <form onSubmit={submitForm} className="grid gap-4">
             <input type="hidden" name="section" value={editing.section} />
@@ -598,7 +604,7 @@ export function PainelSiteManager({
         <p className="text-sm leading-7 text-[var(--panel-muted)]">
           Tem certeza que deseja excluir <strong>{deleteTarget?.title}</strong>?
         </p>
-        {deleteTarget?.section === "event" && content.events.find(item => item.id === deleteTarget.id)?.href.includes("date=") ? <p className="mt-3 text-sm text-[var(--panel-muted)]">A data será fechada. As compras e os vouchers serão preservados.</p> : null}
+        {deleteTarget?.section === "event" && calendarEventDate(content.events.find(item => item.id === deleteTarget.id)) ? <p className="mt-3 text-sm text-[var(--panel-muted)]">A data será fechada. As compras e os vouchers serão preservados.</p> : null}
         {error ? (
           <p className="mt-3 rounded-[8px] border border-[var(--panel-resch)] bg-[var(--panel-resch-bg)] px-4 py-3 text-sm text-[var(--panel-resch)]">
             {error}
@@ -657,65 +663,34 @@ function ContentList<T extends ManagedAttraction | ManagedEvent>({
   onMove: (id: string, direction: "up" | "down") => void;
 }) {
   return (
-    <article className="panel-section p-5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="panel-eyebrow">{title}</p>
-        {buttonLabel ? (
-          <button
-            type="button"
-            onClick={onCreate}
-            className="rounded-full bg-[var(--panel-primary)] px-5 py-3 text-sm font-black text-[var(--panel-on-primary)]"
-          >
-            {buttonLabel}
-          </button>
-        ) : null}
+    <article className={section === "event" ? "calendar-card calendar-event-list" : "panel-section p-5"}>
+      <div className="calendar-site-event-header">
+        <div>
+          <p className="calendar-eyebrow">{section === "event" ? "Site" : "Conteúdo do site"}</p>
+          <h2 className="calendar-heading">{title}</h2>
+          {section === "event" && <p className="calendar-page-sub">Eventos que aparecem na tela inicial do site. Novo evento abre uma tela com dois passos. Editar abre uma janela com as configurações do evento.</p>}
+        </div>
+        {buttonLabel && <button type="button" onClick={onCreate} className="calendar-button">{buttonLabel}</button>}
       </div>
-      <div className="mt-5 grid max-h-[520px] gap-3 overflow-y-auto pr-2">
+      <div className="calendar-event-items">
+        {!items.length && <p className="calendar-muted">{section === "event" ? "Nenhum evento cadastrado." : "Nenhuma atração cadastrada."}</p>}
         {items.map((item, index) => (
-          <div
-            key={item.id}
-            className="rounded-[10px] border border-[var(--panel-line)] bg-[var(--panel-card)] p-4"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-lg font-black text-[var(--panel-ink)]">{item.title}</p>
-                <p className="mt-2 text-sm leading-6 text-[var(--panel-muted)]">{item.description}</p>
-              </div>
-              <span className="rounded-full bg-[var(--panel-head)] px-3 py-1 text-xs font-black text-[var(--panel-ok)]">
-                #{item.sortOrder}
-              </span>
+          <article key={item.id} className="calendar-site-event">
+            <div>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+              {"buttonLabel" in item && <div className="calendar-site-event-meta">
+                <span className={calendarEventDate(item) ? "calendar-chip calendar-event-chip" : "calendar-chip"}>{calendarEventDate(item) ? `Data do site · ${calendarEventDate(item)?.split("-").reverse().join("/")}` : "Link externo"}</span>
+                {calendarEventDate(item) && <span className="calendar-chip">{item.pageEnabled ? "Com página" : "Sem página"}</span>}
+                {!item.active && <span className="calendar-chip">Oculto no site</span>}
+              </div>}
             </div>
-            {"buttonLabel" in item ? (
-              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-[var(--panel-ink)]">
-                <span className="calendar-chip">{item.href.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/) ? `Data do site · ${item.href.match(/(?:\?|&)date=(\d{4}-\d{2}-\d{2})(?:&|$)/)?.[1]?.split("-").reverse().join("/")}` : "Link externo"}</span>
-                <span className="calendar-chip">{item.pageEnabled ? "Com página":"Sem página"}</span>
-                <span className="calendar-chip">Botão: {item.buttonLabel}</span>
-              </div>
-            ) : null}
-            <div className="mt-4 flex flex-wrap gap-2">
-              <MoveButtons
-                onMoveUp={() => onMove(item.id, "up")}
-                onMoveDown={() => onMove(item.id, "down")}
-                canMoveUp={index > 0}
-                canMoveDown={index < items.length - 1}
-                busy={movingKey?.startsWith(`${section}:${item.id}:`) ?? false}
-              />
-              <button
-                type="button"
-                onClick={() => onEdit(item)}
-                className="rounded-full border border-[var(--panel-line)] px-4 py-2 text-xs font-black text-[var(--panel-ink)]"
-              >
-                Editar
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete(item)}
-                className="rounded-full border border-[var(--panel-resch-bg)] px-4 py-2 text-xs font-black text-[var(--panel-resch)]"
-              >
-                Excluir
-              </button>
+            <div className="calendar-actions calendar-site-event-actions">
+              <MoveButtons onMoveUp={() => onMove(item.id, "up")} onMoveDown={() => onMove(item.id, "down")} canMoveUp={index > 0} canMoveDown={index < items.length - 1} busy={movingKey?.startsWith(`${section}:${item.id}:`) ?? false} />
+              <button type="button" onClick={() => onEdit(item)} className="calendar-button-secondary">Editar</button>
+              <button type="button" onClick={() => onDelete(item)} className="calendar-button-secondary calendar-danger">Excluir</button>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </article>

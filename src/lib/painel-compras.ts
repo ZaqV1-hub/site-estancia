@@ -33,6 +33,7 @@ export type PainelPurchaseListFilters = {
 };
 
 export type PainelPurchaseListItem = {
+  addons?: number;
   people?: number;
   originLabel?: string;
   voucherStatus?: "rescheduled" | "available" | "used" | "inactive";
@@ -140,6 +141,7 @@ export type PainelPurchaseVoucherListFilters = {
 };
 
 export type PainelPurchaseVoucherListItem = {
+  kind?: "passport" | "addon";
   purchaseId: number;
   voucherId: number;
   voucherNumber: string | null;
@@ -329,6 +331,7 @@ type PainelPurchaseVoucherListRow = {
 };
 
 type PainelPurchaseVoucherIndicatorsRow = {
+  filtered_value?: string;
   qtdnormal_site: string | number | null;
   vlnormal_site: string | number | null;
   qtdinfantil_site: string | number | null;
@@ -1143,6 +1146,7 @@ export async function listPainelPurchases(input: {
       const dates = [...new Set(vouchers.map((voucher) => voucher.date))]
         .filter((date) => date && (!from || date >= from) && (!to || date <= to));
       const visits = dates.flatMap((date) => buildCalendarPurchases(classificationRows, content.products, date));
+      item.addons = visits.reduce((sum, visit) => sum + visit.addons, 0);
       item.people = visits.reduce((sum, visit) => sum + visit.people, 0);
       if ((from || to) && item.status === "conc") {
         item.visitValue = formatMoneyLabel(visits.reduce((sum, visit) => sum + visit.valueCents, 0) / 100);
@@ -1304,6 +1308,7 @@ export async function listPainelPurchaseVouchers(input: {
     pool.query<PainelPurchaseVoucherIndicatorsRow>(
       `
         SELECT
+          SUM(voucher.vlunicompra)::text AS filtered_value,
           SUM(CASE WHEN voucher.tpvoucher = 'norma' AND c.tpcompra = 'ponli' THEN 1 ELSE 0 END)::text AS qtdnormal_site,
           SUM(CASE WHEN voucher.tpvoucher = 'norma' AND c.tpcompra = 'ponli' THEN voucher.vlunicompra ELSE 0 END)::text AS vlnormal_site,
           SUM(CASE WHEN voucher.tpvoucher = 'infan' AND c.tpcompra = 'ponli' THEN 1 ELSE 0 END)::text AS qtdinfantil_site,
@@ -1333,14 +1338,15 @@ export async function listPainelPurchaseVouchers(input: {
   const total = Number(countResult.rows[0]?.total ?? 0);
   const effectivePerPage = allRows ? Math.max(total, rowsResult.rows.length, 1) : perPage;
 
+  const content = await readEstanciaContent();
   return {
-    items: rowsResult.rows.map(mapPainelPurchaseVoucherListItem),
+    items: rowsResult.rows.map(row => ({...mapPainelPurchaseVoucherListItem(row), kind: resolveCalendarVoucherProduct(row, content.products).kind})),
     total,
     page,
     perPage: effectivePerPage,
     totalPages: Math.max(1, Math.ceil(total / effectivePerPage)),
     filters,
-    indicators: mapPainelPurchaseVoucherIndicators(indicatorsResult.rows[0]),
+    indicators: {...mapPainelPurchaseVoucherIndicators(indicatorsResult.rows[0]), totalCount: total, totalValue: formatMoneyLabel(indicatorsResult.rows[0]?.filtered_value ?? 0)},
   };
 }
 
@@ -1357,6 +1363,8 @@ export function mapPainelPurchaseListExportRows(result: PainelPurchaseListResult
         "Valor",
         "CPF",
         "Usuário",
+        "Pessoas",
+        "Adicionais",
       ],
     ...result.items.map((item) => [
       String(item.purchaseId),
@@ -1369,6 +1377,8 @@ export function mapPainelPurchaseListExportRows(result: PainelPurchaseListResult
       item.totalValue,
       item.cpf ?? "-",
       item.userName ?? "-",
+      String(item.people ?? 0),
+      String(item.addons ?? 0),
     ]),
   ];
 }
@@ -1381,7 +1391,9 @@ export function mapPainelPurchaseVoucherListExportRows(
       "ID",
       "Voucher",
       "Data Visita",
-      "Passaporte",
+      "Item",
+      "Compra",
+      "Categoria",
       "Tipo Compra",
       "Valor",
       "Usado",
@@ -1393,6 +1405,8 @@ export function mapPainelPurchaseVoucherListExportRows(
       item.voucherNumber ?? "-",
       item.visitDate ?? "-",
       item.ticketTypeLabel,
+      String(item.purchaseId),
+      item.kind === "addon" ? "Adicional" : "Ingresso",
       item.purchaseTypeLabel,
       item.unitValue,
       item.usedLabel,
@@ -1441,7 +1455,7 @@ export async function getPainelPurchaseDetail(
   if (!Number.isInteger(purchaseId) || purchaseId <= 0) {
     throw new PainelComprasError(
       "invalid_purchase_id",
-      "Compra invalida.",
+      "Compra inválida.",
       400,
     );
   }
@@ -1451,7 +1465,7 @@ export async function getPainelPurchaseDetail(
   if (!purchase) {
     throw new PainelComprasError(
       "purchase_not_found",
-      "Compra nao encontrada.",
+      "Compra não encontrada.",
       404,
     );
   }
@@ -1545,7 +1559,7 @@ export async function getPainelPurchaseGatewayConsult(
   if (!Number.isInteger(purchaseId) || purchaseId <= 0) {
     throw new PainelComprasError(
       "invalid_purchase_id",
-      "Compra invalida.",
+      "Compra inválida.",
       400,
     );
   }
@@ -1555,7 +1569,7 @@ export async function getPainelPurchaseGatewayConsult(
   if (!purchase) {
     throw new PainelComprasError(
       "purchase_not_found",
-      "Compra nao encontrada.",
+      "Compra não encontrada.",
       404,
     );
   }
@@ -1579,7 +1593,7 @@ export async function getPainelPurchaseGatewayConsult(
     return {
       purchaseId,
       found: false,
-      message: "Dados nao encontrados na Cielo",
+      message: "Dados não encontrados na Cielo",
       statusCode: null,
       statusLabel: null,
       paymentMethodType: null,
@@ -1606,7 +1620,7 @@ export async function getPainelPurchaseGatewayConsult(
     return {
       purchaseId,
       found: false,
-      message: readStringValue(readObject(payload), ["msgRetorno"]) || "Dados nao encontrados na Cielo",
+      message: readStringValue(readObject(payload), ["msgRetorno"]) || "Dados não encontrados na Cielo",
       statusCode: null,
       statusLabel: null,
       paymentMethodType: null,
@@ -1657,7 +1671,7 @@ export function asPainelComprasError(error: unknown) {
 
   return new PainelComprasError(
     "painel_compras_unavailable",
-    "Nao foi possivel carregar os dados de compras agora.",
+    "Não foi possível carregar os dados de compras agora.",
     502,
   );
 }

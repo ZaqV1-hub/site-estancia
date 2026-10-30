@@ -1082,6 +1082,25 @@
   }
   .estancia-panel .legacy-condensed, .estancia-panel .legacy-rounded { font-family: inherit !important; }
   .estancia-panel :is(button,input,select,textarea) { font-family: inherit; }
+  /* Keep legacy administrative screens on the purchase screen's type scale. */
+  @media screen {
+    .estancia-panel .painel-content :is(h1,h2,h3,h4) { font-family: inherit; overflow-wrap: anywhere; }
+    .estancia-panel .painel-content h1,
+    .estancia-panel .painel-content h2.legacy-condensed,
+    .estancia-panel .painel-content h2:is([class*="text-[30px]"],[class*="text-[28px]"],[class*="text-[26px]"]) {
+      font-size: 24px !important; font-weight: 700 !important; line-height: 1.2 !important;
+    }
+    .estancia-panel .painel-content h2:not(.calendar-heading):not(.legacy-condensed):not([class*="text-[30px]"]):not([class*="text-[28px]"]):not([class*="text-[26px]"]) {
+      font-size: 17px !important; font-weight: 600 !important; line-height: 1.2 !important;
+    }
+    .estancia-panel .painel-content :is(h3,h4) { font-weight: 600 !important; }
+    .estancia-panel .painel-content .panel-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .18em !important; }
+    .estancia-panel .painel-content table { font-size: 14px !important; line-height: 1.5; }
+    .estancia-panel .painel-content th { font-size: 11px !important; font-weight: 700 !important; letter-spacing: .12em !important; line-height: 1.5; }
+    .estancia-panel :is(.painel-content,.painel-modal-body) :is(label,legend) { font-size: 13.5px !important; font-weight: 600 !important; line-height: 1.5; }
+    .estancia-panel :is(.painel-content,.painel-modal-body) :is(input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=button]),select,textarea) { font-size: 14.5px !important; font-weight: 400 !important; line-height: 1.5; }
+    .estancia-panel .painel-content :is(.panel-button,.panel-button-secondary,a[class*="rounded-full"],a[class*="rounded-[4px]"],button[class*="rounded-full"],button[class*="rounded-[4px]"]) { font-size: 13.5px; font-weight: 600; line-height: 1.5; }
+  }
   .painel-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100dvh; }
   .painel-sidebar, .painel-drawer-content { background: var(--panel-side); color: var(--panel-side-text); display: flex; flex-direction: column; min-height: 100dvh; }
   .painel-sidebar { position: sticky; top: 0; height: 100dvh; overflow-y: auto; }
@@ -1444,4 +1463,51 @@
     .calendar-dialog-content, .painel-modal { padding: 20px; }
     .calendar-purchase-filters .calendar-search { max-width: none; }
   }
+}
+
+/* Disposição e proporções do protótipo Calendário Estância. */
+.estancia-panel .panel-action-icon { width: 16px; height: 16px; flex: none; }
+.estancia-panel .calendar-inline-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; flex: none; max-width: 100%; }
+.estancia-panel .calendar-inline-actions > :is(a,button), .estancia-panel .calendar-filter-actions > :is(a,button) { width: auto; flex: none; min-height: 42px; text-decoration: none; }
+.estancia-panel .calendar-export-button { width: auto; align-self: start; justify-self: start; }
+.estancia-panel .calendar-page .calendar-heading { line-height: 1.2; }
+.calendar-voucher-header { margin-bottom: 24px; }
+.calendar-filter-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; align-items: end; }
+.calendar-filter-grid .calendar-input { min-height: 44px; }
+.calendar-filter-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; min-height: 44px; }
+.calendar-voucher-section .calendar-section-header { align-items: center; margin-bottom: 16px; }
+.calendar-voucher-meta { display: block; font-size: 12.5px; color: var(--panel-muted); margin-top: 3px; }
+.calendar-voucher-section .calendar-chip { font-size: 12px; padding: 3px 10px; }
+@media(max-width:1100px) { .calendar-filter-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media(max-width:800px) { .calendar-filter-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .estancia-panel .calendar-page-header > .calendar-inline-actions { justify-content: flex-start; } }
+@media(max-width:480px) { .calendar-filter-grid { grid-template-columns: minmax(0,1fr); } .estancia-panel .calendar-inline-actions > :is(a,button) { font-size: 12.5px; padding: 9px 12px; } }
+.calendar-day-report .calendar-report-header h1::first-letter { text-transform: uppercase; }
+
+/* Operation colors stay visible for past dates as well as upcoming dates. */
+.estancia-panel .calendar-day-dayuse {
+  border: 2px solid #438158;
+  background: #edf6ee;
+}
+.estancia-panel .calendar-day-schools:not(.calendar-day-dayuse):not(.calendar-day-event) {
+  border: 1px solid #88a6c4;
+  background: #f0f5fb;
+}
+.estancia-panel .calendar-day-dayuse.calendar-day-schools {
+  box-shadow: inset 0 -4px 0 #88a6c4;
+}
+.estancia-panel .calendar-day-markers .calendar-dayuse-chip {
+  background: #28633d;
+  color: #fff;
+}
+.estancia-panel .calendar-school-chip {
+  background: #dfeaf6;
+  color: #284e72;
+}
+.estancia-panel .calendar-legend i.is-dayuse { border-color: #438158; background: #edf6ee; }
+.estancia-panel .calendar-legend i.is-school { border: 1px solid #88a6c4; background: #f0f5fb; }
+.estancia-panel .calendar-legend i.is-mixed { border-color: #438158; background: linear-gradient(#edf6ee 65%, #88a6c4 65%); }
+
+@media (prefers-color-scheme: dark) {
+  .estancia-panel .calendar-day-dayuse { background: var(--panel-ok-bg); }
+  .estancia-panel .calendar-day-schools:not(.calendar-day-dayuse):not(.calendar-day-event) { background: #1a2d40; }
 }

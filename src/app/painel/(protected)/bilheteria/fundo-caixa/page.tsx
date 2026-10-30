@@ -4,7 +4,7 @@ import { getBilheteriaCashFundSummary } from "@/lib/bilheteria-cash-data";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Fundo de Caixa | Estancia",
+  title: "Painel - Fundo de Caixa | Estância",
   robots: {
     index: false,
     follow: false,

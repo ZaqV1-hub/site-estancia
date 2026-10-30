@@ -101,7 +101,7 @@ describe("painel/password-reset/request route", () => {
       ok: false,
       error: {
         code: "user_not_found",
-        message: "Nenhum usuario foi encontrado utilizando este endereco de e-mail.",
+        message: "Nenhum usuário foi encontrado utilizando este endereço de e-mail.",
       },
     });
   });

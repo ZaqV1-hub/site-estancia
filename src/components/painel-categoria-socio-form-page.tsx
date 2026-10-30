@@ -34,7 +34,7 @@ export function PainelCategoriaSocioFormPage({
     idtabpreco: category?.priceTableId ? String(category.priceTableId) : "",
   });
 
-  const title = mode === "create" ? "Adicionar categoria de socio" : "Editar categoria de socio";
+  const title = mode === "create" ? "Adicionar categoria de sócio" : "Editar categoria de sócio";
   const submitLabel = mode === "create" ? "Cadastrar" : "Salvar";
   const destination = useMemo(
     () =>
@@ -69,13 +69,13 @@ export function PainelCategoriaSocioFormPage({
 
         if (!response.ok || !payload?.ok) {
           throw new Error(
-            payload?.error?.message || "Falha ao salvar a categoria de socio.",
+            payload?.error?.message || "Falha ao salvar a categoria de sócio.",
           );
         }
 
         setFeedback({
           tone: "success",
-          message: payload.data?.message || "Categoria de socio salva com sucesso.",
+          message: payload.data?.message || "Categoria de sócio salva com sucesso.",
         });
         const nextId = payload.data?.id || category?.id;
         router.replace(nextId ? `/painel/categoria-socio/${nextId}` : "/painel/categoria-socio");
@@ -86,7 +86,7 @@ export function PainelCategoriaSocioFormPage({
           message:
             error instanceof Error
               ? error.message
-              : "Falha ao salvar a categoria de socio.",
+              : "Falha ao salvar a categoria de sócio.",
         });
       }
     });
@@ -99,7 +99,7 @@ export function PainelCategoriaSocioFormPage({
           items={[
             { href: "/painel", label: "Home" },
             { href: "/painel/administrativo", label: "Administrativo" },
-            { href: "/painel/categoria-socio", label: "Categoria Socio" },
+            { href: "/painel/categoria-socio", label: "Categoria Sócio" },
             { label: title },
           ]}
         />
@@ -142,7 +142,7 @@ export function PainelCategoriaSocioFormPage({
                     </tr>
                     <tr>
                       <th className="w-[260px] border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">
-                        Tabela de Preco
+                        Tabela de Preço
                       </th>
                       <td className="border border-[#d7d7d7] px-4 py-3">
                         <select

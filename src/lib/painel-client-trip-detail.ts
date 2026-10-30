@@ -146,8 +146,8 @@ function buildUiStatus(stagenda: string | null | undefined) {
 export async function getPainelClientTripDetail(
   input: PainelClientTripDetailInput,
 ): Promise<PainelClientTripDetailData> {
-  const agendaId = assertPositiveInteger(input.agendaId, "Informe uma agenda valida.");
-  const clientId = assertPositiveInteger(input.clientId, "Informe um cliente valido.");
+  const agendaId = assertPositiveInteger(input.agendaId, "Informe uma agenda válida.");
+  const clientId = assertPositiveInteger(input.clientId, "Informe um cliente válido.");
   const purchaseStatus = normalizePurchaseStatus(input.purchaseStatus);
   const pool = getIngressoDbPool();
 
@@ -181,7 +181,7 @@ export async function getPainelClientTripDetail(
   if (!trip) {
     throw new PainelClientTripDetailError(
       "painel_client_trip_detail_not_found",
-      "Passeio nao encontrado.",
+      "Passeio não encontrado.",
       404,
     );
   }
@@ -263,7 +263,7 @@ export function asPainelClientTripDetailError(error: unknown) {
 
   return new PainelClientTripDetailError(
     "painel_client_trip_detail_failed",
-    "Nao foi possivel carregar o detalhe do passeio agora.",
+    "Não foi possível carregar o detalhe do passeio agora.",
     500,
   );
 }

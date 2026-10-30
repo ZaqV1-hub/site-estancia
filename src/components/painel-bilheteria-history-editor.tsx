@@ -363,7 +363,7 @@ export function PainelBilheteriaHistoryEditor({
       setConfirmSaveOpen(false);
       setError(null);
       setErrorTarget(null);
-      setSuccess("Nenhuma alteracao detectada.");
+      setSuccess("Nenhuma alteração detectada.");
       setWarnings([]);
       return;
     }
@@ -379,7 +379,7 @@ export function PainelBilheteriaHistoryEditor({
 
     if (!trimmedReason) {
       setConfirmSaveOpen(false);
-      setError("Informe o motivo da alteracao.");
+      setError("Informe o motivo da alteração.");
       setErrorTarget("reason");
       setSuccess(null);
       setWarnings([]);
@@ -426,7 +426,7 @@ export function PainelBilheteriaHistoryEditor({
         setConfirmSaveOpen(false);
         const payload = await readErrorPayload(
           response,
-          "Nao foi possivel salvar a edicao da venda agora.",
+          "Não foi possível salvar a edição da venda agora.",
         );
         setError(payload.message);
         setErrorTarget(resolveErrorTarget(payload.code));
@@ -437,7 +437,7 @@ export function PainelBilheteriaHistoryEditor({
         | { message?: string; warnings?: string[] }
         | null;
 
-      const nextSuccess = payload?.message?.trim() || "Alteracoes salvas.";
+      const nextSuccess = payload?.message?.trim() || "Alterações salvas.";
       const nextWarnings = Array.isArray(payload?.warnings)
         ? payload.warnings.filter(
             (warning): warning is string =>
@@ -472,10 +472,10 @@ export function PainelBilheteriaHistoryEditor({
               Editar compra #{detail.purchaseId}
             </p>
             <h2 className="legacy-condensed mt-2 text-4xl text-[#205a7f]">
-              Historico de vendas
+              Histórico de vendas
             </h2>
             <p className="mt-2 text-sm leading-6 text-[#5d7282]">
-              Ajuste dados da compra, vouchers e pagamentos mantendo a mesma separacao operacional do painel legado.
+              Ajuste dados da compra, vouchers e pagamentos mantendo a mesma separação operacional do painel legado.
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-3">
@@ -515,7 +515,7 @@ export function PainelBilheteriaHistoryEditor({
           </div>
           <div className="rounded-[22px] border border-[#d9e3eb] bg-[#f7fafc] p-4">
             <div className="text-xs font-semibold uppercase tracking-[0.24em] text-[#5d7282]">
-              Status de conferencia
+              Status de conferência
             </div>
             <div className="mt-3 text-sm font-semibold text-[#205a7f]">
               {hasPaymentMismatch ? "Divergente" : "Conferido"}
@@ -581,7 +581,7 @@ export function PainelBilheteriaHistoryEditor({
                   : "border border-[#c9d8e3]"
               }`}
             >
-              <option value="conc">Concluida</option>
+              <option value="conc">Concluída</option>
               <option value="canc">Cancelada</option>
               <option value="pend">Em processamento</option>
             </select>
@@ -619,7 +619,7 @@ export function PainelBilheteriaHistoryEditor({
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Modalidade</th>
                   <th className="px-4 py-3 text-right">Valor</th>
-                  <th className="px-4 py-3 text-right">Acao</th>
+                  <th className="px-4 py-3 text-right">Ação</th>
                 </tr>
               </thead>
               <tbody>
@@ -658,9 +658,9 @@ export function PainelBilheteriaHistoryEditor({
                         disabled={voucher.cancelled}
                         className="min-w-[160px] rounded-[14px] border border-[#c9d8e3] bg-white px-3 py-2 text-sm text-[#1b3447]"
                       >
-                        <option value="n">Nao validado</option>
+                        <option value="n">Não validado</option>
                         <option value="s">Validado</option>
-                        <option value="inv">Invalido</option>
+                        <option value="inv">Inválido</option>
                       </select>
                     </td>
                     <td className="px-4 py-3">
@@ -779,7 +779,7 @@ export function PainelBilheteriaHistoryEditor({
                 <tr>
                   <th className="px-4 py-3">Forma</th>
                   <th className="px-4 py-3">Valor (R$)</th>
-                  <th className="px-4 py-3 text-right">Acao</th>
+                  <th className="px-4 py-3 text-right">Ação</th>
                 </tr>
               </thead>
               <tbody>
@@ -834,7 +834,7 @@ export function PainelBilheteriaHistoryEditor({
       <aside className="grid gap-6">
         <section className="rounded-[28px] border border-[#d7e5ef] bg-white p-6 shadow-[0_12px_34px_rgba(31,67,98,0.08)]">
           <label className="grid gap-2 text-sm font-semibold text-[#345062]">
-            Explique o motivo da alteracao
+            Explique o motivo da alteração
             <textarea
               value={reason}
               onChange={(event) => setReason(event.target.value)}
@@ -861,7 +861,7 @@ export function PainelBilheteriaHistoryEditor({
           ) : null}
           {warnings.length > 0 ? (
             <div className="mt-4 rounded-[18px] border border-[#f0d3a8] bg-[#fff6e3] px-4 py-3 text-sm text-[#8a6100]">
-              <p className="font-semibold">Avisos apos salvar</p>
+              <p className="font-semibold">Avisos após salvar</p>
               <ul className="mt-2 list-disc space-y-1 pl-5">
                 {warnings.map((warning) => (
                   <li key={warning}>{warning}</li>
@@ -899,7 +899,7 @@ export function PainelBilheteriaHistoryEditor({
               disabled={submitting}
               className="rounded-full bg-[#246b99] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
-              {submitting ? "Salvando..." : "Salvar alteracoes"}
+              {submitting ? "Salvando..." : "Salvar alterações"}
             </button>
           </div>
         </section>
@@ -920,7 +920,7 @@ export function PainelBilheteriaHistoryEditor({
             </div>
 
             <p className="mt-4 text-sm leading-7 text-[#5d7282]">
-              Deseja salvar as alteracoes desta venda?
+              Deseja salvar as alterações desta venda?
             </p>
 
             <div className="mt-6 flex justify-end gap-3">
@@ -929,7 +929,7 @@ export function PainelBilheteriaHistoryEditor({
                 onClick={() => setConfirmSaveOpen(false)}
                 className="rounded-full border border-[#c9d8e3] px-5 py-3 text-sm font-semibold text-[#205a7f]"
               >
-                Nao
+                Não
               </button>
               <button
                 type="button"

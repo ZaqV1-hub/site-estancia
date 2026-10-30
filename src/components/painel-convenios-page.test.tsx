@@ -52,9 +52,9 @@ describe("PainelConveniosPage", () => {
     const html = renderToStaticMarkup(React.createElement(PainelConveniosPage, { data }));
 
     expect(html).toContain("Lista de conv");
-    expect(html).toContain("Adicionar convenio");
+    expect(html).toContain("Adicionar convênio");
     expect(html).toContain("Filtrar");
-    expect(html).toContain("Tabela de Preco");
+    expect(html).toContain("Tabela de Preço");
     expect(html).toContain("Convenio Alfa");
     expect(html).toContain("Desativar");
   });

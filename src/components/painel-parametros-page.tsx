@@ -60,7 +60,7 @@ export function PainelParametrosPage({
           | null;
 
         if (!response.ok || !data?.ok) {
-          throw new Error(data?.error?.message || "Falha ao salvar os parametros.");
+          throw new Error(data?.error?.message || "Falha ao salvar os parâmetros.");
         }
 
         setFeedback({
@@ -72,7 +72,7 @@ export function PainelParametrosPage({
         setFeedback({
           tone: "error",
           message:
-            error instanceof Error ? error.message : "Falha ao salvar os parametros.",
+            error instanceof Error ? error.message : "Falha ao salvar os parâmetros.",
         });
       }
     });
@@ -85,7 +85,7 @@ export function PainelParametrosPage({
           items={[
             { href: "/painel", label: "Home" },
             { href: "/painel/administrativo", label: "Administrativo" },
-            { label: "Parametros" },
+            { label: "Parâmetros" },
           ]}
         />
 
@@ -102,7 +102,7 @@ export function PainelParametrosPage({
         ) : null}
 
         <div className="mt-6 flex items-center justify-between gap-4">
-          <h1 className="text-[42px] leading-none text-[#205a7f]">Parametros</h1>
+          <h1 className="text-[42px] leading-none text-[#205a7f]">Parâmetros</h1>
         </div>
 
         <div className="mt-7 grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -113,7 +113,7 @@ export function PainelParametrosPage({
                   <thead className="bg-[#5f84a3] text-left text-white">
                     <tr>
                       <th className="border border-[#6f8ea8] px-4 py-3 font-normal">ID</th>
-                      <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Descricao</th>
+                      <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Descrição</th>
                       <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor</th>
                     </tr>
                   </thead>

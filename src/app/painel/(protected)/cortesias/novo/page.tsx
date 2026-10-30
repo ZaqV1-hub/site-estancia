@@ -3,7 +3,7 @@ import { PainelCortesiaFormPage } from "@/components/painel-cortesia-form-page";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Nova Cortesia | Estancia",
+  title: "Painel - Nova Cortesia | Estância",
   robots: { index: false, follow: false },
 };
 

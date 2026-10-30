@@ -719,7 +719,7 @@ export async function listPainelClientes(
 }
 
 export async function getPainelClientDetail(clientIdInput: unknown) {
-  const clientId = assertPositiveInteger(clientIdInput, "Informe um cliente valido.");
+  const clientId = assertPositiveInteger(clientIdInput, "Informe um cliente válido.");
   const pool = getIngressoDbPool();
   const client = await pool.connect();
 
@@ -747,7 +747,7 @@ export async function getPainelClientDetail(clientIdInput: unknown) {
     if (!detail) {
       throw new PainelClientesError(
         "client_not_found",
-        "Cliente nao encontrado.",
+        "Cliente não encontrado.",
         404,
       );
     }
@@ -835,7 +835,7 @@ export async function createPainelClient(input: PainelClienteMutationInput) {
     if (code === "23505") {
       throw new PainelClientesError(
         "client_duplicate",
-        "Ja existe um cliente com este nome para o tipo selecionado.",
+        "Já existe um cliente com este nome para o tipo selecionado.",
         409,
       );
     }
@@ -847,7 +847,7 @@ export async function createPainelClient(input: PainelClienteMutationInput) {
 }
 
 export async function updatePainelClient(input: PainelClienteMutationInput) {
-  const clientId = assertPositiveInteger(input.clientId, "Informe um cliente valido.");
+  const clientId = assertPositiveInteger(input.clientId, "Informe um cliente válido.");
   const payload = validateClientPayload(input.values);
   const pool = getIngressoDbPool();
   const client = await pool.connect();
@@ -871,7 +871,7 @@ export async function updatePainelClient(input: PainelClienteMutationInput) {
     if (!updateResult.rows[0]) {
       throw new PainelClientesError(
         "client_not_found",
-        "Cliente nao encontrado.",
+        "Cliente não encontrado.",
         404,
       );
     }
@@ -892,7 +892,7 @@ export async function updatePainelClient(input: PainelClienteMutationInput) {
     if (code === "23505") {
       throw new PainelClientesError(
         "client_duplicate",
-        "Ja existe um cliente com este nome para o tipo selecionado.",
+        "Já existe um cliente com este nome para o tipo selecionado.",
         409,
       );
     }
@@ -915,7 +915,7 @@ export async function removePainelClient(input: {
   if (!Number.isInteger(clientId) || clientId <= 0) {
     throw new PainelClientesError(
       "invalid_client_payload",
-      "Informe um cliente valido.",
+      "Informe um cliente válido.",
       400,
     );
   }
@@ -942,7 +942,7 @@ export async function removePainelClient(input: {
     if (code === "23503") {
       throw new PainelClientesError(
         "client_delete_conflict",
-        "Nao e possivel excluir: existem registros relacionados.",
+        "Não é possível excluir: existem registros relacionados.",
         409,
       );
     }
@@ -954,13 +954,13 @@ export async function removePainelClient(input: {
 }
 
 export async function addPainelClientTripDate(input: PainelClientTripDateMutationInput) {
-  const clientId = assertPositiveInteger(input.clientId, "Cliente invalido.");
+  const clientId = assertPositiveInteger(input.clientId, "Cliente inválido.");
   const tripDateYmd = parseDateToYmd(input.values?.datapasseio);
 
   if (!tripDateYmd) {
     throw new PainelClientesError(
       "invalid_trip_date_payload",
-      "Data invalida (use dd/mm/aaaa).",
+      "Data inválida (use dd/mm/aaaa).",
       400,
     );
   }
@@ -968,7 +968,7 @@ export async function addPainelClientTripDate(input: PainelClientTripDateMutatio
   if (tripDateYmd < currentDateYmd()) {
     throw new PainelClientesError(
       "invalid_trip_date_payload",
-      "Nao e permitido cadastrar data no passado.",
+      "Não é permitido cadastrar data no passado.",
       400,
     );
   }
@@ -983,7 +983,7 @@ export async function addPainelClientTripDate(input: PainelClientTripDateMutatio
     if (!agendaId) {
       throw new PainelClientesError(
         "trip_date_create_failed",
-        "Nao foi possivel preparar a data do passeio.",
+        "Não foi possível preparar a data do passeio.",
         502,
       );
     }
@@ -1009,8 +1009,8 @@ export async function addPainelClientTripDate(input: PainelClientTripDateMutatio
 export async function togglePainelClientTripDateStatus(
   input: PainelClientTripDateMutationInput,
 ) {
-  const clientId = assertPositiveInteger(input.clientId, "Cliente invalido.");
-  const agendaId = assertPositiveInteger(input.agendaId, "Agenda invalida.");
+  const clientId = assertPositiveInteger(input.clientId, "Cliente inválido.");
+  const agendaId = assertPositiveInteger(input.agendaId, "Agenda inválida.");
   const nextUiStatus = String(input.values?.status ?? "").trim().toLowerCase() === "ati"
     ? "ati"
     : "ina";
@@ -1035,7 +1035,7 @@ export async function togglePainelClientTripDateStatus(
     if (!binding.rows[0]?.idagenda) {
       throw new PainelClientesError(
         "trip_date_binding_not_found",
-        "Vinculo cliente-data nao encontrado.",
+        "Vínculo cliente-data não encontrado.",
         404,
       );
     }
@@ -1094,8 +1094,8 @@ export async function togglePainelClientTripDateStatus(
 }
 
 export async function removePainelClientTripDate(input: PainelClientTripDateMutationInput) {
-  const clientId = assertPositiveInteger(input.clientId, "Cliente invalido.");
-  const agendaId = assertPositiveInteger(input.agendaId, "Agenda invalida.");
+  const clientId = assertPositiveInteger(input.clientId, "Cliente inválido.");
+  const agendaId = assertPositiveInteger(input.agendaId, "Agenda inválida.");
   const pool = getIngressoDbPool();
   const client = await pool.connect();
 
@@ -1127,7 +1127,7 @@ export async function removePainelClientTripDate(input: PainelClientTripDateMuta
     if (!binding.rows[0]?.exists) {
       throw new PainelClientesError(
         "trip_date_binding_not_found",
-        "Vinculo cliente-agenda nao encontrado.",
+        "Vínculo cliente-agenda não encontrado.",
         404,
       );
     }
@@ -1163,7 +1163,7 @@ export async function removePainelClientTripDate(input: PainelClientTripDateMuta
     if (clientVouchers > 0) {
       throw new PainelClientesError(
         "trip_date_delete_conflict",
-        "Nao e possivel remover: existem ingressos para este cliente nesta data.",
+        "Não é possível remover: existem ingressos para este cliente nesta data.",
         409,
       );
     }
@@ -1198,7 +1198,7 @@ export async function removePainelClientTripDate(input: PainelClientTripDateMuta
       return {
         clientId,
         agendaId,
-        message: "Vinculo removido. Agenda mantida porque ha ingressos nesta data.",
+        message: "Vínculo removido. Agenda mantida porque há ingressos nesta data.",
       };
     }
 
@@ -1261,7 +1261,7 @@ export async function removePainelClientTripDate(input: PainelClientTripDateMuta
 }
 
 export async function listPainelTripSchools(input: PainelTripSchoolLookupInput) {
-  const agendaId = assertPositiveInteger(input.agendaId, "Agenda invalida.");
+  const agendaId = assertPositiveInteger(input.agendaId, "Agenda inválida.");
   const pool = getIngressoDbPool();
   const result = await pool.query<{ idcliente: number; nome: string }>(
     `
@@ -1283,7 +1283,7 @@ export async function listPainelTripSchools(input: PainelTripSchoolLookupInput) 
 }
 
 export async function listPainelTripSchoolDates(input: PainelTripSchoolDatesInput) {
-  const clientId = assertPositiveInteger(input.clientId, "Cliente invalido.");
+  const clientId = assertPositiveInteger(input.clientId, "Cliente inválido.");
   const pool = getIngressoDbPool();
   const result = await pool.query<{ idagenda: number; dtagenda_fmt: string }>(
     `
@@ -1307,14 +1307,14 @@ export async function listPainelTripSchoolDates(input: PainelTripSchoolDatesInpu
 export async function updatePainelTripVoucherStudent(
   input: PainelTripVoucherMutationInput,
 ) {
-  const voucherId = assertPositiveInteger(input.voucherId, "Voucher invalido.");
+  const voucherId = assertPositiveInteger(input.voucherId, "Voucher inválido.");
   const purchaseId = assertPositiveInteger(
     input.values?.purchaseId,
-    "Compra invalida.",
+    "Compra inválida.",
   );
   const studentName = normalizeClientName(input.values?.studentName);
-  const schoolId = assertPositiveInteger(input.values?.schoolId, "Escola invalida.");
-  const agendaId = assertPositiveInteger(input.values?.agendaId, "Agenda invalida.");
+  const schoolId = assertPositiveInteger(input.values?.schoolId, "Escola inválida.");
+  const agendaId = assertPositiveInteger(input.values?.agendaId, "Agenda inválida.");
   const educationType = normalizeSchoolEducationType(
     String(input.values?.educationType ?? ""),
   );
@@ -1341,7 +1341,7 @@ export async function updatePainelTripVoucherStudent(
   if (!educationType) {
     throw new PainelClientesError(
       "invalid_trip_voucher_payload",
-      "Tipo de ensino invalido.",
+      "Tipo de ensino inválido.",
       400,
     );
   }
@@ -1349,7 +1349,7 @@ export async function updatePainelTripVoucherStudent(
   if (!educationYear) {
     throw new PainelClientesError(
       "invalid_trip_voucher_payload",
-      "Ano invalido para o tipo de ensino.",
+      "Ano inválido para o tipo de ensino.",
       400,
     );
   }
@@ -1357,7 +1357,7 @@ export async function updatePainelTripVoucherStudent(
   if (!classLetter) {
     throw new PainelClientesError(
       "invalid_trip_voucher_payload",
-      "Turma invalida.",
+      "Turma inválida.",
       400,
     );
   }
@@ -1365,7 +1365,7 @@ export async function updatePainelTripVoucherStudent(
   if (!Number.isFinite(value) || value < 0) {
     throw new PainelClientesError(
       "invalid_trip_voucher_payload",
-      "Valor invalido.",
+      "Valor inválido.",
       400,
     );
   }
@@ -1373,7 +1373,7 @@ export async function updatePainelTripVoucherStudent(
   if (!["conc", "pago", "paid", "pend", "canc"].includes(purchaseStatus)) {
     throw new PainelClientesError(
       "invalid_trip_voucher_payload",
-      "Status da compra invalido.",
+      "Status da compra inválido.",
       400,
     );
   }
@@ -1402,7 +1402,7 @@ export async function updatePainelTripVoucherStudent(
     if (!voucher) {
       throw new PainelClientesError(
         "trip_voucher_not_found",
-        "Voucher nao encontrado.",
+        "Voucher não encontrado.",
         404,
       );
     }
@@ -1410,7 +1410,7 @@ export async function updatePainelTripVoucherStudent(
     if (Number(voucher.idcompra) !== purchaseId) {
       throw new PainelClientesError(
         "invalid_trip_voucher_payload",
-        "Compra nao confere com o voucher.",
+        "Compra não confere com o voucher.",
         400,
       );
     }
@@ -1418,7 +1418,7 @@ export async function updatePainelTripVoucherStudent(
     if (String(voucher.tpparticipante ?? "").trim().toLowerCase() === "educador") {
       throw new PainelClientesError(
         "invalid_trip_voucher_payload",
-        "Este voucher nao e de aluno.",
+        "Este voucher não é de aluno.",
         400,
       );
     }
@@ -1426,7 +1426,7 @@ export async function updatePainelTripVoucherStudent(
     if (String(voucher.tpvoucher ?? "").trim().toLowerCase() !== "escol") {
       throw new PainelClientesError(
         "invalid_trip_voucher_payload",
-        "Voucher nao e escolar.",
+        "Voucher não é escolar.",
         400,
       );
     }
@@ -1445,7 +1445,7 @@ export async function updatePainelTripVoucherStudent(
     if (!bindingResult.rows[0]?.exists) {
       throw new PainelClientesError(
         "trip_voucher_binding_not_found",
-        "Passeio nao encontrado para a escola/data informada.",
+        "Passeio não encontrado para a escola/data informada.",
         404,
       );
     }

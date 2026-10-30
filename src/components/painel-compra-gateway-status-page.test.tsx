@@ -99,6 +99,6 @@ describe("PainelCompraGatewayStatusPage", () => {
       }),
     );
 
-    expect(html).toContain("Dados nao encontrados na Cielo");
+    expect(html).toContain("Dados não encontrados na Cielo");
   });
 });

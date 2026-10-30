@@ -66,7 +66,7 @@ export function PainelCompraDetailActions({
         setWhatsappError(
           await readErrorPayload(
             response,
-            "Nao foi possivel enviar os ingressos por WhatsApp agora.",
+            "Não foi possível enviar os ingressos por WhatsApp agora.",
           ),
         );
         return;

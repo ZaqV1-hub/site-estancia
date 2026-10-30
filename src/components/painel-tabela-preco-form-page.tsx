@@ -36,7 +36,7 @@ export function PainelTabelaPrecoFormPage({
     sttabpreco: table?.status || "ati",
   });
 
-  const title = mode === "create" ? "Adicionar tabela de preco" : "Editar tabela de preco";
+  const title = mode === "create" ? "Adicionar tabela de preço" : "Editar tabela de preço";
   const submitLabel = mode === "create" ? "Cadastrar" : "Salvar";
   const destination = useMemo(
     () => (mode === "create" ? "/api/painel/tabela-preco" : `/api/painel/tabela-preco/${table?.id}`),
@@ -68,13 +68,13 @@ export function PainelTabelaPrecoFormPage({
 
         if (!response.ok || !payload?.ok) {
           throw new Error(
-            payload?.error?.message || "Falha ao salvar a tabela de preco.",
+            payload?.error?.message || "Falha ao salvar a tabela de preço.",
           );
         }
 
         setFeedback({
           tone: "success",
-          message: payload.data?.message || "Tabela de preco salva com sucesso.",
+          message: payload.data?.message || "Tabela de preço salva com sucesso.",
         });
         const nextId = payload.data?.id || table?.id;
         router.replace(nextId ? `/painel/tabela-preco/${nextId}` : "/painel/tabela-preco");
@@ -85,7 +85,7 @@ export function PainelTabelaPrecoFormPage({
           message:
             error instanceof Error
               ? error.message
-              : "Falha ao salvar a tabela de preco.",
+              : "Falha ao salvar a tabela de preço.",
         });
       }
     });
@@ -98,7 +98,7 @@ export function PainelTabelaPrecoFormPage({
           items={[
             { href: "/painel", label: "Home" },
             { href: "/painel/administrativo", label: "Administrativo" },
-            { href: "/painel/tabela-preco", label: "Tabela de Preco" },
+            { href: "/painel/tabela-preco", label: "Tabela de Preço" },
             { label: title },
           ]}
         />

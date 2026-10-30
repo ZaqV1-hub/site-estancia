@@ -74,7 +74,7 @@ const implementedBilheteriaVoucherActions: Phase7ParityAction[] = [
   {
     legacyController: "BilheteriaController.php",
     legacyAction: "imprimirAction",
-    capability: "Impressao operacional de ingresso/voucher",
+    capability: "Impressão operacional de ingresso/voucher",
     status: "implemented",
     nextSurface: "PDF/voucher export",
     evidence: "apps/web/src/lib/voucher-pdf.tsx",
@@ -102,7 +102,7 @@ const pendingBilheteriaActions: Phase7ParityAction[] = [
   {
     legacyController: "BilheteriaController.php",
     legacyAction: "historicoVendasAction",
-    capability: "Tela de historico de vendas",
+    capability: "Tela de histórico de vendas",
     status: "implemented",
     nextSurface: "/painel/bilheteria/historico",
     evidence:
@@ -111,7 +111,7 @@ const pendingBilheteriaActions: Phase7ParityAction[] = [
   {
     legacyController: "BilheteriaController.php",
     legacyAction: "imprimirQrAction",
-    capability: "Impressao de QR individual",
+    capability: "Impressão de QR individual",
     status: "implemented",
     nextSurface: "/painel/bilheteria/vouchers/[voucherId]/imprimir",
     evidence:
@@ -129,7 +129,7 @@ const pendingBilheteriaActions: Phase7ParityAction[] = [
   {
     legacyController: "BilheteriaController.php",
     legacyAction: "historicoVendasDadosAction",
-    capability: "Consulta detalhada do historico de vendas",
+    capability: "Consulta detalhada do histórico de vendas",
     status: "implemented",
     nextSurface: "/painel/bilheteria/historico/[purchaseId]",
     evidence:
@@ -138,16 +138,16 @@ const pendingBilheteriaActions: Phase7ParityAction[] = [
   {
     legacyController: "BilheteriaController.php",
     legacyAction: "historicoVendasSalvarAction",
-    capability: "Edicao auditavel de venda historica",
+    capability: "Edição auditável de venda histórica",
     status: "implemented",
     nextSurface: "/painel/bilheteria/historico/[purchaseId]/editar",
     evidence:
-      "Tela dedicada cobre compra, pagamentos, status de voucher, modalidade de desconto, avisos pos-save do backend e estados Conferido/Divergente alinhados ao Zend.",
+      "Tela dedicada cobre compra, pagamentos, status de voucher, modalidade de desconto, avisos pós-save do backend e estados Conferido/Divergente alinhados ao Zend.",
   },
   {
     legacyController: "BilheteriaController.php",
     legacyAction: "historicoVendasExcluirAction",
-    capability: "Cancelamento/exclusao auditavel no historico",
+    capability: "Cancelamento/exclusão auditável no histórico",
     status: "implemented",
     nextSurface: "/painel/bilheteria/historico/[purchaseId]",
     evidence: "apps/web/src/app/api/ops/purchases/cancel/route.ts",
@@ -227,7 +227,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "BilheteriaController.php",
         legacyAction: "cronFecharDiaAction",
-        capability: "Fechamento automatico diario",
+        capability: "Fechamento automático diário",
         status: "implemented",
         nextSurface: "/api/ops/jobs/daily-run",
         evidence: "apps/web/src/app/api/ops/jobs/daily-run/route.ts",
@@ -263,7 +263,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "AgendaController.php",
         legacyAction: "index/adicionar/remover/ajaxCheckDate",
-        capability: "Gerenciamento de agenda por calendario mensal e detalhe do dia",
+        capability: "Gerenciamento de agenda por calendário mensal e detalhe do dia",
         status: "implemented",
         nextSurface: "/painel/agenda",
         evidence: "apps/web/src/app/painel/(protected)/agenda/page.tsx",
@@ -271,7 +271,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "ParametroController.php",
         legacyAction: "index",
-        capability: "Manutencao de parametros do sistema",
+        capability: "Manutenção de parâmetros do sistema",
         status: "implemented",
         nextSurface: "/api/ops/admin/parameters",
         evidence: "apps/web/src/lib/ops-admin-parameters.ts",
@@ -279,7 +279,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "InformacaoController.php",
         legacyAction: "index/adicionar/editar/remover",
-        capability: "CRUD administrativo de informacoes",
+        capability: "CRUD administrativo de informações",
         status: "implemented",
         nextSurface: "/api/ops/admin/master-data/information",
         evidence: "apps/web/src/lib/ops-admin-master-data.ts",
@@ -287,7 +287,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "TabelaPrecoController.php",
         legacyAction: "index/adicionar/editar/remover",
-        capability: "CRUD administrativo de tabelas de preco",
+        capability: "CRUD administrativo de tabelas de preço",
         status: "implemented",
         nextSurface: "/api/ops/admin/master-data/price-tables",
         evidence: "apps/web/src/lib/ops-admin-master-data.ts",
@@ -304,7 +304,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "CategoriaSocioController.php",
         legacyAction: "index/adicionar/editar/remover",
-        capability: "CRUD administrativo de categorias de socio",
+        capability: "CRUD administrativo de categorias de sócio",
         status: "implemented",
         nextSurface: "/api/ops/admin/master-data/membership-categories",
         evidence: "apps/web/src/lib/ops-admin-master-data.ts",
@@ -312,7 +312,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "ConvenioController.php",
         legacyAction: "index/adicionar/editar/remover",
-        capability: "CRUD administrativo de convenios",
+        capability: "CRUD administrativo de convênios",
         status: "implemented",
         nextSurface: "/api/ops/admin/master-data/agreements",
         evidence: "apps/web/src/lib/ops-admin-master-data.ts",
@@ -320,7 +320,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "ClientesController.php",
         legacyAction: "index/adicionar/editar/remover",
-        capability: "CRUD administrativo basico de clientes",
+        capability: "CRUD administrativo básico de clientes",
         status: "implemented",
         nextSurface: "/api/ops/admin/master-data/clients",
         evidence: "apps/web/src/lib/ops-admin-master-data.ts",
@@ -328,7 +328,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "EscolaController.php",
         legacyAction: "index/adicionar/editar/detalhe/remover",
-        capability: "CRUD administrativo basico de escolas",
+        capability: "CRUD administrativo básico de escolas",
         status: "implemented",
         nextSurface: "/api/ops/admin/master-data/schools",
         evidence: "apps/web/src/lib/ops-admin-master-data.ts",
@@ -336,7 +336,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "UsuarioController.php",
         legacyAction: "index/adicionar/editar/detalhe/remover",
-        capability: "CRUD administrativo de usuarios internos",
+        capability: "CRUD administrativo de usuários internos",
         status: "implemented",
         nextSurface: "/api/ops/admin/master-data/internal-users",
         evidence: "apps/web/src/lib/ops-admin-master-data.ts",
@@ -344,7 +344,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "UsuarioSiteController.php",
         legacyAction: "index/detalhe",
-        capability: "Consulta e manutencao de usuarios do site",
+        capability: "Consulta e manutenção de usuários do site",
         status: "implemented",
         nextSurface: "/api/ops/admin/master-data/site-users",
         evidence: "apps/web/src/lib/ops-admin-master-data.ts",
@@ -352,7 +352,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "SocioController.php",
         legacyAction: "index/adicionar/editar/detalhe/remover",
-        capability: "CRUD administrativo de socios",
+        capability: "CRUD administrativo de sócios",
         status: "implemented",
         nextSurface: "/api/ops/admin/master-data/members",
         evidence: "apps/web/src/lib/ops-admin-master-data.ts",
@@ -360,7 +360,7 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "CompraConvenioController.php",
         legacyAction: "index/exportaXls/sidebar",
-        capability: "Relatorios e consolidacao de compra convenio",
+        capability: "Relatórios e consolidação de compra convênio",
         status: "implemented",
         nextSurface: "/api/ops/admin/reports/agreement-purchases e console /operacoes",
         evidence: "apps/web/src/lib/ops-agreement-purchases.ts",
@@ -369,7 +369,7 @@ const domains: Phase7ParityDomain[] = [
         legacyController: "ConvenioController.php",
         legacyAction:
           "listaConveniado/adicionarConveniado/editarConveniado/detalheConveniado/removerConveniado/importarConveniado/importar/downloadLog",
-        capability: "Conveniados e importacao de conveniados",
+        capability: "Conveniados e importação de conveniados",
         status: "implemented",
         nextSurface:
           "/api/ops/admin/agreements/[agreementId]/members e /imports/*, console /operacoes",
@@ -378,16 +378,16 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "ConvenioController.php",
         legacyAction: "cancelarImportacaoAction",
-        capability: "Cancelamento de importacao staged",
+        capability: "Cancelamento de importação staged",
         status: "deprecated",
         nextSurface: null,
         evidence:
-          "Importacao no BFF e stateless; preview nao persiste staging e dispensa cancelamento.",
+          "Importação no BFF é stateless; preview não persiste staging e dispensa cancelamento.",
       },
     ],
   },
   {
-    domain: "Clientes, escolas, passeios e relatorios",
+    domain: "Clientes, escolas, passeios e relatórios",
     criticality: "high",
     actions: [
       {
@@ -404,22 +404,22 @@ const domains: Phase7ParityDomain[] = [
       {
         legacyController: "ClientesController.php",
         legacyAction: "passeios/relatorios/links/alunos",
-        capability: "Passeios, links, alunos e relatorios de clientes",
+        capability: "Passeios, links, alunos e relatórios de clientes",
         status: "implemented",
         nextSurface:
           "/painel/clientes/passeios, /painel/clientes/passeios/[agendaId]/alunos e /api/ops/admin/clients/trips*",
         evidence:
-          "Lista, vinculo, links de compra, edicao de faixas, desvinculo, detalhe de alunos/educadores e relatorios CSV/PDF entregues no modulo de passeios.",
+          "Lista, vínculo, links de compra, edição de faixas, desvínculo, detalhe de alunos/educadores e relatórios CSV/PDF entregues no módulo de passeios.",
       },
       {
         legacyController: "EscolaController.php",
         legacyAction: "adicionarDatapasseio/removerDatapasseio/editarStatus/passeio/relatorios",
-        capability: "Datas de passeio, cancelamento e relatorios escolares",
+        capability: "Datas de passeio, cancelamento e relatórios escolares",
         status: "implemented",
         nextSurface:
           "/painel/clientes/escolas/passeios e /api/ops/admin/schools/[schoolId]/trips*",
         evidence:
-          "CRUD de datas/status por escola, detalhe com alunos/educadores e relatorios JSON/CSV/PDF entregues no novo modulo escolar.",
+          "CRUD de datas/status por escola, detalhe com alunos/educadores e relatórios JSON/CSV/PDF entregues no novo módulo escolar.",
       },
     ],
   },
@@ -464,7 +464,7 @@ export function getPhase7ParityReport(date = new Date()): Phase7ParityReport {
 
   return {
     phase: 7,
-    title: "Operacao Interna e Painel",
+    title: "Operação Interna e Painel",
     generatedAt: date.toISOString(),
     summary,
     domains: parityDomains,

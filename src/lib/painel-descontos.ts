@@ -168,7 +168,7 @@ export async function getPainelDiscount(id: unknown) {
   if (!Number.isInteger(discountId) || discountId <= 0) {
     throw new PainelDescontosError(
       "invalid_discount_id",
-      "Informe um desconto valido.",
+      "Informe um desconto válido.",
       400,
     );
   }
@@ -179,7 +179,7 @@ export async function getPainelDiscount(id: unknown) {
   if (!found) {
     throw new PainelDescontosError(
       "discount_not_found",
-      "Desconto nao encontrado.",
+      "Desconto não encontrado.",
       404,
     );
   }
@@ -192,7 +192,7 @@ export async function getPainelDiscountType(id: unknown) {
   if (!Number.isInteger(typeId) || typeId <= 0) {
     throw new PainelDescontosError(
       "invalid_discount_type_id",
-      "Informe um tipo de desconto valido.",
+      "Informe um tipo de desconto válido.",
       400,
     );
   }
@@ -291,7 +291,7 @@ export function asPainelDescontosError(error: unknown) {
 
   return new PainelDescontosError(
     "painel_discounts_unavailable",
-    "Nao foi possivel operar descontos agora.",
+    "Não foi possível operar descontos agora.",
     500,
   );
 }

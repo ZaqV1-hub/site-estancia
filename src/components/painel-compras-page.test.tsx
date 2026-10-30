@@ -93,11 +93,11 @@ describe("PainelComprasPage", () => {
     expect(html).toContain("Filtrar");
     expect(html).toContain("Bilheteria");
     expect(html).toContain("DEV");
-    expect(html).toContain("/ingresso/painel/usuario-site/detalhe/cpf/MTIzNDU2Nzg5MDE=");
+    expect(html).toContain("/painel/usuario-site/12345678901");
     expect(html).toContain("Ver detalhes");
     expect(html).toContain("/painel/compras/551");
     expect(html).toContain("08/05/2026");
-    expect(html).toContain("Atualizacao manual em fase futura");
+    expect(html).toContain("Atualização manual em fase futura");
     expect(html).toContain("Exportar");
   });
 
@@ -133,6 +133,6 @@ describe("PainelComprasPage", () => {
 
     expect(html).toContain("Nenhuma compra encontrada.");
     expect(html).not.toContain("Limpar filtros");
-    expect(html).not.toContain("Atualizacao manual em fase futura");
+    expect(html).not.toContain("Atualização manual em fase futura");
   });
 });

@@ -4,7 +4,7 @@ import { getPainelConvenioMemberDetail } from "@/lib/painel-convenio-members";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Editar Conveniado | Estancia",
+  title: "Painel - Editar Conveniado | Estância",
   robots: {
     index: false,
     follow: false,

@@ -235,7 +235,7 @@ export async function lookupPainelBilheteriaTicketByVoucherId(
   if (!lookup || !Number.isInteger(voucherId) || voucherId <= 0) {
     throw new PainelBilheteriaWorkstationError(
       "invalid_ticket_lookup",
-      "Informe um ID do ingresso valido para consultar.",
+      "Informe um ID do ingresso válido para consultar.",
     );
   }
 
@@ -259,7 +259,7 @@ export async function lookupPainelBilheteriaTicketByVoucherId(
   if (!row) {
     throw new PainelBilheteriaWorkstationError(
       "ticket_not_found",
-      "Ingresso nao encontrado.",
+      "Ingresso não encontrado.",
       404,
     );
   }

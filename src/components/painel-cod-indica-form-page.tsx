@@ -81,7 +81,7 @@ export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) 
           | null;
 
         if (!response.ok || !payload?.ok) {
-          throw new Error(payload?.error?.message || "Falha ao salvar o codigo.");
+          throw new Error(payload?.error?.message || "Falha ao salvar o código.");
         }
 
         const targetCode = payload.data?.codigo ?? codigo ?? values.codindica;
@@ -91,9 +91,9 @@ export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) 
           return;
         }
 
-        setFeedback(payload.data?.message || "Codigo salvo com sucesso.");
+        setFeedback(payload.data?.message || "Código salvo com sucesso.");
       } catch (submitError) {
-        setError(submitError instanceof Error ? submitError.message : "Falha ao salvar o codigo.");
+        setError(submitError instanceof Error ? submitError.message : "Falha ao salvar o código.");
       }
     });
   }
@@ -126,7 +126,7 @@ export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) 
       <form action={handleSubmit} className="mt-6 space-y-6">
         <div className="grid gap-5 lg:grid-cols-3">
           <label className="block text-sm font-semibold text-[#5a5a5a]">
-            Codigo
+            Código
             <input
               className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444] disabled:bg-[#f2f2f2]"
               defaultValue={initialValues.codindica}
@@ -196,8 +196,8 @@ export function PainelCodIndicaFormPage({ mode, initialValues, codigo }: Props) 
         </div>
 
         <p className="text-sm leading-6 text-[#666]">
-          O percentual informado sera aplicado no valor final da compra quando o cliente
-          usar este codigo. O cashback sera calculado como percentual sobre o valor da venda.
+          O percentual informado será aplicado no valor final da compra quando o cliente
+          usar este código. O cashback será calculado como percentual sobre o valor da venda.
         </p>
 
         <div className="flex flex-wrap gap-3">

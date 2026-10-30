@@ -42,7 +42,7 @@ export function PainelCortesiasPage({ data }: Props) {
         );
       }
 
-      setFeedback(payload.data?.message || "Excluido com sucesso.");
+      setFeedback(payload.data?.message || "Excluído com sucesso.");
       startTransition(() => router.refresh());
     } catch (submitError) {
       setError(
@@ -98,7 +98,7 @@ export function PainelCortesiasPage({ data }: Props) {
                 <tr>
                   <th className="px-3 py-2.5 text-xs font-semibold">ID</th>
                   <th className="px-3 py-2.5 text-xs font-semibold">Nome</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold text-right">Acoes</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -142,7 +142,7 @@ export function PainelCortesiasPage({ data }: Props) {
               className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-sm font-semibold text-[#17351f]"
               href={previousHref}
             >
-              Pagina anterior
+              Página anterior
             </Link>
           ) : null}
           {nextHref ? (
@@ -150,7 +150,7 @@ export function PainelCortesiasPage({ data }: Props) {
               className="rounded-[8px] border border-[#dbe7d7] px-3 py-2 text-sm font-semibold text-[#17351f]"
               href={nextHref}
             >
-              Proxima pagina
+              Próxima página
             </Link>
           ) : null}
         </div>

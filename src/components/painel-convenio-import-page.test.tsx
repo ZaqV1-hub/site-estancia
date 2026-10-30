@@ -23,7 +23,7 @@ describe("PainelConvenioImportPage", () => {
     );
 
     expect(html).toContain("Importar Candidatos");
-    expect(html).toContain("Selecione o arquivo para importacao");
+    expect(html).toContain("Selecione o arquivo para importação");
     expect(html).toContain("Modelo de arquivo (CSV)");
   });
 
@@ -53,8 +53,8 @@ describe("PainelConvenioImportPage", () => {
     );
 
     expect(html).toContain("Leitura do Arquivo CSV finalizada.");
-    expect(html).toContain("Continuar Importacao");
-    expect(html).toContain("Cancelar Importacao");
+    expect(html).toContain("Continuar Importação");
+    expect(html).toContain("Cancelar Importação");
     expect(html).toContain("Download");
   });
 });

@@ -136,7 +136,7 @@ export async function POST(request: Request) {
 
     return errorResponse(
       "invalid_credentials",
-      "CPF ou senha invalidos.",
+      "CPF ou senha inválidos.",
       401,
     );
   }
@@ -177,7 +177,7 @@ export async function POST(request: Request) {
 
       return errorResponse(
         "invalid_credentials",
-        "CPF ou senha invalidos.",
+        "CPF ou senha inválidos.",
         401,
       );
     }
@@ -193,7 +193,7 @@ export async function POST(request: Request) {
 
       return errorResponse(
         "inactive_user",
-        "Este usuario nao esta ativo.",
+        "Este usuário não está ativo.",
         403,
       );
     }
@@ -212,7 +212,7 @@ export async function POST(request: Request) {
 
       return errorResponse(
         "operations_session_invalid",
-        "Nao foi possivel abrir a sessao do painel.",
+        "Não foi possível abrir a sessão do painel.",
         500,
       );
     }
@@ -260,7 +260,7 @@ export async function POST(request: Request) {
 
     return errorResponse(
       "auth_unavailable",
-      "Nao foi possivel autenticar agora.",
+      "Não foi possível autenticar agora.",
       502,
     );
   }

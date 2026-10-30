@@ -4,7 +4,7 @@ import { getBilheteriaCashClosureReport } from "@/lib/bilheteria-cash-data";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Fechamento de Caixa | Estancia",
+  title: "Painel - Fechamento de Caixa | Estância",
   robots: {
     index: false,
     follow: false,

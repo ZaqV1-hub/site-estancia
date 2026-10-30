@@ -93,7 +93,7 @@ function mapRoleLabel(idpapel: number | null) {
   }
 
   if (idpapel === 2) {
-    return "Funcionario";
+    return "Funcionário";
   }
 
   if (idpapel === 3) {
@@ -177,7 +177,7 @@ function validatePasswordPair(password: string, confirmation: string) {
   if (password.length > 20) {
     throw new PainelUsuariosError(
       "invalid_user_password",
-      "A senha deve ter no maximo 20 caracteres.",
+      "A senha deve ter no máximo 20 caracteres.",
       400,
     );
   }
@@ -185,7 +185,7 @@ function validatePasswordPair(password: string, confirmation: string) {
   if (password !== confirmation) {
     throw new PainelUsuariosError(
       "invalid_user_password_confirmation",
-      "A confirmacao da senha e a senha devem ser iguais.",
+      "A confirmação da senha e a senha devem ser iguais.",
       400,
     );
   }
@@ -195,7 +195,7 @@ async function getPainelUsuarioRaw(cpf: unknown) {
   const normalizedCpf = sanitizeCpf(String(cpf ?? ""));
 
   if (normalizedCpf.length !== 11) {
-    throw new PainelUsuariosError("invalid_user_cpf", "Informe um CPF valido.", 400);
+    throw new PainelUsuariosError("invalid_user_cpf", "Informe um CPF válido.", 400);
   }
 
   const result = await listOpsAdminMasterData("internal-users");
@@ -204,7 +204,7 @@ async function getPainelUsuarioRaw(cpf: unknown) {
   );
 
   if (!found) {
-    throw new PainelUsuariosError("user_not_found", "Usuario nao encontrado.", 404);
+    throw new PainelUsuariosError("user_not_found", "Usuário não encontrado.", 404);
   }
 
   return found;
@@ -265,15 +265,15 @@ export async function createPainelUsuario(values: PainelUsuarioFormValues) {
   const idpapel = Number(values.idpapel);
 
   if (!cpf || cpf.length !== 11) {
-    throw new PainelUsuariosError("invalid_user_cpf", "Informe um CPF valido.", 400);
+    throw new PainelUsuariosError("invalid_user_cpf", "Informe um CPF válido.", 400);
   }
 
   if (!nmusuario) {
-    throw new PainelUsuariosError("invalid_user_name", "Informe o nome do usuario.", 400);
+    throw new PainelUsuariosError("invalid_user_name", "Informe o nome do usuário.", 400);
   }
 
   if (!Number.isInteger(idpapel) || ![1, 2, 3].includes(idpapel)) {
-    throw new PainelUsuariosError("invalid_user_role", "Informe um papel valido.", 400);
+    throw new PainelUsuariosError("invalid_user_role", "Informe um papel válido.", 400);
   }
 
   validatePasswordPair(senha, csenha);
@@ -299,15 +299,15 @@ export async function updatePainelUsuario(cpf: unknown, values: PainelUsuarioFor
   const idpapel = Number(values.idpapel);
 
   if (!normalizedCpf || normalizedCpf.length !== 11) {
-    throw new PainelUsuariosError("invalid_user_cpf", "Informe um CPF valido.", 400);
+    throw new PainelUsuariosError("invalid_user_cpf", "Informe um CPF válido.", 400);
   }
 
   if (!nmusuario) {
-    throw new PainelUsuariosError("invalid_user_name", "Informe o nome do usuario.", 400);
+    throw new PainelUsuariosError("invalid_user_name", "Informe o nome do usuário.", 400);
   }
 
   if (!Number.isInteger(idpapel) || ![1, 2, 3].includes(idpapel)) {
-    throw new PainelUsuariosError("invalid_user_role", "Informe um papel valido.", 400);
+    throw new PainelUsuariosError("invalid_user_role", "Informe um papel válido.", 400);
   }
 
   if (senha || csenha) {
@@ -346,7 +346,7 @@ export async function togglePainelUsuarioStatus(input: {
   if (normalizedCpf && currentActorCpf && normalizedCpf === currentActorCpf) {
     throw new PainelUsuariosError(
       "user_self_status_forbidden",
-      "Nao e permitido alterar o proprio status.",
+      "Não é permitido alterar o próprio status.",
       400,
     );
   }
@@ -373,7 +373,7 @@ export async function removePainelUsuario(input: {
   const normalizedCpf = sanitizeCpf(String(input.cpf ?? ""));
 
   if (!normalizedCpf || normalizedCpf.length !== 11) {
-    throw new PainelUsuariosError("invalid_user_cpf", "Informe um CPF valido.", 400);
+    throw new PainelUsuariosError("invalid_user_cpf", "Informe um CPF válido.", 400);
   }
 
   return deleteOpsAdminMasterData("internal-users", {
@@ -391,7 +391,7 @@ export async function updatePainelMinhaContaSenha(input: {
   const csenha = normalizeText(input.values.csenha);
 
   if (!normalizedCpf || normalizedCpf.length !== 11) {
-    throw new PainelUsuariosError("invalid_user_cpf", "Informe um CPF valido.", 400);
+    throw new PainelUsuariosError("invalid_user_cpf", "Informe um CPF válido.", 400);
   }
 
   validatePasswordPair(senha, csenha);

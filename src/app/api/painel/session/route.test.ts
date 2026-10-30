@@ -190,7 +190,7 @@ describe("painel/session BFF route", () => {
       ok: false,
       error: {
         code: "invalid_credentials",
-        message: "CPF ou senha invalidos.",
+        message: "CPF ou senha inválidos.",
       },
     });
   });
@@ -256,7 +256,7 @@ describe("painel/session BFF route", () => {
       ok: false,
       error: {
         code: "invalid_credentials",
-        message: "CPF ou senha invalidos.",
+        message: "CPF ou senha inválidos.",
       },
     });
   });
@@ -292,7 +292,7 @@ describe("painel/session BFF route", () => {
       ok: false,
       error: {
         code: "inactive_user",
-        message: "Este usuario nao esta ativo.",
+        message: "Este usuário não está ativo.",
       },
     });
   });

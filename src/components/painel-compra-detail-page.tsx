@@ -133,7 +133,7 @@ export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageH
       </div>
       {reschedules.length ? <div className="calendar-purchase-reschedule-notice" role="note"><strong>Reagendada.</strong>{reschedules.map((voucher) => <p key={[voucher.originalDate, voucher.visitDate, voucher.validUntil, voucher.rescheduleReason].join("|")}>Visita original em {voucher.originalDate}{voucher.rescheduleReason ? ` (${voucher.rescheduleReason})` : ""}. Nova data: {voucher.visitDate ?? "Não informada"}. Validade: {voucher.validUntil ?? voucher.visitDate ?? "Não informada"}.</p>)}</div> : null}
       <dl className="calendar-purchase-summary">
-        <div><dt>Comprador</dt><dd>{detail.userName ?? "Não informado"}</dd></div>
+          <div><dt>Comprador</dt><dd>{detail.cpf ? <Link href={`/painel/usuario-site/${encodeURIComponent(detail.cpf)}`}>{detail.userName ?? "Ver cliente"}</Link> : detail.userName ?? "Não informado"}</dd></div>
         <div><dt>Data da visita</dt><dd>{visits.join(" · ") || "Não informada"}</dd></div>
         <div><dt>Validade</dt><dd>{validity.join(" · ") || visits.join(" · ") || "Não informada"}</dd></div>
         <div><dt>Pessoas</dt><dd>{passports.filter((voucher) => voucher.used !== "inv").length}</dd></div>

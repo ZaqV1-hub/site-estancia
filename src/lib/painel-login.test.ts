@@ -15,7 +15,7 @@ describe("painel-login helpers", () => {
 
   it("maps known login errors to user-facing messages", () => {
     expect(mapPainelLoginErrorCode("invalid_credentials")).toBe(
-      "CPF ou senha invalidos.",
+      "CPF ou senha inválidos.",
     );
     expect(mapPainelLoginErrorCode("recaptcha_rejected")).toBe(
       "Ocorreu um erro ao validar o Recaptcha, tente novamente.",

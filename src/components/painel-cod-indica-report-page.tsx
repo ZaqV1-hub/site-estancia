@@ -28,7 +28,7 @@ export function PainelCodIndicaReportPage({ codigo, dtini, dtfim, report, error 
             {codigo}
           </Link>{" "}
           <span className="mx-2 text-[#b8b8b8]">&gt;</span>
-          <span>Relatorio</span>
+          <span>Relatório</span>
         </div>
 
         {error ? (
@@ -39,7 +39,7 @@ export function PainelCodIndicaReportPage({ codigo, dtini, dtfim, report, error 
 
         <form action={`/painel/cod-indica/${encodeURIComponent(codigo)}/relatorio`} className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_auto]" method="get">
           <label className="block text-sm font-semibold text-[#5a5a5a]">
-            Dia Inicio
+            Dia Início
             <input
               className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
               defaultValue={dtini}
@@ -58,7 +58,7 @@ export function PainelCodIndicaReportPage({ codigo, dtini, dtfim, report, error 
           </label>
           <div className="flex items-end">
             <button className="w-full bg-[#4aa329] px-6 py-3 text-sm font-semibold text-white" type="submit">
-              Gerar relatorio
+              Gerar relatório
             </button>
           </div>
         </form>
@@ -69,7 +69,7 @@ export function PainelCodIndicaReportPage({ codigo, dtini, dtfim, report, error 
               <div>
                 <h1 className="text-[28px] font-semibold text-[#205a7f]">{report.representante}</h1>
                 <p className="text-sm text-[#5a5a5a]">
-                  Periodo: {report.dateFromLabel} ate {report.dateToLabel}
+                  Período: {report.dateFromLabel} até {report.dateToLabel}
                 </p>
               </div>
               <a
@@ -131,7 +131,7 @@ export function PainelCodIndicaReportPage({ codigo, dtini, dtfim, report, error 
           </li>
           <li>
             <Link className="text-[#1d68a2] underline" href="/painel/cod-indica">
-              Lista de codigos
+              Lista de códigos
             </Link>
           </li>
         </ul>

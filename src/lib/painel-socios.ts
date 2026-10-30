@@ -174,7 +174,7 @@ function assertSocioCpf(value: unknown) {
   const cpf = sanitizeCpf(String(value ?? ""));
 
   if (cpf.length !== 11) {
-    throw new PainelSociosError("invalid_member_cpf", "Informe um CPF valido.", 400);
+    throw new PainelSociosError("invalid_member_cpf", "Informe um CPF válido.", 400);
   }
 
   return cpf;
@@ -191,7 +191,7 @@ function assertSocioPayload(values: PainelSocioFormValues) {
   if (!isIsoDate(startDate)) {
     throw new PainelSociosError(
       "invalid_member_start_date",
-      "Informe a data de inicio.",
+      "Informe a data de início.",
       400,
     );
   }
@@ -207,13 +207,13 @@ function assertSocioPayload(values: PainelSocioFormValues) {
   if (endDate < startDate) {
     throw new PainelSociosError(
       "invalid_member_period",
-      "A data fim deve ser igual ou posterior a data inicio.",
+      "A data fim deve ser igual ou posterior a data início.",
       400,
     );
   }
 
   if (!name) {
-    throw new PainelSociosError("invalid_member_name", "Informe o nome do socio.", 400);
+    throw new PainelSociosError("invalid_member_name", "Informe o nome do sócio.", 400);
   }
 
   if (!Number.isInteger(dailyPurchaseLimit)) {
@@ -227,7 +227,7 @@ function assertSocioPayload(values: PainelSocioFormValues) {
   if (!Number.isInteger(categoryId) || categoryId <= 0) {
     throw new PainelSociosError(
       "invalid_member_category",
-      "Informe a categoria do socio.",
+      "Informe a categoria do sócio.",
       400,
     );
   }
@@ -255,7 +255,7 @@ export function validatePainelSocioActivation(input: {
   if (!input.endDate || !isIsoDate(input.endDate) || input.endDate <= today) {
     throw new PainelSociosError(
       "invalid_member_activation_term",
-      "Data de vigencia invalida. Favor, altere a data para ativar o socio.",
+      "Data de vigência inválida. Favor, altere a data para ativar o sócio.",
       400,
     );
   }
@@ -360,7 +360,7 @@ async function getPainelSocioRaw(cpf: unknown) {
 
   const found = result.rows[0];
   if (!found) {
-    throw new PainelSociosError("member_not_found", "Socio nao encontrado.", 404);
+    throw new PainelSociosError("member_not_found", "Sócio não encontrado.", 404);
   }
 
   return found;

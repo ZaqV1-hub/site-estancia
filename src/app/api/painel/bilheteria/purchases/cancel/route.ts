@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: { code: "invalid_purchase_id", message: "Compra invalida." },
+        error: { code: "invalid_purchase_id", message: "Compra inválida." },
       },
       { status: 400 },
     );
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         ok: false,
         error: {
           code: "invalid_update_reason",
-          message: "Informe o motivo da exclusao.",
+          message: "Informe o motivo da exclusão.",
         },
       },
       { status: 400 },

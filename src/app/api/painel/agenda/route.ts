@@ -120,7 +120,7 @@ export async function GET(request: Request) {
   if (!date) {
     return errorResponse(
       "agenda_invalid_date",
-      "Informe a data selecionada em formato valido.",
+      "Informe a data selecionada em formato válido.",
       400,
     );
   }

@@ -325,7 +325,7 @@ export function PainelAgendaEditor({
         </p>
         {mode === "create" ? (
           <p className="mt-2 text-sm text-[#5f7564]">
-            Datas promocionais sao cadastradas pelo painel de Site para manter o evento vinculado corretamente.
+            Datas promocionais são cadastradas pelo painel de Site para manter o evento vinculado corretamente.
           </p>
         ) : null}
       </div>
@@ -391,7 +391,7 @@ export function PainelAgendaEditor({
           </label>
 
           <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
-            Tabela de preco da agenda
+            Tabela de preço da agenda
             <select
               value={form.priceTableId}
               onChange={(event) =>
@@ -412,7 +412,7 @@ export function PainelAgendaEditor({
         </div>
 
         <label className="grid gap-1.5 text-[13px] font-semibold text-[#17351f]">
-          Informacao vinculada
+          Informação vinculada
           <select
             value={form.informationId}
             onChange={(event) =>

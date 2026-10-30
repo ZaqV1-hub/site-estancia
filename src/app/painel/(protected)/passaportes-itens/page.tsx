@@ -4,7 +4,7 @@ import { readEstanciaContent } from "@/lib/estancia-content-store";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Passaportes e Itens | Estancia",
+  title: "Painel - Passaportes e Itens | Estância",
   robots: {
     index: false,
     follow: false,
@@ -25,7 +25,7 @@ export default async function PainelPassaportesItensRoute() {
           Passaportes e itens
         </h2>
         <p className="mt-1 text-sm text-[#5f7564]">
-          Produtos padrao usados no site e na agenda.
+          Produtos padrão usados no site e na agenda.
         </p>
       </section>
 

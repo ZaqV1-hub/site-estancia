@@ -8,7 +8,7 @@ import {
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Alunos do Passeio | Estancia",
+  title: "Painel - Alunos do Passeio | Estância",
   robots: {
     index: false,
     follow: false,

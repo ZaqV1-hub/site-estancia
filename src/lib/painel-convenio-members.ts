@@ -186,7 +186,7 @@ export function normalizePainelConvenioMembersFilters(
   if (!Number.isInteger(parsedAgreementId) || parsedAgreementId <= 0) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_id",
-      "Informe um convenio valido.",
+      "Informe um convênio válido.",
       400,
     );
   }
@@ -238,7 +238,7 @@ export function validateConveniadoActivation(input: {
   if (input.endDate && input.endDate < today) {
     throw new PainelConvenioMembersError(
       "agreement_member_activation_period_invalid",
-      "Data de vigencia invalida. Favor, altere a data para ativar o conveniado.",
+      "Data de vigência inválida. Favor, altere a data para ativar o conveniado.",
       422,
     );
   }
@@ -253,7 +253,7 @@ export function validatePainelConvenioMemberForm(input: PainelConvenioMemberForm
   if (!/^\d{11}$/.test(cpf)) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_member_form",
-      "CPF invalido.",
+      "CPF inválido.",
       422,
     );
   }
@@ -261,7 +261,7 @@ export function validatePainelConvenioMemberForm(input: PainelConvenioMemberForm
   if (!Number.isInteger(dailyPurchaseLimit) || dailyPurchaseLimit <= 0) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_member_form",
-      "Quantidade de compra por dia obrigatoria.",
+      "Quantidade de compra por dia obrigatória.",
       422,
     );
   }
@@ -269,7 +269,7 @@ export function validatePainelConvenioMemberForm(input: PainelConvenioMemberForm
   if (!startDate) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_member_form",
-      "Data inicio obrigatoria.",
+      "Data início obrigatória.",
       422,
     );
   }
@@ -277,7 +277,7 @@ export function validatePainelConvenioMemberForm(input: PainelConvenioMemberForm
   if (!endDate) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_member_form",
-      "Data fim obrigatoria.",
+      "Data fim obrigatória.",
       422,
     );
   }
@@ -285,7 +285,7 @@ export function validatePainelConvenioMemberForm(input: PainelConvenioMemberForm
   if (endDate < startDate) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_member_form",
-      "Data fim deve ser maior ou igual a data inicio.",
+      "Data fim deve ser maior ou igual a data início.",
       422,
     );
   }
@@ -313,7 +313,7 @@ function buildMembersWhere(filters: PainelConvenioMembersFilters) {
   if (filters.status && filters.status !== "-1" && !status) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_member_filter",
-      "Informe um status valido para filtrar.",
+      "Informe um status válido para filtrar.",
       400,
     );
   }
@@ -321,7 +321,7 @@ function buildMembersWhere(filters: PainelConvenioMembersFilters) {
   if (filters.periodFrom && !periodFrom) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_member_filter",
-      "Informe uma data inicial de vigencia valida.",
+      "Informe uma data inicial de vigência válida.",
       400,
     );
   }
@@ -329,7 +329,7 @@ function buildMembersWhere(filters: PainelConvenioMembersFilters) {
   if (filters.periodTo && !periodTo) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_member_filter",
-      "Informe uma data final de vigencia valida.",
+      "Informe uma data final de vigência válida.",
       400,
     );
   }
@@ -390,7 +390,7 @@ export async function listPainelConvenioMembers(input: {
   if (!agreement) {
     throw new PainelConvenioMembersError(
       "agreement_not_found",
-      "Convenio nao encontrado.",
+      "Convênio não encontrado.",
       404,
     );
   }
@@ -470,7 +470,7 @@ export async function getPainelConvenioMemberDetail(input: {
   if (!Number.isInteger(agreementId) || agreementId <= 0) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_id",
-      "Informe um convenio valido.",
+      "Informe um convênio válido.",
       400,
     );
   }
@@ -478,7 +478,7 @@ export async function getPainelConvenioMemberDetail(input: {
   if (!/^\d{11}$/.test(memberId)) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_member_id",
-      "Informe um CPF valido.",
+      "Informe um CPF válido.",
       400,
     );
   }
@@ -552,7 +552,7 @@ export async function getPainelConvenioMemberDetail(input: {
   if (!row) {
     throw new PainelConvenioMembersError(
       "agreement_member_not_found",
-      "Conveniado nao encontrado.",
+      "Conveniado não encontrado.",
       404,
     );
   }
@@ -625,7 +625,7 @@ export async function updatePainelConvenioMember(input: {
       endDate: values.endDate,
       status: normalizedStatus,
     },
-    reason: "Edicao de conveniado pela tela legado do painel.",
+    reason: "Edição de conveniado pela tela legado do painel.",
   });
 }
 
@@ -643,7 +643,7 @@ export async function togglePainelConvenioMemberStatus(input: {
   if (!nextStatus) {
     throw new PainelConvenioMembersError(
       "invalid_agreement_member_status",
-      "Informe um status valido para o conveniado.",
+      "Informe um status válido para o conveniado.",
       400,
     );
   }
@@ -676,7 +676,7 @@ export async function removePainelConvenioMember(input: {
   return deleteAgreementMember({
     agreementId: input.agreementId,
     id: input.memberId,
-    reason: "Exclusao de conveniado pela lista legado do painel.",
+    reason: "Exclusão de conveniado pela lista legado do painel.",
   });
 }
 
@@ -703,7 +703,7 @@ export function asPainelConvenioMembersError(error: unknown) {
 
   return new PainelConvenioMembersError(
     "agreement_member_unavailable",
-    "Nao foi possivel concluir a operacao de conveniado agora.",
+    "Não foi possível concluir a operação de conveniado agora.",
     500,
   );
 }

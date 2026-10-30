@@ -233,14 +233,14 @@ const statusLabels: Record<string, string> = {
 
 const purchaseStatusLabels: Record<string, string> = {
   pend: "Pendente",
-  conc: "Concluida",
+  conc: "Concluída",
   canc: "Cancelada",
 };
 
 const ticketPaymentMethodLabels: Record<string, string> = {
   dinhe: "Dinheiro",
-  debit: "Debito",
-  credi: "Credito",
+  debit: "Débito",
+  credi: "Crédito",
   chequ: "Cheque",
   tranb: "Trans. Bancaria",
   corte: "Cortesia",
@@ -249,7 +249,7 @@ const ticketPaymentMethodLabels: Record<string, string> = {
 };
 
 const gatewayPaymentMethodLabels: Record<string, string> = {
-  "1": "Cartao de credito",
+  "1": "Cartão de crédito",
   "2": "Boleto",
   "11": "Pix",
 };
@@ -258,12 +258,12 @@ const gatewayStatusLabels: Record<string, string> = {
   "1": "Aguardando pagamento",
   "2": "Em analise",
   "3": "Paga",
-  "4": "Disponivel",
+  "4": "Disponível",
   "5": "Em disputa",
   "6": "Devolvida",
   "7": "Cancelada",
   "8": "Chargeback debitado",
-  "9": "Em contestacao",
+  "9": "Em contestação",
 };
 
 function normalizeText(value: unknown) {
@@ -439,7 +439,7 @@ function assertValidCode(codigo: string) {
   if (!codigo || codigo.length !== 6) {
     throw new PainelCodIndicaError(
       "invalid_codindica",
-      "Informe um codigo de indicacao valido.",
+      "Informe um código de indicação válido.",
       400,
     );
   }
@@ -505,7 +505,7 @@ function normalizeFormPayload(values: PainelCodIndicaFormValues, mode: "create" 
   if (validade < todayIso) {
     throw new PainelCodIndicaError(
       "invalid_validity",
-      "O campo Validade nao pode ser menor que a data atual.",
+      "O campo Validade não pode ser menor que a data atual.",
       400,
     );
   }
@@ -893,7 +893,7 @@ export async function getPainelCodIndica(codigo: string) {
   if (!found) {
     throw new PainelCodIndicaError(
       "codindica_not_found",
-      "Codigo de indicacao nao encontrado.",
+      "Código de indicação não encontrado.",
       404,
     );
   }
@@ -924,7 +924,7 @@ export async function createPainelCodIndica(
   if (existing) {
     throw new PainelCodIndicaError(
       "codindica_exists",
-      `Codigo de Indicacao ${payload.codindica} ja existe.`,
+      `Código de Indicação ${payload.codindica} já existe.`,
       409,
     );
   }
@@ -972,7 +972,7 @@ export async function createPainelCodIndica(
     ],
   );
 
-  return { codigo: payload.codindica, message: "Codigo de indicacao cadastrado com sucesso." };
+  return { codigo: payload.codindica, message: "Código de indicação cadastrado com sucesso." };
 }
 
 export async function updatePainelCodIndica(
@@ -1042,7 +1042,7 @@ export async function updatePainelCodIndica(
     ],
   );
 
-  return { codigo: currentCode, message: "Codigo de indicacao atualizado com sucesso." };
+  return { codigo: currentCode, message: "Código de indicação atualizado com sucesso." };
 }
 
 export async function setPainelCodIndicaStatus(codigo: string, status: string) {
@@ -1056,7 +1056,7 @@ export async function setPainelCodIndicaStatus(codigo: string, status: string) {
   ]);
   return {
     codigo: normalizedCode,
-    message: nextStatus === "ati" ? "Codigo ativado com sucesso." : "Codigo desativado com sucesso.",
+    message: nextStatus === "ati" ? "Código ativado com sucesso." : "Código desativado com sucesso.",
   };
 }
 
@@ -1069,11 +1069,11 @@ export async function removePainelCodIndica(codigo: string) {
   } catch {
     throw new PainelCodIndicaError(
       "codindica_delete_blocked",
-      "Nao e possivel realizar esta operacao, pois ja existem compras realizadas com esse codigo.",
+      "Não é possível realizar esta operação, pois já existem compras realizadas com esse código.",
       409,
     );
   }
-  return { codigo: normalizedCode, message: "Codigo removido com sucesso." };
+  return { codigo: normalizedCode, message: "Código removido com sucesso." };
 }
 
 export async function getPainelCodIndicaDetail(
@@ -1180,7 +1180,7 @@ export async function payPainelCodIndicaCashback(
   if (!adminPassword) {
     throw new PainelCodIndicaError(
       "cashback_admin_password_unconfigured",
-      "Senha administrativa de cashback nao configurada.",
+      "Senha administrativa de cashback não configurada.",
       409,
     );
   }
@@ -1188,7 +1188,7 @@ export async function payPainelCodIndicaCashback(
   if (normalizeText(values.senha_admin) !== adminPassword) {
     throw new PainelCodIndicaError(
       "invalid_admin_password",
-      "Senha administrativa invalida.",
+      "Senha administrativa inválida.",
       400,
     );
   }
@@ -1197,7 +1197,7 @@ export async function payPainelCodIndicaCashback(
   if (amount > toNumber(summary.disponivel)) {
     throw new PainelCodIndicaError(
       "cashback_amount_exceeds_available",
-      "O valor informado e maior que o cashback disponivel.",
+      "O valor informado é maior que o cashback disponível.",
       409,
     );
   }
@@ -1266,7 +1266,7 @@ export async function reprocessPainelCodIndicaPurchase(
   if (!purchase || purchase.codindica !== normalizedCode) {
     throw new PainelCodIndicaError(
       "purchase_not_found_for_code",
-      "Compra nao encontrada para este codigo de indicacao.",
+      "Compra não encontrada para este código de indicação.",
       404,
     );
   }
@@ -1275,7 +1275,7 @@ export async function reprocessPainelCodIndicaPurchase(
   if (result.status !== "processed") {
     throw new PainelCodIndicaError(
       "cashback_reprocess_failed",
-      "Nao foi possivel reprocessar o cashback.",
+      "Não foi possível reprocessar o cashback.",
       409,
     );
   }
@@ -1293,7 +1293,7 @@ export async function loadPainelCodIndicaReport(
   if (!dateFrom || !dateTo) {
     throw new PainelCodIndicaError(
       "report_period_required",
-      "Os campos Dia Inicio e Dia Fim sao obrigatorios.",
+      "Os campos Dia Início e Dia Fim são obrigatórios.",
       400,
     );
   }
@@ -1329,7 +1329,7 @@ export async function loadPainelCodIndicaReport(
   if (result.rows.length === 0) {
     throw new PainelCodIndicaError(
       "report_empty_period",
-      "Nenhuma compra concluida foi encontrada nesse periodo.",
+      "Nenhuma compra concluída foi encontrada nesse período.",
       404,
     );
   }
@@ -1364,7 +1364,7 @@ export function asPainelCodIndicaError(error: unknown) {
 
   return new PainelCodIndicaError(
     "painel_codindica_unavailable",
-    "Nao foi possivel operar Cod Indica agora.",
+    "Não foi possível operar Cod Indica agora.",
     500,
   );
 }

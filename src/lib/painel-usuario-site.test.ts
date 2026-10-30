@@ -74,6 +74,6 @@ describe("updatePainelUsuarioSiteStatus", () => {
         status: "ina",
         actorCpf: "12345678901",
       }),
-    ).rejects.toThrow(/proprio status/i);
+    ).rejects.toThrow(/próprio status/i);
   });
 });

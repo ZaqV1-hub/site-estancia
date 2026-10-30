@@ -4,7 +4,7 @@ import { listPainelCortesias } from "@/lib/painel-cortesias";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Cortesias | Estancia",
+  title: "Painel - Cortesias | Estância",
   robots: { index: false, follow: false },
 };
 

@@ -126,7 +126,7 @@ export function PainelClienteFormPage({
         if (!response.ok || !result?.ok) {
           throw new Error(
             result?.error?.message ||
-              "Nao foi possivel atualizar a data do passeio agora.",
+              "Não foi possível atualizar a data do passeio agora.",
           );
         }
 
@@ -137,7 +137,7 @@ export function PainelClienteFormPage({
         setTripDateError(
           error instanceof Error
             ? error.message
-            : "Nao foi possivel atualizar a data do passeio agora.",
+            : "Não foi possível atualizar a data do passeio agora.",
         );
       }
     });
@@ -232,13 +232,13 @@ export function PainelClienteFormPage({
 
         if (!response.ok || !result?.ok) {
           throw new Error(
-            result?.error?.message || "Nao foi possivel salvar o cliente agora.",
+            result?.error?.message || "Não foi possível salvar o cliente agora.",
           );
         }
 
         const nextClientId = result.data?.clientId;
         if (!nextClientId) {
-          throw new Error("Resposta invalida ao salvar cliente.");
+          throw new Error("Resposta inválida ao salvar cliente.");
         }
 
         router.push(
@@ -255,7 +255,7 @@ export function PainelClienteFormPage({
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : "Nao foi possivel salvar o cliente agora.",
+            : "Não foi possível salvar o cliente agora.",
         );
       }
     });
@@ -365,7 +365,7 @@ export function PainelClienteFormPage({
       {client ? (
         <>
           <section className="rounded-[6px] bg-white px-4 py-6 shadow-[0_10px_28px_rgba(26,61,94,0.08)] md:px-8">
-            <h2 className="text-[28px] text-[#3f3f3f]">Historicos de Datas de Passeio</h2>
+            <h2 className="text-[28px] text-[#3f3f3f]">Históricos de Datas de Passeio</h2>
             <div className="mt-5 rounded-[4px] border border-[#d7d7d7] bg-[#f8fafc] px-5 py-4">
               <div className="text-sm font-bold text-[#495866]">Adicionar data de passeio</div>
               <form action={handleTripDateSubmit} className="mt-3 flex flex-wrap items-end gap-3">
@@ -404,7 +404,7 @@ export function PainelClienteFormPage({
                   <tr>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Data do Passeio</th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Status</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Acoes</th>
+                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -457,7 +457,7 @@ export function PainelClienteFormPage({
                   ) : (
                     <tr>
                       <td className="border border-[#d7d7d7] px-4 py-5 text-center" colSpan={3}>
-                        Nao ha dados
+                        Não há dados
                       </td>
                     </tr>
                   )}
@@ -470,7 +470,7 @@ export function PainelClienteFormPage({
             <section className="rounded-[6px] bg-white px-8 py-6 shadow-[0_10px_28px_rgba(26,61,94,0.08)]">
               <h2 className="text-[28px] text-[#3f3f3f]">Estrutura Escolar</h2>
               <p className="mt-2 text-sm text-[#667]">
-                Estrutura atual de turmas e periodos do cliente escola.
+                Estrutura atual de turmas e períodos do cliente escola.
               </p>
 
               <div className="mt-4 grid gap-4">
@@ -487,7 +487,7 @@ export function PainelClienteFormPage({
                         {classItem.periods.length > 0 ? (
                           classItem.periods.map((period) => period.name).join(", ")
                         ) : (
-                          <span>Nenhum periodo cadastrado.</span>
+                          <span>Nenhum período cadastrado.</span>
                         )}
                       </div>
                     </div>

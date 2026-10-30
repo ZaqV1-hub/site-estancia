@@ -35,7 +35,7 @@ describe("PainelConvenioFormPage", () => {
     );
 
     expect(html).toContain("Nome");
-    expect(html).toContain("Tabela de Preco");
+    expect(html).toContain("Tabela de Preço");
     expect(html).toContain('type="date"');
     expect(html).toContain("Enviar");
   });

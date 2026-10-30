@@ -4,7 +4,7 @@ import { getPainelSocio } from "@/lib/painel-socios";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Detalhe Socio | Estancia",
+  title: "Painel - Detalhe Sócio | Estância",
   robots: { index: false, follow: false },
 };
 

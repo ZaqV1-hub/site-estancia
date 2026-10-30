@@ -4,7 +4,7 @@ import { PainelBilheteriaSaleFinalize } from "@/components/painel-bilheteria-sal
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Finalizar Compra | Estancia",
+  title: "Painel - Finalizar Compra | Estância",
   robots: {
     index: false,
     follow: false,

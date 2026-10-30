@@ -113,7 +113,7 @@ describe("renderPainelCompraConvenioExportTable", () => {
       },
     ]);
 
-    expect(html).toContain("<th>Convenios</th>");
+    expect(html).toContain("<th>Convênios</th>");
     expect(html).toContain("Convenio Alfa");
   });
 });

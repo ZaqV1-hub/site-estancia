@@ -58,7 +58,7 @@ export function PainelForgotPasswordPage() {
         setError(
           payload && !payload.ok
             ? payload.error.message
-            : "Nao foi possivel processar a recuperacao agora.",
+            : "Não foi possível processar a recuperação agora.",
         );
         return;
       }
@@ -66,7 +66,7 @@ export function PainelForgotPasswordPage() {
       setSuccessEmail(payload.data.email);
     } catch (requestError) {
       console.error("painel-password-reset-request-submit-failed", requestError);
-      setError("Nao foi possivel processar a recuperacao agora.");
+      setError("Não foi possível processar a recuperação agora.");
     } finally {
       setPending(false);
     }
@@ -84,7 +84,7 @@ export function PainelForgotPasswordPage() {
             Esqueci minha senha
           </h1>
           <p className="mt-5 max-w-[56ch] text-sm leading-7 text-[#516956]">
-            Informe o e-mail cadastrado para receber o link de redefinicao.
+            Informe o e-mail cadastrado para receber o link de redefinição.
           </p>
         </div>
 
@@ -93,7 +93,7 @@ export function PainelForgotPasswordPage() {
 
           {successEmail ? (
             <div className="mt-4 rounded-xl border border-[#c9e3c5] bg-[#f3fff1] px-4 py-3 text-sm text-[#3d6940]">
-              Uma nova instrucao foi enviada para o e-mail <strong>{successEmail}</strong>.
+              Uma nova instrução foi enviada para o e-mail <strong>{successEmail}</strong>.
             </div>
           ) : (
             <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
@@ -152,7 +152,7 @@ export function PainelResetPasswordPage({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(
-    initialValid ? null : "Ticket para troca de senha invalido.",
+    initialValid ? null : "Ticket para troca de senha inválido.",
   );
   const [success, setSuccess] = useState(false);
   const [pending, setPending] = useState(false);
@@ -195,7 +195,7 @@ export function PainelResetPasswordPage({
         setError(
           payload && !payload.ok
             ? payload.error.message
-            : "Nao foi possivel alterar a senha agora.",
+            : "Não foi possível alterar a senha agora.",
         );
         return;
       }
@@ -204,7 +204,7 @@ export function PainelResetPasswordPage({
       router.refresh();
     } catch (requestError) {
       console.error("painel-password-reset-ticket-submit-failed", requestError);
-      setError("Nao foi possivel alterar a senha agora.");
+      setError("Não foi possível alterar a senha agora.");
     } finally {
       setPending(false);
     }

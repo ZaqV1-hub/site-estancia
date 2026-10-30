@@ -4,7 +4,7 @@ import { painelAdminModules } from "@/lib/painel-admin-modules";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Administrativo | Estancia",
+  title: "Painel - Administrativo | Estância",
   robots: {
     index: false,
     follow: false,

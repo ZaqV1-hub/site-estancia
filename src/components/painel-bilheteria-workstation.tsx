@@ -227,7 +227,7 @@ export function PainelBilheteriaWorkstation({
     if (!response.ok || !payload?.ok || !payload.data) {
       setMessage({
         tone: "error",
-        text: payload?.error?.message || "Nao foi possivel consultar este cliente.",
+        text: payload?.error?.message || "Não foi possível consultar este cliente.",
       });
       setCustomerLookup(null);
       return null;
@@ -243,7 +243,7 @@ export function PainelBilheteriaWorkstation({
       text:
         data.purchases.length > 0
           ? `${data.purchases.length} compra(s) encontrada(s).`
-          : "Nenhuma compra concluida encontrada para este cliente.",
+          : "Nenhuma compra concluída encontrada para este cliente.",
     });
     return data;
   }
@@ -268,14 +268,14 @@ export function PainelBilheteriaWorkstation({
       if (!response.ok || !payload?.ok) {
         setMessage({
           tone: "error",
-          text: payload?.error?.message || "Nao foi possivel concluir esta acao agora.",
+          text: payload?.error?.message || "Não foi possível concluir esta ação agora.",
         });
         return false;
       }
 
       setMessage({
         tone: payload.data?.warnings?.length ? "warning" : "success",
-        text: payload.data?.message || "Operacao concluida com sucesso.",
+        text: payload.data?.message || "Operação concluída com sucesso.",
         warnings: payload.data?.warnings || [],
       });
       return true;
@@ -357,7 +357,7 @@ export function PainelBilheteriaWorkstation({
 
     setMessage({
       tone: "success",
-      text: `${voucherIds.length} voucher(s) enviado(s) para impressao.`,
+      text: `${voucherIds.length} voucher(s) enviado(s) para impressão.`,
     });
   }
 
@@ -414,7 +414,7 @@ export function PainelBilheteriaWorkstation({
           tone: "error",
           text:
             payload?.error?.message ||
-            "Nao foi possivel enviar os vouchers selecionados por WhatsApp.",
+            "Não foi possível enviar os vouchers selecionados por WhatsApp.",
         });
         return;
       }
@@ -535,7 +535,7 @@ export function PainelBilheteriaWorkstation({
 
   async function handleSendTicketLookupWhatsapp() {
     if (!ticketLookupResult?.purchaseId) {
-      setTicketWhatsappError("Compra nao localizada para este ingresso.");
+      setTicketWhatsappError("Compra não localizada para este ingresso.");
       setTicketWhatsappSuccess(null);
       return;
     }
@@ -582,7 +582,7 @@ export function PainelBilheteriaWorkstation({
 
       if (!response.ok || !payload?.ok) {
         setTicketWhatsappError(
-          payload?.error?.message || "Nao foi possivel enviar este ingresso agora.",
+          payload?.error?.message || "Não foi possível enviar este ingresso agora.",
         );
         return;
       }
@@ -643,7 +643,7 @@ export function PainelBilheteriaWorkstation({
 
                     <p className="mt-3 text-sm text-[#667c6a]">
                       {form.id === "voucher-validation"
-                        ? "Digite o codigo do voucher para validar."
+                        ? "Digite o código do voucher para validar."
                         : "Digite o RG ou CPF do cliente para consultar."}
                     </p>
                   </div>
@@ -791,7 +791,7 @@ export function PainelBilheteriaWorkstation({
                   ) : null}
                   {ticketLookupResult.used ? (
                     <p className="mt-3 text-[#8a6100]">
-                      Este ingresso ja foi utilizado. Reemissao e envio estao bloqueados.
+                      Este ingresso já foi utilizado. Reemissão e envio estão bloqueados.
                     </p>
                   ) : ticketLookupResult.purchaseId ? (
                     <div className="mt-4 grid gap-3">
@@ -876,7 +876,7 @@ export function PainelBilheteriaWorkstation({
 
           {customerLookup.purchases.length === 0 ? (
             <p className="mt-5 text-sm text-[#5d7282]">
-              Nenhuma compra concluida encontrada para este documento.
+              Nenhuma compra concluída encontrada para este documento.
             </p>
           ) : (
             <div className="mt-5 grid gap-4">

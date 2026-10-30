@@ -158,8 +158,8 @@ describe("PainelClientTripDetailPage", () => {
     );
 
     expect(html).toContain("Dados do Passeio");
-    expect(html).toContain("Codigo Passeio");
-    expect(html).toContain("Relatorio de Ingressos");
+    expect(html).toContain("Código Passeio");
+    expect(html).toContain("Relatório de Ingressos");
     expect(html).toContain("Alunos");
     expect(html).toContain("Educadores");
     expect(html).toContain("Editar");

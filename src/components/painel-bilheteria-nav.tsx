@@ -12,7 +12,7 @@ const navItems = [
   {
     key: "overview",
     href: "/painel/bilheteria",
-    label: "Visao geral",
+    label: "Visão geral",
   },
   {
     key: "indicators",
@@ -27,7 +27,7 @@ const navItems = [
   {
     key: "history",
     href: "/painel/bilheteria/historico",
-    label: "Historico",
+    label: "Histórico",
   },
 ] as const;
 

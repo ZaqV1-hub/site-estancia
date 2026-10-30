@@ -26,12 +26,12 @@ describe("ops-admin-parity", () => {
       expect.arrayContaining([
         expect.objectContaining({
           legacyController: "ClientesController.php",
-          capability: "Passeios, links, alunos e relatorios de clientes",
+          capability: "Passeios, links, alunos e relatórios de clientes",
           status: "implemented",
         }),
         expect.objectContaining({
           legacyController: "BilheteriaController.php",
-          capability: "Edicao auditavel de venda historica",
+          capability: "Edição auditável de venda histórica",
           status: "implemented",
         }),
         expect.objectContaining({

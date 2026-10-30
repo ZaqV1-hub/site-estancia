@@ -270,7 +270,7 @@ describe("decodeLegacyPurchaseId", () => {
 });
 
 describe("mapPainelPurchaseListExportRows", () => {
-  it("keeps the legacy list-principal column order for xls export", () => {
+  it("keeps purchase/payment columns and appends people and addon counts to export", () => {
     const result: PainelPurchaseListResult = {
       items: [
         {
@@ -288,6 +288,8 @@ describe("mapPainelPurchaseListExportRows", () => {
           cpf: "12345678901",
           userName: "DEV",
           totalValue: "80,00",
+          people: 2,
+          addons: 3,
         },
       ],
       total: 1,
@@ -322,6 +324,8 @@ describe("mapPainelPurchaseListExportRows", () => {
         "Valor",
         "CPF",
         "Usuário",
+        "Pessoas",
+        "Adicionais",
       ],
       [
         "551",
@@ -334,13 +338,15 @@ describe("mapPainelPurchaseListExportRows", () => {
         "80,00",
         "12345678901",
         "DEV",
+        "2",
+        "3",
       ],
     ]);
   });
 });
 
 describe("mapPainelPurchaseVoucherListExportRows", () => {
-  it("preserva as colunas legadas da exportacao de vouchers", () => {
+  it("exporta itens com compra vinculada e categoria", () => {
     const result: PainelPurchaseVoucherListResult = {
       items: [
         {
@@ -407,14 +413,16 @@ describe("mapPainelPurchaseVoucherListExportRows", () => {
         "ID",
         "Voucher",
         "Data Visita",
-        "Passaporte",
+        "Item",
+        "Compra",
+        "Categoria",
         "Tipo Compra",
         "Valor",
         "Usado",
         "Data de uso",
         "Hora de uso",
       ],
-      ["9001", "ABC-123", "08/05/2026", "Passaporte", "Compra", "40,00", "Não", "-", "-"],
+      ["9001", "ABC-123", "08/05/2026", "Passaporte", "551", "Ingresso", "Compra", "40,00", "Não", "-", "-"],
     ]);
   });
 });
@@ -558,7 +566,7 @@ describe("listPainelPurchases", () => {
           paymentDate: "07/05/2026",
           paymentTime: "10:15:00",
           visitDate: "15/05/2026",
-          people: 2, originLabel: "Bilheteria", voucherStatus: "rescheduled", voucherStatusLabel: "Reagendado",
+          people: 2, addons: 0, originLabel: "Bilheteria", voucherStatus: "rescheduled", voucherStatusLabel: "Reagendado",
           type: "bilhe",
           typeLabel: "Bilheteria",
           status: "conc",
@@ -905,6 +913,7 @@ describe("listPainelPurchaseVouchers", () => {
         return {
           rows: [
             {
+              filtered_value: "40.00",
               qtdnormal_site: "1",
               vlnormal_site: "40.00",
               qtdinfantil_site: "0",
@@ -975,6 +984,7 @@ describe("listPainelPurchaseVouchers", () => {
           usedDate: null,
           usedTime: null,
           purchaseTypeLabel: "Compra",
+          kind: "passport",
         },
       ],
       total: 1,

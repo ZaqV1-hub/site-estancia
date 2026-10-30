@@ -85,7 +85,7 @@ export function PainelTabelaPrecoPage({
 
       setFeedback({
         tone: "success",
-        message: payload.data?.message || "Tabela de preco atualizada.",
+        message: payload.data?.message || "Tabela de preço atualizada.",
       });
       startTransition(() => router.refresh());
     } catch (error) {
@@ -130,7 +130,7 @@ export function PainelTabelaPrecoPage({
 
       setFeedback({
         tone: "success",
-        message: payload.data?.message || "Tabela de preco removida com sucesso.",
+        message: payload.data?.message || "Tabela de preço removida com sucesso.",
       });
       startTransition(() => router.refresh());
     } catch (error) {
@@ -153,7 +153,7 @@ export function PainelTabelaPrecoPage({
           items={[
             { href: "/painel", label: "Home" },
             { href: "/painel/administrativo", label: "Administrativo" },
-            { label: "Tabela de Preco" },
+            { label: "Tabela de Preço" },
           ]}
         />
 
@@ -191,7 +191,7 @@ export function PainelTabelaPrecoPage({
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Infantil</th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Bilheteria</th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Status</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Acoes</th>
+                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -260,7 +260,7 @@ export function PainelTabelaPrecoPage({
                         className="border border-[#d7d7d7] px-4 py-8 text-center text-[#6f6f6f]"
                         colSpan={6}
                       >
-                        Nao ha dados
+                        Não há dados
                       </td>
                     </tr>
                   )}
@@ -270,7 +270,7 @@ export function PainelTabelaPrecoPage({
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-[#5a5a5a]">
               <span>
-                Pagina {data.page} de {data.pageCount}
+                Página {data.page} de {data.pageCount}
               </span>
               <div className="flex items-center gap-2">
                 {previousHref ? (
@@ -284,11 +284,11 @@ export function PainelTabelaPrecoPage({
                 )}
                 {nextHref ? (
                   <Link className="border border-[#cfcfcf] px-3 py-2" href={nextHref}>
-                    Proxima
+                    Próxima
                   </Link>
                 ) : (
                   <span className="border border-[#e2e2e2] px-3 py-2 text-[#afafaf]">
-                    Proxima
+                    Próxima
                   </span>
                 )}
               </div>
@@ -326,7 +326,7 @@ export function PainelTabelaPrecoPage({
                     defaultValue={data.filters.status || ""}
                     name="status"
                   >
-                    <option value="">Ativos por padrao</option>
+                    <option value="">Ativos por padrão</option>
                     <option value="ati">Ativo</option>
                     <option value="ina">Inativo</option>
                   </select>

@@ -1,10 +1,10 @@
 const defaultPainelRedirect = "/painel";
 
 const painelLoginErrorMessages: Record<string, string> = {
-  invalid_credentials: "CPF ou senha invalidos.",
-  inactive_user: "Este usuario nao esta ativo.",
-  auth_unavailable: "Nao foi possivel abrir a sessao do painel agora.",
-  operations_session_invalid: "Nao foi possivel abrir a sessao do painel.",
+  invalid_credentials: "CPF ou senha inválidos.",
+  inactive_user: "Este usuário não está ativo.",
+  auth_unavailable: "Não foi possível abrir a sessão do painel agora.",
+  operations_session_invalid: "Não foi possível abrir a sessão do painel.",
   recaptcha_missing: "Ocorreu um erro ao validar o Recaptcha, tente novamente.",
   recaptcha_rejected: "Ocorreu um erro ao validar o Recaptcha, tente novamente.",
   recaptcha_unavailable: "Ocorreu um erro ao validar o Recaptcha, tente novamente.",

@@ -4,7 +4,7 @@ import { listPainelParametros } from "@/lib/painel-parametros";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Parametros | Estancia",
+  title: "Painel - Parâmetros | Estância",
   robots: { index: false, follow: false },
 };
 

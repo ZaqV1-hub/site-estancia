@@ -13,6 +13,6 @@ export default async function PainelAgendaDayPage({ params }: { params: Promise<
   const { date } = await params;
   try { assertCalendarDate(date); } catch { notFound(); }
   const data = await getCalendarDay(date);
-  if (!data.rule) notFound();
+  if (!data.rule && !data.schoolTrips?.length && !data.schoolTripsUnavailable) notFound();
   return <OperationalDayReport key={date} data={data} />;
 }

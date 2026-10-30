@@ -12,7 +12,7 @@ type PageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Painel - Impressao de Fechamento | Estancia",
+  title: "Painel - Impressão de Fechamento | Estância",
   robots: {
     index: false,
     follow: false,

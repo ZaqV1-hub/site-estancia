@@ -7,10 +7,11 @@ import { getLegacyPanelResources } from "@/lib/painel-access";
 vi.mock("next/navigation", () => ({ usePathname: () => "/painel/agenda", useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }) }));
 describe("calendar panel shell", () => {
   it("lets employees reach the calendar and removes the duplicate overview", () => {
-    const html = renderToStaticMarkup(<PainelShell actorName="Operadora" actorCpf={null} role="operator" permissions={[]} legacyRoleId={2} legacyResources={getLegacyPanelResources(2)}>Conteúdo</PainelShell>);
+    const html = renderToStaticMarkup(<PainelShell actorName="Operadora" actorCpf={null} role="operator" permissions={[]} legacyRoleId={2} legacyRoleName="Funcionario" legacyResources={getLegacyPanelResources(2)}>Conteúdo</PainelShell>);
     expect(html).toContain('href="/painel/agenda"');
     expect(html).toContain('aria-current="page"');
     expect(html).toContain("Encerrar sessão");
+    expect(html).toContain("Funcionário");
     expect(html).toContain("Abrir menu");
     expect(html).not.toContain("Visão geral");
     const navigation = html.match(/<nav[^>]*>([\s\S]*?)<\/nav>/)?.[1] ?? "";

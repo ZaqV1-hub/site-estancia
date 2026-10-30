@@ -77,7 +77,7 @@ function ImagePicker({ name, label }: { name: string; label: string }) {
       <span className="text-xs font-medium text-[var(--panel-muted)]">
         Clique em escolher arquivo para enviar a imagem.
         {name === "mobileImage"
-          ? " Se nao enviar a versao mobile, a imagem desktop sera usada no celular."
+          ? " Se não enviar a versão mobile, a imagem desktop será usada no celular."
           : ""}
       </span>
     </label>
@@ -105,7 +105,7 @@ function CurrentImagePreview({
         />
       </div>
       <p className="text-xs font-medium text-[var(--panel-muted)]">
-        O navegador nao reabre esse campo com um arquivo ja selecionado. Para trocar
+        O navegador não reabre esse campo com um arquivo já selecionado. Para trocar
         a imagem, escolha um novo arquivo abaixo.
       </p>
     </div>
@@ -244,7 +244,7 @@ export function PainelSiteManager({
       } | null;
 
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error?.message || "Nao foi possivel salvar.");
+        throw new Error(payload?.error?.message || "Não foi possível salvar.");
       }
 
       setEditing(null);
@@ -252,7 +252,7 @@ export function PainelSiteManager({
       router.refresh();
     } catch (saveError) {
       setError(
-        saveError instanceof Error ? saveError.message : "Nao foi possivel salvar.",
+        saveError instanceof Error ? saveError.message : "Não foi possível salvar.",
       );
     } finally {
       setPending(false);
@@ -280,7 +280,7 @@ export function PainelSiteManager({
       } | null;
 
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error?.message || "Nao foi possivel mover o item.");
+        throw new Error(payload?.error?.message || "Não foi possível mover o item.");
       }
 
       router.refresh();
@@ -288,7 +288,7 @@ export function PainelSiteManager({
       setError(
         moveError instanceof Error
           ? moveError.message
-          : "Nao foi possivel mover o item.",
+          : "Não foi possível mover o item.",
       );
     } finally {
       setMovingKey(null);
@@ -315,7 +315,7 @@ export function PainelSiteManager({
       } | null;
 
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error?.message || "Nao foi possivel excluir.");
+        throw new Error(payload?.error?.message || "Não foi possível excluir.");
       }
 
       setDeleteTarget(null);
@@ -324,7 +324,7 @@ export function PainelSiteManager({
       setError(
         deleteError instanceof Error
           ? deleteError.message
-          : "Nao foi possivel excluir.",
+          : "Não foi possível excluir.",
       );
     } finally {
       setPending(false);
@@ -423,8 +423,8 @@ export function PainelSiteManager({
       {activeSection === "attraction" && <section role="region" id="site-panel-attraction" aria-labelledby="site-tab-attraction">
         <ContentList
           section="attraction"
-          title="Atracoes"
-          buttonLabel="Adicionar atracao"
+          title="Atrações"
+          buttonLabel="Adicionar atração"
           items={content.attractions}
           movingKey={movingKey}
           onEdit={(item) => setEditing({ section: "attraction", item })}
@@ -534,7 +534,7 @@ export function PainelSiteManager({
 
                   return (
                     <>
-                      <Field label="Titulo">
+                      <Field label="Título">
                         <div className="grid gap-2">
                           <input
                             name="title"
@@ -543,12 +543,12 @@ export function PainelSiteManager({
                             className="rounded-[8px] border border-[var(--panel-line)] px-4 py-3"
                           />
                           <p className="text-xs font-medium text-[var(--panel-muted)]">
-                            Maximo de {limits.title} caracteres para manter o layout correto.
+                            Máximo de {limits.title} caracteres para manter o layout correto.
                           </p>
                         </div>
                       </Field>
 
-                      <Field label="Descricao">
+                      <Field label="Descrição">
                         <div className="grid gap-2">
                           <textarea
                             name="description"
@@ -558,7 +558,7 @@ export function PainelSiteManager({
                             className="rounded-[8px] border border-[var(--panel-line)] px-4 py-3"
                           />
                           <p className="text-xs font-medium text-[var(--panel-muted)]">
-                            Maximo de {limits.description} caracteres para manter a imagem e o texto equilibrados no site.
+                            Máximo de {limits.description} caracteres para manter a imagem e o texto equilibrados no site.
                           </p>
                         </div>
                       </Field>
@@ -597,7 +597,7 @@ export function PainelSiteManager({
       </PainelModal>
 
       <PainelModal
-        title="Confirmar exclusao"
+        title="Confirmar exclusão"
         open={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
       >

@@ -58,7 +58,7 @@ describe("PainelClientTripsManager", () => {
       React.createElement(PainelClientTripsManager, { data }),
     );
 
-    expect(html).toContain("Codigo Passeio");
+    expect(html).toContain("Código Passeio");
     expect(html).toContain("Tipo de Cliente");
     expect(html).toContain("Qtd Pessoas");
     expect(html).toContain("Link Compra Participante");

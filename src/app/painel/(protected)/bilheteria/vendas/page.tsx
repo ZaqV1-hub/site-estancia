@@ -7,7 +7,7 @@ import { getAgendaProductAvailability } from "@/lib/painel-agenda-product-availa
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Vendas da Bilheteria | Estancia",
+  title: "Painel - Vendas da Bilheteria | Estância",
   robots: {
     index: false,
     follow: false,

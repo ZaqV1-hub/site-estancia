@@ -39,7 +39,7 @@ export function PainelCodIndicaDetailPage({
     if (parseCurrencyInput(paymentAmount) > availableCashback) {
       setFeedback({
         tone: "error",
-        message: "O valor informado e maior que o cashback disponivel.",
+        message: "O valor informado é maior que o cashback disponível.",
       });
       return;
     }
@@ -195,7 +195,7 @@ export function PainelCodIndicaDetailPage({
           </div>
           <div className="border border-[#d7d7d7] bg-[#f8fbfd] p-4">
             <div className="text-xs uppercase tracking-[0.12em] text-[#6f7f8d]">
-              Compras nao pagas
+              Compras não pagas
             </div>
             <div className="mt-2 text-[28px] font-semibold text-[#205a7f]">
               R$ {detail.indicators.totalNaoPagasLabel}
@@ -225,7 +225,7 @@ export function PainelCodIndicaDetailPage({
           </div>
           <div className="border border-[#d7d7d7] bg-[#f8fbfd] p-4">
             <div className="text-xs uppercase tracking-[0.12em] text-[#6f7f8d]">
-              Cashback disponivel
+              Cashback disponível
             </div>
             <div className="mt-2 text-[28px] font-semibold text-[#205a7f]">
               R$ {detail.indicators.cashbackDisponivelLabel}
@@ -261,7 +261,7 @@ export function PainelCodIndicaDetailPage({
                 />
               </label>
               <label className="block text-sm font-semibold text-[#5a5a5a]">
-                Observacao
+                Observação
                 <input
                   autoComplete="off"
                   className="mt-1 w-full border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
@@ -271,7 +271,7 @@ export function PainelCodIndicaDetailPage({
               </label>
             </div>
             <p className="text-sm text-[#5a5a5a]">
-              Disponivel para pagamento: <strong>R$ {detail.indicators.cashbackDisponivelLabel}</strong>
+              Disponível para pagamento: <strong>R$ {detail.indicators.cashbackDisponivelLabel}</strong>
             </p>
             <button
               className="inline-flex items-center justify-center bg-[#4aa329] px-6 py-3 text-sm font-semibold text-white hover:bg-[#3c8721] disabled:opacity-60"
@@ -291,7 +291,7 @@ export function PainelCodIndicaDetailPage({
                 <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Hora</th>
                 <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Valor</th>
                 <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Gerente</th>
-                <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Observacao</th>
+                <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Observação</th>
               </tr>
             </thead>
             <tbody>
@@ -336,7 +336,7 @@ export function PainelCodIndicaDetailPage({
               <input className="mt-1 w-full border border-[#d7d7d7] px-3 py-2 text-sm" defaultValue={detail.filters.dtcompraDe} name="dtcompra[de]" type="date" />
             </label>
             <label className="block text-sm font-semibold text-[#5a5a5a]">
-              Compra ate
+              Compra até
               <input className="mt-1 w-full border border-[#d7d7d7] px-3 py-2 text-sm" defaultValue={detail.filters.dtcompraAte} name="dtcompra[ate]" type="date" />
             </label>
             <label className="block text-sm font-semibold text-[#5a5a5a]">
@@ -344,14 +344,14 @@ export function PainelCodIndicaDetailPage({
               <input className="mt-1 w-full border border-[#d7d7d7] px-3 py-2 text-sm" defaultValue={detail.filters.dtpagamentoDe} name="dtpagamento[de]" type="date" />
             </label>
             <label className="block text-sm font-semibold text-[#5a5a5a]">
-              Pagamento ate
+              Pagamento até
               <input className="mt-1 w-full border border-[#d7d7d7] px-3 py-2 text-sm" defaultValue={detail.filters.dtpagamentoAte} name="dtpagamento[ate]" type="date" />
             </label>
             <label className="block text-sm font-semibold text-[#5a5a5a]">
               Forma Pgto. Cielo
               <select className="mt-1 w-full border border-[#d7d7d7] px-3 py-2 text-sm" defaultValue={detail.filters.paymentmethodtype || "-1"} name="paymentmethodtype">
                 <option value="-1">Todos</option>
-                <option value="1">Cartao de credito</option>
+                <option value="1">Cartão de crédito</option>
                 <option value="2">Boleto</option>
                 <option value="11">Pix</option>
               </select>
@@ -361,7 +361,7 @@ export function PainelCodIndicaDetailPage({
               <select className="mt-1 w-full border border-[#d7d7d7] px-3 py-2 text-sm" defaultValue={detail.filters.status || "-1"} name="status">
                 <option value="-1">Todos</option>
                 <option value="1">Aguardando pagamento</option>
-                <option value="2">Em analise</option>
+                <option value="2">Em análise</option>
                 <option value="3">Paga</option>
                 <option value="7">Cancelada</option>
               </select>
@@ -371,7 +371,7 @@ export function PainelCodIndicaDetailPage({
               <select className="mt-1 w-full border border-[#d7d7d7] px-3 py-2 text-sm" defaultValue={detail.filters.stcompra || "-1"} name="stcompra">
                 <option value="-1">Todos</option>
                 <option value="pend">Pendente</option>
-                <option value="conc">Concluida</option>
+                <option value="conc">Concluída</option>
                 <option value="canc">Cancelada</option>
               </select>
             </label>
@@ -396,7 +396,7 @@ export function PainelCodIndicaDetailPage({
                 <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Desconto</th>
                 <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Cashback</th>
                 <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Status</th>
-                <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Acoes</th>
+                <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -449,7 +449,7 @@ export function PainelCodIndicaDetailPage({
         <ul className="space-y-3 text-[15px]">
           <li>
             <Link className="text-[#1d68a2] underline" href="/painel/cod-indica">
-              Lista de codigos
+              Lista de códigos
             </Link>
           </li>
           <li>
@@ -472,7 +472,7 @@ export function PainelCodIndicaDetailPage({
                 searchParams.toString() ? `?${searchParams.toString()}` : ""
               }`}
             >
-              Relatorio PDF
+              Relatório PDF
             </Link>
           </li>
         </ul>

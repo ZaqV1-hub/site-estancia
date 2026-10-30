@@ -1,9 +1,9 @@
+import ExcelJS from "exceljs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requirePainelApiAccess = vi.fn();
 const listPainelPurchaseVouchers = vi.fn();
 const mapPainelPurchaseVoucherListExportRows = vi.fn();
-const renderPainelPurchaseListExportTable = vi.fn();
 
 vi.mock("@/lib/painel-api-auth", () => ({
   requirePainelApiAccess,
@@ -12,7 +12,6 @@ vi.mock("@/lib/painel-api-auth", () => ({
 vi.mock("@/lib/painel-compras", () => ({
   listPainelPurchaseVouchers,
   mapPainelPurchaseVoucherListExportRows,
-  renderPainelPurchaseListExportTable,
 }));
 
 describe("GET /api/painel/compras/vouchers/export", () => {
@@ -20,7 +19,7 @@ describe("GET /api/painel/compras/vouchers/export", () => {
     vi.clearAllMocks();
   });
 
-  it("gera exportacao xls da lista de vouchers", async () => {
+  it("gera exportação XLSX da lista de vouchers", async () => {
     requirePainelApiAccess.mockResolvedValue({
       ok: true,
       session: {
@@ -41,9 +40,6 @@ describe("GET /api/painel/compras/vouchers/export", () => {
       ["ID", "Voucher"],
       ["9001", "ABC-123"],
     ]);
-    renderPainelPurchaseListExportTable.mockReturnValue(
-      "<table><tr><td>9001</td></tr></table>",
-    );
 
     const { GET } = await import(
       "@/app/api/painel/compras/vouchers/export/route"
@@ -51,7 +47,9 @@ describe("GET /api/painel/compras/vouchers/export", () => {
     const response = await GET(
       new Request("https://example.com/api/painel/compras/vouchers/export"),
     );
-    const body = await response.text();
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await response.arrayBuffer());
+    const sheet = workbook.worksheets[0];
 
     expect(listPainelPurchaseVouchers).toHaveBeenCalledWith({
       page: "1",
@@ -59,11 +57,11 @@ describe("GET /api/painel/compras/vouchers/export", () => {
       allRows: true,
     });
     expect(mapPainelPurchaseVoucherListExportRows).toHaveBeenCalled();
-    expect(renderPainelPurchaseListExportTable).toHaveBeenCalled();
     expect(response.status).toBe(200);
     expect(response.headers.get("content-disposition")).toContain(
-      'attachment; filename="compras-vouchers.xls"',
+      'attachment; filename="ingressos-adicionais.xlsx"',
     );
-    expect(body).toContain("<td>9001</td>");
+    expect(sheet.getRow(1).values).toEqual([, "ID", "Voucher"]);
+    expect(sheet.getRow(2).values).toEqual([, "9001", "ABC-123"]);
   });
 });

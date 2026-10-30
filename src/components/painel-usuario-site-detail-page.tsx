@@ -65,7 +65,7 @@ export function PainelUsuarioSiteDetailPage({
           items={[
             { href: "/painel", label: "Home" },
             { href: "/painel/administrativo", label: "Administrativo" },
-            { href: "/painel/usuario-site", label: "Usuario Site" },
+            { href: "/painel/usuario-site", label: "Usuário Site" },
             { label: data.name },
           ]}
         />
@@ -100,8 +100,8 @@ export function PainelUsuarioSiteDetailPage({
                   <tr>
                     <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">Telefone</th>
                     <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">Celular</th>
-                    <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">Endereco</th>
-                    <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">Numero</th>
+                    <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">Endereço</th>
+                    <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">Número</th>
                   </tr>
                   <tr>
                     <td className="border border-[#d7d7d7] px-4 py-3">{data.phone}</td>
@@ -112,7 +112,7 @@ export function PainelUsuarioSiteDetailPage({
                   <tr>
                     <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">CEP</th>
                     <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">Bairro</th>
-                    <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">Regiao</th>
+                    <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">Região</th>
                     <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">Complemento</th>
                   </tr>
                   <tr>
@@ -124,7 +124,7 @@ export function PainelUsuarioSiteDetailPage({
                   <tr className="bg-[#fafafa]">
                     <th className="border border-[#d7d7d7] px-4 py-3 font-semibold text-[#5a5a5a]">Status</th>
                     <th className="border border-[#d7d7d7] px-4 py-3 font-semibold text-[#5a5a5a]">Data de Cadastro</th>
-                    <th className="border border-[#d7d7d7] px-4 py-3 font-semibold text-[#5a5a5a]" colSpan={2}>Ultimo Login</th>
+                    <th className="border border-[#d7d7d7] px-4 py-3 font-semibold text-[#5a5a5a]" colSpan={2}>Último Login</th>
                   </tr>
                   <tr className="bg-[#fafafa]">
                     <td className="border border-[#d7d7d7] px-4 py-3">{data.statusLabel}</td>
@@ -132,7 +132,7 @@ export function PainelUsuarioSiteDetailPage({
                     <td className="border border-[#d7d7d7] px-4 py-3" colSpan={2}>{data.lastLoginLabel}</td>
                   </tr>
                   <tr className="bg-[#fafafa]">
-                    <th className="border border-[#d7d7d7] px-4 py-3 font-semibold text-[#5a5a5a]" colSpan={4}>Tipo de usuario</th>
+                    <th className="border border-[#d7d7d7] px-4 py-3 font-semibold text-[#5a5a5a]" colSpan={4}>Tipo de usuário</th>
                   </tr>
                   <tr className="bg-[#fafafa]">
                     <td className="border border-[#d7d7d7] px-4 py-3" colSpan={4}>{data.userType}</td>
@@ -141,9 +141,10 @@ export function PainelUsuarioSiteDetailPage({
               </table>
             </div>
 
+            <section className="mt-8"><h2 className="text-2xl font-bold">Histórico de compras</h2><div className="overflow-x-auto"><table className="calendar-purchases-table"><thead><tr><th>Compra</th><th>Data</th><th>Visita</th><th>Status</th><th>Pessoas</th><th>Adicionais</th><th>Valor</th></tr></thead><tbody>{(data.purchases ?? []).map(p => <tr key={p.purchaseId}><td><Link href={`/painel/compras/${p.purchaseId}`}>#{p.purchaseId}</Link></td><td>{p.purchaseDate}</td><td>{p.visitDate}</td><td>{p.statusLabel}</td><td>{p.people ?? 0}</td><td>{p.addons ?? 0}</td><td>R$ {p.totalValue}</td></tr>)}</tbody></table></div>{!data.purchases?.length && <p>Nenhuma compra encontrada.</p>}</section>
             {data.agreements.length > 0 ? (
               <>
-                <h2 className="mt-8 text-[30px] leading-none text-[#205a7f]">Lista de convenios</h2>
+                <h2 className="mt-8 text-[30px] leading-none text-[#205a7f]">Lista de convênios</h2>
                 <div className="mt-4 overflow-x-auto border border-[#cfcfcf]">
                   <table className="min-w-full border-collapse text-[15px]">
                     <thead className="bg-[#5f84a3] text-left text-white">
@@ -204,11 +205,11 @@ export function PainelUsuarioSiteDetailPage({
           <aside className="space-y-5">
             <div className="border border-[#d8d8d8] bg-white">
               <div className="border-b border-[#d8d8d8] bg-[#f3f3f3] px-5 py-3 text-[20px] text-[#666]">
-                Acoes
+                Ações
               </div>
               <div className="grid gap-3 px-5 py-4 text-[15px]">
                 <Link className="text-[#666] underline" href="/painel/usuario-site">
-                  Lista de usuarios
+                  Lista de usuários
                 </Link>
               </div>
             </div>

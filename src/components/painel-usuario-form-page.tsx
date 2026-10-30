@@ -16,7 +16,7 @@ type PainelUsuarioFormPageProps = {
 const roleOptions = [
   { value: "1", label: "Gerente" },
   { value: "3", label: "Bilheteria" },
-  { value: "2", label: "Funcionario" },
+  { value: "2", label: "Funcionário" },
 ];
 
 export function PainelUsuarioFormPage({
@@ -40,7 +40,7 @@ export function PainelUsuarioFormPage({
     stusuario: user?.status ?? "ati",
   });
 
-  const title = mode === "create" ? "Adicionar usuario" : "Editar usuario";
+  const title = mode === "create" ? "Adicionar usuário" : "Editar usuário";
   const submitLabel = mode === "create" ? "Cadastrar" : "Salvar";
   const destination = useMemo(
     () => (mode === "create" ? "/api/painel/usuario" : `/api/painel/usuario/${user?.cpf}`),
@@ -72,13 +72,13 @@ export function PainelUsuarioFormPage({
 
         if (!response.ok || !payload?.ok) {
           throw new Error(
-            payload?.error?.message || "Falha ao salvar o usuario.",
+            payload?.error?.message || "Falha ao salvar o usuário.",
           );
         }
 
         setFeedback({
           tone: "success",
-          message: payload.data?.message || "Usuario salvo com sucesso.",
+          message: payload.data?.message || "Usuário salvo com sucesso.",
         });
 
         const nextCpf = payload.data?.id || user?.cpf;
@@ -92,7 +92,7 @@ export function PainelUsuarioFormPage({
           message:
             error instanceof Error
               ? error.message
-              : "Falha ao salvar o usuario.",
+              : "Falha ao salvar o usuário.",
         });
       }
     });
@@ -105,7 +105,7 @@ export function PainelUsuarioFormPage({
           items={[
             { href: "/painel", label: "Home" },
             { href: "/painel/administrativo", label: "Administrativo" },
-            { href: "/painel/usuario", label: "Usuarios" },
+            { href: "/painel/usuario", label: "Usuários" },
             { label: title },
           ]}
         />
@@ -291,7 +291,7 @@ export function PainelUsuarioFormPage({
                         </tr>
                         <tr>
                           <th className="border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">
-                            Confirmacao da senha
+                            Confirmação da senha
                           </th>
                           <td className="border border-[#d7d7d7] px-4 py-3">
                             <input

@@ -264,8 +264,8 @@ export class PainelBilheteriaError extends Error {
 
 const paymentMethodLabels: Record<string, string> = {
   dinhe: "Dinheiro",
-  debit: "Debito",
-  credi: "Credito",
+  debit: "Débito",
+  credi: "Crédito",
   chequ: "Cheque",
   tranb: "Trans. Bancaria",
   corte: "Cortesia",
@@ -275,7 +275,7 @@ const paymentMethodLabels: Record<string, string> = {
 
 const purchaseStatusLabels: Record<string, string> = {
   pend: "Em processamento",
-  conc: "Concluida",
+  conc: "Concluída",
   canc: "Cancelada",
 };
 
@@ -294,7 +294,7 @@ const voucherTypeLabels: Record<string, string> = {
 };
 
 const voucherStatusLabels: Record<string, string> = {
-  n: "Nao usado",
+  n: "Não usado",
   s: "Usado",
   inv: "Invalidado",
 };
@@ -303,12 +303,12 @@ const gatewayStatusLabels: Record<number, string> = {
   1: "Aguardando pagamento",
   2: "Em analise",
   3: "Pago",
-  4: "Disponivel",
+  4: "Disponível",
   5: "Em disputa",
   6: "Devolvido",
   7: "Cancelado",
   8: "Chargeback debitado",
-  9: "Em contestacao",
+  9: "Em contestação",
   12: "Pendente",
 };
 
@@ -429,7 +429,7 @@ function formatVoucherStatusLabel(code: string | null | undefined) {
 
 function formatGatewayStatusLabel(status: number | null | undefined) {
   if (!Number.isInteger(status)) {
-    return "Indisponivel";
+    return "Indisponível";
   }
 
   return gatewayStatusLabels[Number(status)] ?? String(status);
@@ -747,7 +747,7 @@ export async function getPainelBilheteriaPurchaseDetail(purchaseId: number) {
   if (!Number.isInteger(purchaseId) || purchaseId <= 0) {
     throw new PainelBilheteriaError(
       "invalid_purchase_id",
-      "Compra invalida.",
+      "Compra inválida.",
       400,
     );
   }
@@ -777,7 +777,7 @@ export async function getPainelBilheteriaPurchaseDetail(purchaseId: number) {
   if (!purchase) {
     throw new PainelBilheteriaError(
       "purchase_not_found",
-      "Compra nao encontrada.",
+      "Compra não encontrada.",
       404,
     );
   }
@@ -913,7 +913,7 @@ export async function sendPainelBilheteriaVoucherWhatsapp(
   if (!Number.isInteger(input.purchaseId) || input.purchaseId <= 0) {
     throw new PainelBilheteriaError(
       "invalid_purchase_id",
-      "Informe uma compra valida.",
+      "Informe uma compra válida.",
       400,
     );
   }
@@ -921,7 +921,7 @@ export async function sendPainelBilheteriaVoucherWhatsapp(
   if (!Number.isInteger(input.voucherId) || input.voucherId <= 0) {
     throw new PainelBilheteriaError(
       "invalid_voucher_id",
-      "Informe um voucher valido para envio.",
+      "Informe um voucher válido para envio.",
       400,
     );
   }
@@ -931,7 +931,7 @@ export async function sendPainelBilheteriaVoucherWhatsapp(
   if (normalizedPhone.length < 11) {
     throw new PainelBilheteriaError(
       "invalid_phone_number",
-      "Informe um numero de WhatsApp valido com DDD.",
+      "Informe um número de WhatsApp válido com DDD.",
       400,
     );
   }
@@ -967,7 +967,7 @@ export async function sendPainelBilheteriaVoucherWhatsapp(
     if (!purchase) {
       throw new PainelBilheteriaError(
         "purchase_not_confirmed",
-        "Compra nao encontrada ou ainda nao confirmada.",
+        "Compra não encontrada ou ainda não confirmada.",
         404,
       );
     }
@@ -990,7 +990,7 @@ export async function sendPainelBilheteriaVoucherWhatsapp(
     if (!voucher) {
       throw new PainelBilheteriaError(
         "voucher_not_found",
-        "Voucher nao encontrado para esta compra.",
+        "Voucher não encontrado para esta compra.",
         404,
       );
     }
@@ -998,7 +998,7 @@ export async function sendPainelBilheteriaVoucherWhatsapp(
     if (String(voucher.stusado ?? "").trim() === "s") {
       throw new PainelBilheteriaError(
         "voucher_already_used",
-        "Voucher ja utilizado; nao e possivel reenviar por WhatsApp.",
+        "Voucher já utilizado; não é possível reenviar por WhatsApp.",
         409,
       );
     }
@@ -1045,8 +1045,8 @@ export async function sendPainelBilheteriaVoucherWhatsapp(
     if (result.status !== "sent") {
       const message =
         result.skippedReason === "phone_not_allowed_for_testing"
-          ? "Numero nao autorizado para este ambiente."
-          : "Nao foi possivel enviar o voucher por WhatsApp agora.";
+          ? "Número não autorizado para este ambiente."
+          : "Não foi possível enviar o voucher por WhatsApp agora.";
 
       throw new PainelBilheteriaError("whatsapp_unavailable", message, 502);
     }
@@ -1056,7 +1056,7 @@ export async function sendPainelBilheteriaVoucherWhatsapp(
       voucherId: input.voucherId,
       phoneNumber: normalizedPhone,
       validUntil: validUntilText,
-      message: "Solicitacao enviada para o WhatsApp.",
+      message: "Solicitação enviada para o WhatsApp.",
       auditLogId,
     };
   } catch (error) {
@@ -1074,7 +1074,7 @@ export async function getPainelBilheteriaVoucherPrintModel(
   if (!Number.isInteger(voucherId) || voucherId <= 0) {
     throw new PainelBilheteriaError(
       "invalid_voucher_id",
-      "Voucher invalido.",
+      "Voucher inválido.",
       400,
     );
   }
@@ -1114,7 +1114,7 @@ export async function getPainelBilheteriaVoucherPrintModel(
     if (!voucher || !voucher.idcompra) {
       throw new PainelBilheteriaError(
         "voucher_not_found",
-        "Voucher nao encontrado.",
+        "Voucher não encontrado.",
         404,
       );
     }
@@ -1122,7 +1122,7 @@ export async function getPainelBilheteriaVoucherPrintModel(
     if (String(voucher.dtuso ?? "").trim()) {
       throw new PainelBilheteriaError(
         "voucher_already_used",
-        "Voucher ja utilizado; nao e possivel reemitir/imprimir.",
+        "Voucher já utilizado; não é possível reemitir/imprimir.",
         409,
       );
     }
@@ -1159,8 +1159,8 @@ export async function getPainelBilheteriaVoucherPrintModel(
       origem: "compra",
       acao: "editar",
       compraId: voucher.idcompra,
-      descricao: `Impressao operacional do voucher ${voucherId}.`,
-      motivo: "Reemissao de QR individual no painel.",
+      descricao: `Impressão operacional do voucher ${voucherId}.`,
+      motivo: "Reemissão de QR individual no painel.",
       usuarioNome:
         [String(actor?.name ?? "").trim(), normalizeCpf(actor?.cpf ?? "")]
           .filter(Boolean)
@@ -1229,7 +1229,7 @@ export async function getPainelBilheteriaPurchasePrintModel(
   if (!Number.isInteger(purchaseId) || purchaseId <= 0) {
     throw new PainelBilheteriaError(
       "invalid_purchase_id",
-      "Compra invalida.",
+      "Compra inválida.",
       400,
     );
   }
@@ -1249,7 +1249,7 @@ export async function getPainelBilheteriaPurchasePrintModel(
   if (purchaseResult.rowCount === 0) {
     throw new PainelBilheteriaError(
       "purchase_not_found",
-      "Compra nao encontrada.",
+      "Compra não encontrada.",
       404,
     );
   }
@@ -1267,7 +1267,7 @@ export async function getPainelBilheteriaPurchasePrintModel(
   if (voucherResult.rowCount === 0) {
     throw new PainelBilheteriaError(
       "voucher_not_found",
-      "Nenhum voucher encontrado para impressao.",
+      "Nenhum voucher encontrado para impressão.",
       404,
     );
   }
@@ -1290,7 +1290,7 @@ export async function getPainelBilheteriaGatewayStatus(
   if (!Number.isInteger(purchaseId) || purchaseId <= 0) {
     throw new PainelBilheteriaError(
       "invalid_purchase_id",
-      "Compra invalida.",
+      "Compra inválida.",
       400,
     );
   }
@@ -1338,7 +1338,7 @@ export async function getPainelBilheteriaGatewayStatus(
   if (!purchase) {
     throw new PainelBilheteriaError(
       "purchase_not_found",
-      "Compra nao encontrada.",
+      "Compra não encontrada.",
       404,
     );
   }
@@ -1357,13 +1357,13 @@ export async function getPainelBilheteriaGatewayStatus(
       paymentId: null,
       reference: null,
       ledgerStatus: null,
-      ledgerStatusLabel: "Indisponivel",
+      ledgerStatusLabel: "Indisponível",
       ledgerUpdatedAt: null,
       consultResult: "no_transaction",
       gatewayStatus: null,
-      gatewayStatusLabel: "Indisponivel",
+      gatewayStatusLabel: "Indisponível",
       purchaseStatus: null,
-      message: "Compra sem transacao online registrada no gateway.",
+      message: "Compra sem transação online registrada no gateway.",
     };
   }
 
@@ -1378,9 +1378,9 @@ export async function getPainelBilheteriaGatewayStatus(
       ledgerUpdatedAt,
       consultResult: "not_configured",
       gatewayStatus: null,
-      gatewayStatusLabel: "Indisponivel",
+      gatewayStatusLabel: "Indisponível",
       purchaseStatus: null,
-      message: "Integracao Cielo nao configurada para consulta manual.",
+      message: "Integração Cielo não configurada para consulta manual.",
     };
   }
 
@@ -1401,9 +1401,9 @@ export async function getPainelBilheteriaGatewayStatus(
       ledgerUpdatedAt,
       consultResult: "not_found",
       gatewayStatus: null,
-      gatewayStatusLabel: "Indisponivel",
+      gatewayStatusLabel: "Indisponível",
       purchaseStatus: null,
-      message: String(payload.msgRetorno ?? "Transacao nao encontrada."),
+      message: String(payload.msgRetorno ?? "Transação não encontrada."),
     };
   }
 
@@ -1431,7 +1431,7 @@ export async function payPainelBilheteriaReservation(
   if (!Number.isInteger(input.purchaseId) || input.purchaseId <= 0) {
     throw new PainelBilheteriaError(
       "invalid_purchase_id",
-      "Informe uma reserva valida.",
+      "Informe uma reserva válida.",
       400,
     );
   }
@@ -1484,7 +1484,7 @@ export async function payPainelBilheteriaReservation(
     if (!purchase) {
       throw new PainelBilheteriaError(
         "reservation_not_found",
-        "Reserva nao encontrada.",
+        "Reserva não encontrada.",
         404,
       );
     }
@@ -1492,7 +1492,7 @@ export async function payPainelBilheteriaReservation(
     if (String(purchase.stcompra ?? "").trim() === "canc") {
       throw new PainelBilheteriaError(
         "reservation_cancelled",
-        "Nao e possivel pagar uma reserva cancelada.",
+        "Não é possível pagar uma reserva cancelada.",
         409,
       );
     }
@@ -1519,7 +1519,7 @@ export async function payPainelBilheteriaReservation(
         status: "conc",
         totalValue: formatMoney(totalValue),
         paymentMethods: normalizedPayments.map((payment) => payment.method),
-        message: "Reserva ja estava paga.",
+        message: "Reserva já estava paga.",
         alreadyPaid: true,
         auditLogId: null,
       } satisfies PayPainelReservationSuccess;
@@ -1611,7 +1611,7 @@ export function asPainelBilheteriaError(error: unknown) {
 
   return new PainelBilheteriaError(
     "painel_bilheteria_unavailable",
-    "Nao foi possivel carregar os dados da bilheteria agora.",
+    "Não foi possível carregar os dados da bilheteria agora.",
     502,
   );
 }

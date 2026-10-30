@@ -36,7 +36,7 @@ function assertAgreementId(value: unknown) {
   if (!Number.isInteger(agreementId) || agreementId <= 0) {
     throw new PainelConvenioImportError(
       "invalid_agreement_id",
-      "Informe um convenio valido.",
+      "Informe um convênio válido.",
       400,
     );
   }
@@ -48,7 +48,7 @@ function assertImportId(value: unknown) {
   if (!importId) {
     throw new PainelConvenioImportError(
       "invalid_agreement_import_id",
-      "Informe uma importacao valida.",
+      "Informe uma importação válida.",
       400,
     );
   }
@@ -87,7 +87,7 @@ async function readStage(agreementId: number, importId: string) {
   } catch {
     throw new PainelConvenioImportError(
       "agreement_import_not_found",
-      "Importacao nao encontrada.",
+      "Importação não encontrada.",
       404,
     );
   }
@@ -182,7 +182,7 @@ export async function cancelPainelConvenioImport(input: {
 
   return {
     importId,
-    message: "Importacao cancelada com sucesso.",
+    message: "Importação cancelada com sucesso.",
   };
 }
 
@@ -218,7 +218,7 @@ export function asPainelConvenioImportError(error: unknown) {
 
   return new PainelConvenioImportError(
     "agreement_import_unavailable",
-    "Nao foi possivel operar a importacao de conveniados agora.",
+    "Não foi possível operar a importação de conveniados agora.",
     500,
   );
 }

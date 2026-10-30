@@ -187,7 +187,7 @@ export function PainelBilheteriaSalesBuilder({
         if (!response.ok || !payload?.ok || !payload.data) {
           setErrorMessage(
             payload?.error?.message ||
-              "Nao foi possivel carregar descontos e autorizadores.",
+              "Não foi possível carregar descontos e autorizadores.",
           );
           return;
         }
@@ -321,7 +321,7 @@ export function PainelBilheteriaSalesBuilder({
 
   function handleProceed() {
     if (!selectedAgenda) {
-      setErrorMessage("A agenda nao esta aberta para hoje.");
+      setErrorMessage("A agenda não está aberta para hoje.");
       return;
     }
 
@@ -361,7 +361,7 @@ export function PainelBilheteriaSalesBuilder({
           {todayLabel}
         </h2>
         <div className="mt-4 rounded-[12px] border border-[#f0d3a8] bg-[#fff6e3] px-4 py-3 text-sm text-[#8a6100]">
-          A agenda nao esta aberta para hoje.
+          A agenda não está aberta para hoje.
         </div>
       </section>
     );

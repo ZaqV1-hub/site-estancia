@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { PainelCompraVouchersPage } from "@/components/painel-compra-vouchers-page";
 
 describe("PainelCompraVouchersPage", () => {
-  it("renderiza indicadores, tabela e filtros da tela legado", () => {
+  it("renderiza ingressos, filtros e exportações preservando a compra vinculada", () => {
     const html = renderToStaticMarkup(
       React.createElement(PainelCompraVouchersPage, {
         result: {
@@ -70,12 +70,21 @@ describe("PainelCompraVouchersPage", () => {
       }),
     );
 
-    expect(html).toContain("Passaporte SITE");
-    expect(html).toContain("&gt;</span><span>Vouchers</span>");
-    expect(html).toContain("Passaporte</th>");
+    expect(html).toContain("Ingressos e itens adicionais");
+    expect(html).toContain("Valor dos itens:");
+    expect(html).toContain("R$ 40,00");
+    expect(html).toContain('aria-label="Navegação de vouchers"');
+    expect(html).toContain("Item</th>");
+    expect(html).toContain("Itens adicionais");
+    expect(html).toContain('href="/painel/compras/551"');
     expect(html).toContain("ABC-123");
     expect(html).toContain("Passaporte</option>");
-    expect(html).toContain("Remover Filtros");
-    expect(html).toContain("Exportar (.xls)");
+    expect(html).toContain("Limpar filtros");
+    expect(html).toContain('name="tpcompra"');
+    expect(html).toContain('value="site" selected=""');
+    expect(html).toContain("Exportar Excel");
+    expect(html).toContain("Exportar PDF");
+    expect(html).toContain("idvoucher=9001");
+    expect(html).toContain("tpcompra=site");
   });
 });

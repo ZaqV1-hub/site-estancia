@@ -245,7 +245,7 @@ export function PainelShell({
 
   const sidebar = <>
     <div className="painel-brand"><EstanciaLogo href="/painel" compact light className="painel-logo" /></div>
-    <div className="painel-operator"><p>Operador</p><strong>{actorName || actorCpf || "Sessão operacional"}</strong><span>{legacyRoleName || role}</span><small>CPF ••• ••• ••• ••</small></div>
+    <div className="painel-operator"><p>Operador</p><strong>{actorName || actorCpf || "Sessão operacional"}</strong><span>{legacyRoleName === "Funcionario" ? "Funcionário" : legacyRoleName || role}</span><small>CPF ••• ••• ••• ••</small></div>
     <nav className="painel-navigation" aria-label="Navegação do painel">{visibleItems.map((item) => {
       const active = isPainelShellNavItemActive(pathname, item);
       return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={active ? "is-active" : ""} onClick={() => drawer.current?.close()}><PanelIcon name={item.icon} /><span>{item.label}</span>{item.href === "/painel/agenda" && <small className="painel-home-badge">Início</small>}</Link>;

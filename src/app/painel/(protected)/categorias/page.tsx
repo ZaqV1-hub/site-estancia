@@ -4,7 +4,7 @@ import { listPainelDiscountTypes } from "@/lib/painel-descontos";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Categorias | Estancia",
+  title: "Painel - Categorias | Estância",
   robots: { index: false, follow: false },
 };
 

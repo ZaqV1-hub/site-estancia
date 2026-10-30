@@ -15,8 +15,8 @@ import {
 import { getRecaptchaSiteKey } from "@/lib/recaptcha";
 
 export const metadata: Metadata = {
-  title: "Painel - Entrar | Estancia",
-  description: "Entrada do novo painel interno operacional do Estancia.",
+  title: "Painel - Entrar | Estância",
+  description: "Entrada do novo painel interno operacional do Estância.",
   robots: {
     index: false,
     follow: false,

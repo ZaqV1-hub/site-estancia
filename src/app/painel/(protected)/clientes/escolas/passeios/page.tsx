@@ -5,7 +5,7 @@ import { getOpsSchoolTripsScreenData } from "@/lib/ops-school-trips";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Passeios Escolares | Estancia",
+  title: "Painel - Passeios Escolares | Estância",
   robots: {
     index: false,
     follow: false,
@@ -40,7 +40,7 @@ export default async function PainelClientesEscolasPasseiosPage({
           Passeios escolares
         </h1>
         <p className="mt-3 max-w-[80ch] text-sm leading-7 text-[#5d7282]">
-          Gerencie datas, status e relatorios de passeios escolares.
+          Gerencie datas, status e relatórios de passeios escolares.
         </p>
         <div className="mt-5">
           <PainelClientesNav current="schoolTrips" />

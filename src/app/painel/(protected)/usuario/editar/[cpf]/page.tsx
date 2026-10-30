@@ -4,7 +4,7 @@ import { getPainelUsuario } from "@/lib/painel-usuarios";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Editar Usuario | Estancia",
+  title: "Painel - Editar Usuário | Estância",
   robots: {
     index: false,
     follow: false,

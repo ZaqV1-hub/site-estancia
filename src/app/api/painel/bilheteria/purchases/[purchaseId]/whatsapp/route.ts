@@ -14,19 +14,19 @@ type SendPurchaseWhatsappPayload = {
 function resolveSkippedWhatsappMessage(skippedReason?: string) {
   switch (skippedReason) {
     case "ticket_service_not_configured":
-      return "Servico de envio por WhatsApp nao configurado neste ambiente.";
+      return "Serviço de envio por WhatsApp não configurado neste ambiente.";
     case "ticket_auth_failed":
-      return "Nao foi possivel autenticar o servico de envio por WhatsApp.";
+      return "Não foi possível autenticar o serviço de envio por WhatsApp.";
     case "phone_not_allowed_for_testing":
-      return "Numero nao autorizado para este ambiente.";
+      return "Número não autorizado para este ambiente.";
     case "invalid_phone_number":
       return "Informe telefone com DDD para enviar os passaportes.";
     case "no_selected_vouchers":
-      return "Nenhum voucher elegivel foi selecionado para envio por WhatsApp.";
+      return "Nenhum voucher elegível foi selecionado para envio por WhatsApp.";
     case "purchase_not_confirmed":
-      return "A compra ainda nao esta confirmada para envio por WhatsApp.";
+      return "A compra ainda não está confirmada para envio por WhatsApp.";
     default:
-      return "Nao foi possivel enviar os passaportes selecionados por WhatsApp.";
+      return "Não foi possível enviar os passaportes selecionados por WhatsApp.";
   }
 }
 
@@ -48,14 +48,14 @@ function asWhatsappRouteError(error: unknown) {
   if (error instanceof Error) {
     return {
       code: "painel_bilheteria_whatsapp_failed",
-      message: error.message || "Nao foi possivel enviar os passaportes por WhatsApp.",
+      message: error.message || "Não foi possível enviar os passaportes por WhatsApp.",
       status: 502,
     };
   }
 
   return {
     code: "painel_bilheteria_whatsapp_failed",
-    message: "Nao foi possivel enviar os passaportes por WhatsApp.",
+    message: "Não foi possível enviar os passaportes por WhatsApp.",
     status: 502,
   };
 }

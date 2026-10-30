@@ -27,6 +27,6 @@ describe("PainelConvenioDetailPage", () => {
     expect(html).toContain("Convenio Alfa");
     expect(html).toContain("Qtd Conveniados");
     expect(html).toContain("Importar conveniados");
-    expect(html).toContain("Tabela de Preco");
+    expect(html).toContain("Tabela de Preço");
   });
 });

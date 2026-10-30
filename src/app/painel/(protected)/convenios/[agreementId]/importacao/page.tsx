@@ -8,7 +8,7 @@ import { getPainelConvenioDetail } from "@/lib/painel-convenios";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Importar Conveniados | Estancia",
+  title: "Painel - Importar Conveniados | Estância",
   robots: {
     index: false,
     follow: false,

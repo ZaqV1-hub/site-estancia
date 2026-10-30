@@ -38,7 +38,7 @@ export function PainelConvenioImportPage({
     completed
       ? {
           tone: "success",
-          message: "Importacao finalizada com sucesso.",
+          message: "Importação finalizada com sucesso.",
         }
       : null,
   );
@@ -90,7 +90,7 @@ export function PainelConvenioImportPage({
 
         if (!response.ok || !result?.ok || !result.data?.stage) {
           throw new Error(
-            result?.error?.message || "Falha ao validar a importacao.",
+            result?.error?.message || "Falha ao validar a importação.",
           );
         }
 
@@ -106,7 +106,7 @@ export function PainelConvenioImportPage({
           message:
             error instanceof Error
               ? error.message
-              : "Falha ao validar a importacao.",
+              : "Falha ao validar a importação.",
         });
       }
     });
@@ -143,14 +143,14 @@ export function PainelConvenioImportPage({
 
         if (!response.ok || !result?.ok) {
           throw new Error(
-            result?.error?.message || "Falha ao aplicar a importacao.",
+            result?.error?.message || "Falha ao aplicar a importação.",
           );
         }
 
         setStage(null);
         setFeedback({
           tone: "success",
-          message: result.data?.message || "Importacao finalizada com sucesso.",
+          message: result.data?.message || "Importação finalizada com sucesso.",
         });
         router.replace(`/painel/convenios/${agreementId}/importacao?c=sim`);
       } catch (error) {
@@ -159,7 +159,7 @@ export function PainelConvenioImportPage({
           message:
             error instanceof Error
               ? error.message
-              : "Falha ao aplicar a importacao.",
+              : "Falha ao aplicar a importação.",
         });
       }
     });
@@ -197,7 +197,7 @@ export function PainelConvenioImportPage({
 
         if (!response.ok || !result?.ok) {
           throw new Error(
-            result?.error?.message || "Falha ao cancelar a importacao.",
+            result?.error?.message || "Falha ao cancelar a importação.",
           );
         }
 
@@ -209,7 +209,7 @@ export function PainelConvenioImportPage({
           message:
             error instanceof Error
               ? error.message
-              : "Falha ao cancelar a importacao.",
+              : "Falha ao cancelar a importação.",
         });
       }
     });
@@ -257,7 +257,7 @@ export function PainelConvenioImportPage({
         {completed && !stage ? (
           <div className="mt-6 rounded-[4px] border border-[#d7d7d7] bg-[#fdfdfd] px-5 py-5">
             <p className="text-[15px] text-[#505050]">
-              A importacao dos conveniados foi concluida com sucesso.
+              A importação dos conveniados foi concluída com sucesso.
             </p>
             <p className="mt-4">
               <Link
@@ -284,7 +284,7 @@ export function PainelConvenioImportPage({
               <div className="mt-5 grid gap-4 md:grid-cols-3">
                 <div className="border border-[#d7d7d7] bg-white px-4 py-3 text-sm text-[#505050]">
                   <strong>{stage.preview.validRows}</strong>
-                  <div>Registros validos</div>
+                  <div>Registros válidos</div>
                 </div>
                 <div className="border border-[#d7d7d7] bg-white px-4 py-3 text-sm text-[#505050]">
                   <strong>{stage.preview.invalidRows}</strong>
@@ -320,7 +320,7 @@ export function PainelConvenioImportPage({
                 onClick={handleCancel}
                 type="button"
               >
-                Cancelar Importacao
+                Cancelar Importação
               </button>
               <button
                 className="inline-flex items-center justify-center bg-[#4aa329] px-6 py-3 text-sm font-semibold text-white hover:bg-[#3c8721] disabled:opacity-60"
@@ -328,7 +328,7 @@ export function PainelConvenioImportPage({
                 onClick={handleApply}
                 type="button"
               >
-                Continuar Importacao
+                Continuar Importação
               </button>
             </div>
           </>
@@ -338,7 +338,7 @@ export function PainelConvenioImportPage({
 
             <div className="mt-5">
               <span className="block text-sm font-semibold text-[#5a5a5a]">
-                Selecione o arquivo para importacao
+                Selecione o arquivo para importação
               </span>
               <input
                 className="mt-2 block w-full max-w-[520px] border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"

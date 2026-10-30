@@ -87,7 +87,7 @@ export async function getPainelCortesia(id: unknown) {
   if (!Number.isInteger(courtesyId) || courtesyId <= 0) {
     throw new PainelCortesiasError(
       "invalid_courtesy_author_id",
-      "Informe um autorizador de cortesia valido.",
+      "Informe um autorizador de cortesia válido.",
       400,
     );
   }
@@ -98,7 +98,7 @@ export async function getPainelCortesia(id: unknown) {
   if (!found) {
     throw new PainelCortesiasError(
       "courtesy_author_not_found",
-      "Autorizador de cortesia nao encontrado.",
+      "Autorizador de cortesia não encontrado.",
       404,
     );
   }
@@ -153,7 +153,7 @@ export function asPainelCortesiasError(error: unknown) {
 
   return new PainelCortesiasError(
     "painel_courtesy_unavailable",
-    "Nao foi possivel operar cortesias agora.",
+    "Não foi possível operar cortesias agora.",
     500,
   );
 }

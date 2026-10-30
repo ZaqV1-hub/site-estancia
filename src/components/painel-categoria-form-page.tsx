@@ -75,7 +75,7 @@ export function PainelCategoriaFormPage({ mode, typeId, initialValues }: Props) 
 
       <form action={handleSubmit} className="mt-6 space-y-5">
         <label className="block text-sm font-semibold text-[#5a5a5a]">
-          Descricao *
+          Descrição *
           <input
             className="mt-1 w-full max-w-[420px] border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
             defaultValue={initialValues.descricao}

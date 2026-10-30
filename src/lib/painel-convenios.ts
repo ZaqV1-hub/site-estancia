@@ -186,7 +186,7 @@ export function validateAgreementActivation(input: {
   if (input.endDate && input.endDate < today) {
     throw new PainelConveniosError(
       "agreement_activation_period_invalid",
-      "Data de vigencia invalida. Favor, altere a data para ativar o convenio.",
+      "Data de vigência inválida. Favor, altere a data para ativar o convênio.",
       422,
     );
   }
@@ -196,7 +196,7 @@ export function validatePainelConvenioForm(input: PainelConvenioFormValues) {
   if (!normalizeText(input.nmconvenio)) {
     throw new PainelConveniosError(
       "invalid_agreement_form",
-      "Nome obrigatorio.",
+      "Nome obrigatório.",
       422,
     );
   }
@@ -208,7 +208,7 @@ export function validatePainelConvenioForm(input: PainelConvenioFormValues) {
   if (!startDate) {
     throw new PainelConveniosError(
       "invalid_agreement_form",
-      "Data inicio obrigatoria.",
+      "Data início obrigatória.",
       422,
     );
   }
@@ -216,7 +216,7 @@ export function validatePainelConvenioForm(input: PainelConvenioFormValues) {
   if (!endDate) {
     throw new PainelConveniosError(
       "invalid_agreement_form",
-      "Data fim obrigatoria.",
+      "Data fim obrigatória.",
       422,
     );
   }
@@ -224,7 +224,7 @@ export function validatePainelConvenioForm(input: PainelConvenioFormValues) {
   if (!Number.isInteger(priceTableId) || priceTableId <= 0) {
     throw new PainelConveniosError(
       "invalid_agreement_form",
-      "Tabela de preco obrigatoria.",
+      "Tabela de preço obrigatória.",
       422,
     );
   }
@@ -232,7 +232,7 @@ export function validatePainelConvenioForm(input: PainelConvenioFormValues) {
   if (endDate < startDate) {
     throw new PainelConveniosError(
       "invalid_agreement_form",
-      "Data fim deve ser maior ou igual a data inicio.",
+      "Data fim deve ser maior ou igual a data início.",
       422,
     );
   }
@@ -300,7 +300,7 @@ function buildPainelConveniosWhere(filters: PainelConvenioListFilters) {
   if (filters.periodFrom && !periodFrom) {
     throw new PainelConveniosError(
       "invalid_convenio_filter",
-      "Informe uma data inicial valida para o periodo.",
+      "Informe uma data inicial válida para o período.",
       400,
     );
   }
@@ -308,7 +308,7 @@ function buildPainelConveniosWhere(filters: PainelConvenioListFilters) {
   if (filters.periodTo && !periodTo) {
     throw new PainelConveniosError(
       "invalid_convenio_filter",
-      "Informe uma data final valida para o periodo.",
+      "Informe uma data final válida para o período.",
       400,
     );
   }
@@ -421,7 +421,7 @@ export async function togglePainelConvenioStatus(input: {
   if (!Number.isInteger(agreementId) || agreementId <= 0) {
     throw new PainelConveniosError(
       "invalid_agreement_id",
-      "Informe um convenio valido.",
+      "Informe um convênio válido.",
       400,
     );
   }
@@ -429,7 +429,7 @@ export async function togglePainelConvenioStatus(input: {
   if (nextStatus !== "ati" && nextStatus !== "ina") {
     throw new PainelConveniosError(
       "invalid_agreement_status",
-      "Informe um status valido para o convenio.",
+      "Informe um status válido para o convênio.",
       400,
     );
   }
@@ -454,7 +454,7 @@ export async function togglePainelConvenioStatus(input: {
   if (!current) {
     throw new PainelConveniosError(
       "agreement_not_found",
-      "Convenio nao encontrado.",
+      "Convênio não encontrado.",
       404,
     );
   }
@@ -477,8 +477,8 @@ export async function togglePainelConvenioStatus(input: {
     agreementId,
     message:
       nextStatus === "ati"
-        ? "Convenio ativado com sucesso."
-        : "Convenio inativado com sucesso.",
+        ? "Convênio ativado com sucesso."
+        : "Convênio inativado com sucesso.",
   };
 }
 
@@ -489,7 +489,7 @@ export async function getPainelConvenioDetail(agreementIdInput: unknown) {
   if (!Number.isInteger(agreementId) || agreementId <= 0) {
     throw new PainelConveniosError(
       "invalid_agreement_id",
-      "Informe um convenio valido.",
+      "Informe um convênio válido.",
       400,
     );
   }
@@ -541,7 +541,7 @@ export async function getPainelConvenioDetail(agreementIdInput: unknown) {
   if (!row) {
     throw new PainelConveniosError(
       "agreement_not_found",
-      "Convenio nao encontrado.",
+      "Convênio não encontrado.",
       404,
     );
   }
@@ -586,7 +586,7 @@ export async function createPainelConvenio(input: { values: PainelConvenioFormVa
 
   return {
     agreementId: Number(result.rows[0]?.idconvenio ?? 0),
-    message: "Convenio criado com sucesso.",
+    message: "Convênio criado com sucesso.",
   };
 }
 
@@ -599,7 +599,7 @@ export async function updatePainelConvenio(input: {
   if (!Number.isInteger(agreementId) || agreementId <= 0) {
     throw new PainelConveniosError(
       "invalid_agreement_id",
-      "Informe um convenio valido.",
+      "Informe um convênio válido.",
       400,
     );
   }
@@ -622,7 +622,7 @@ export async function updatePainelConvenio(input: {
 
   return {
     agreementId,
-    message: "Convenio atualizado com sucesso.",
+    message: "Convênio atualizado com sucesso.",
   };
 }
 
@@ -633,7 +633,7 @@ export async function removePainelConvenio(input: { agreementId: unknown }) {
   if (!Number.isInteger(agreementId) || agreementId <= 0) {
     throw new PainelConveniosError(
       "invalid_agreement_id",
-      "Informe um convenio valido.",
+      "Informe um convênio válido.",
       400,
     );
   }
@@ -645,14 +645,14 @@ export async function removePainelConvenio(input: { agreementId: unknown }) {
   } catch {
     throw new PainelConveniosError(
       "agreement_remove_blocked",
-      "Nao e possivel realizar esta operacao. O convenio possui relacionamentos no sistema.",
+      "Não é possível realizar esta operação. O convênio possui relacionamentos no sistema.",
       409,
     );
   }
 
   return {
     agreementId,
-    message: "Convenio removido com sucesso.",
+    message: "Convênio removido com sucesso.",
   };
 }
 
@@ -663,7 +663,7 @@ export function asPainelConveniosError(error: unknown) {
 
   return new PainelConveniosError(
     "agreement_unavailable",
-    "Nao foi possivel concluir a operacao de convenio agora.",
+    "Não foi possível concluir a operação de convênio agora.",
     500,
   );
 }

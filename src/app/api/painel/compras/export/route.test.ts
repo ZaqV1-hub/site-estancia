@@ -1,9 +1,9 @@
+import ExcelJS from "exceljs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requirePainelApiAccess = vi.fn();
 const listPainelPurchases = vi.fn();
 const mapPainelPurchaseListExportRows = vi.fn();
-const renderPainelPurchaseListExportTable = vi.fn();
 
 vi.mock("@/lib/painel-api-auth", () => ({
   requirePainelApiAccess,
@@ -12,7 +12,6 @@ vi.mock("@/lib/painel-api-auth", () => ({
 vi.mock("@/lib/painel-compras", () => ({
   listPainelPurchases,
   mapPainelPurchaseListExportRows,
-  renderPainelPurchaseListExportTable,
 }));
 
 describe("GET /api/painel/compras/export", () => {
@@ -20,7 +19,7 @@ describe("GET /api/painel/compras/export", () => {
     vi.clearAllMocks();
   });
 
-  it("gera exportacao xls da lista principal", async () => {
+  it("gera exportação XLSX da lista principal", async () => {
     requirePainelApiAccess.mockResolvedValue({
       ok: true,
       session: {
@@ -51,15 +50,14 @@ describe("GET /api/painel/compras/export", () => {
       ["ID", "Data compra"],
       ["551", "06/05/2026"],
     ]);
-    renderPainelPurchaseListExportTable.mockReturnValue(
-      "<table><tr><td>551</td></tr></table>",
-    );
 
     const { GET } = await import("@/app/api/painel/compras/export/route");
     const response = await GET(
       new Request("https://example.com/api/painel/compras/export"),
     );
-    const body = await response.text();
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await response.arrayBuffer());
+    const sheet = workbook.worksheets[0];
 
     expect(listPainelPurchases).toHaveBeenCalledWith({
       page: "1",
@@ -67,13 +65,12 @@ describe("GET /api/painel/compras/export", () => {
       allRows: true,
     });
     expect(mapPainelPurchaseListExportRows).toHaveBeenCalled();
-    expect(renderPainelPurchaseListExportTable).toHaveBeenCalled();
     expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toContain("application/vnd.ms-excel");
+    expect(response.headers.get("content-type")).toContain("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     expect(response.headers.get("content-disposition")).toContain(
-      'attachment; filename="compras.xls"',
+      'attachment; filename="compras.xlsx"',
     );
-    expect(body).toContain("<table");
-    expect(body).toContain("<td>551</td>");
+    expect(sheet.getRow(1).values).toEqual([, "ID", "Data compra"]);
+    expect(sheet.getRow(2).values).toEqual([, "551", "06/05/2026"]);
   });
 });

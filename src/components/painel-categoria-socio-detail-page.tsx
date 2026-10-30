@@ -19,7 +19,7 @@ export function PainelCategoriaSocioDetailPage({
           items={[
             { href: "/painel", label: "Home" },
             { href: "/painel/administrativo", label: "Administrativo" },
-            { href: "/painel/categoria-socio", label: "Categoria Socio" },
+            { href: "/painel/categoria-socio", label: "Categoria Sócio" },
             { label: data.name },
           ]}
         />
@@ -33,7 +33,7 @@ export function PainelCategoriaSocioDetailPage({
                 <tbody>
                   <tr>
                     <th className="w-[260px] border border-[#d7d7d7] bg-[#f7f7f7] px-4 py-3 font-semibold text-[#5a5a5a]">
-                      Tabela de Preco
+                      Tabela de Preço
                     </th>
                     <td className="border border-[#d7d7d7] px-4 py-3 text-[#355066]">
                       {data.priceTableName || "-"}
@@ -48,7 +48,7 @@ export function PainelCategoriaSocioDetailPage({
             <section className="rounded-[6px] border border-[#d7e1e8] bg-white shadow-[0_10px_28px_rgba(26,61,94,0.08)]">
               <div className="grid gap-3 px-6 py-5 text-[17px] text-[#5a5a5a]">
                 <Link className="text-[#666] underline" href="/painel/categoria-socio">
-                  Lista de categoria de socio
+                  Lista de categoria de sócio
                 </Link>
                 <Link
                   className="text-[#666] underline"

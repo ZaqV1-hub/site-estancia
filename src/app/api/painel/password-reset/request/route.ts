@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   const email = typeof payload?.email === "string" ? payload.email.trim() : "";
 
   if (!email || email.length > 120 || !email.includes("@")) {
-    return errorResponse("invalid_email", "E-mail invalido.", 400);
+    return errorResponse("invalid_email", "E-mail inválido.", 400);
   }
 
   try {
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     if (!result.userFound) {
       return errorResponse(
         "user_not_found",
-        "Nenhum usuario foi encontrado utilizando este endereco de e-mail.",
+        "Nenhum usuário foi encontrado utilizando este endereço de e-mail.",
         404,
       );
     }
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
 
     return errorResponse(
       "password_reset_unavailable",
-      "Nao foi possivel processar a recuperacao de senha agora.",
+      "Não foi possível processar a recuperação de senha agora.",
       502,
     );
   }

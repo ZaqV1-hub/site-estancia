@@ -6,7 +6,7 @@ import {
 } from "@/lib/painel-bilheteria-page";
 
 export const metadata: Metadata = {
-  title: "Painel - Editar Venda | Estancia",
+  title: "Painel - Editar Venda | Estância",
   robots: {
     index: false,
     follow: false,

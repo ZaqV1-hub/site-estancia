@@ -18,9 +18,9 @@ function buildResetEmailHtml(input: {
   resetUrl: string;
 }) {
   return `
-    <h2>Recuperacao de Senha</h2>
-    <p>Ola ${input.userName}, foi solicitado em seu e-mail uma recuperacao de senha para acesso ao painel do Estancia.</p>
-    <p>Seu ticket para mudanca de senha e: <strong>${input.ticket}</strong>.</p>
+    <h2>Recuperação de Senha</h2>
+    <p>Olá ${input.userName}, foi solicitado em seu e-mail uma recuperação de senha para acesso ao painel do Estância.</p>
+    <p>Seu ticket para mudança de senha é: <strong>${input.ticket}</strong>.</p>
     <p>Para alterar sua senha, acesse: <a href="${input.resetUrl}">${input.resetUrl}</a></p>
   `;
 }

@@ -113,7 +113,7 @@ async function getPainelInformacaoRaw(id: unknown) {
   if (!Number.isInteger(infoId) || infoId <= 0) {
     throw new PainelInformacoesError(
       "invalid_information_id",
-      "Informe uma informacao valida.",
+      "Informe uma informação válida.",
       400,
     );
   }
@@ -126,7 +126,7 @@ async function getPainelInformacaoRaw(id: unknown) {
   if (!found) {
     throw new PainelInformacoesError(
       "information_not_found",
-      "Informacao nao encontrada.",
+      "Informação não encontrada.",
       404,
     );
   }
@@ -186,7 +186,7 @@ export async function createPainelInformacao(values: PainelInformacaoFormValues)
   if (!name) {
     throw new PainelInformacoesError(
       "invalid_information_name",
-      "Informe o nome da informacao.",
+      "Informe o nome da informação.",
       400,
     );
   }
@@ -194,7 +194,7 @@ export async function createPainelInformacao(values: PainelInformacaoFormValues)
   if (!text) {
     throw new PainelInformacoesError(
       "invalid_information_text",
-      "Informe o texto da informacao.",
+      "Informe o texto da informação.",
       400,
     );
   }
@@ -219,7 +219,7 @@ export async function updatePainelInformacao(
   if (!Number.isInteger(infoId) || infoId <= 0) {
     throw new PainelInformacoesError(
       "invalid_information_id",
-      "Informe uma informacao valida.",
+      "Informe uma informação válida.",
       400,
     );
   }
@@ -227,7 +227,7 @@ export async function updatePainelInformacao(
   if (!name) {
     throw new PainelInformacoesError(
       "invalid_information_name",
-      "Informe o nome da informacao.",
+      "Informe o nome da informação.",
       400,
     );
   }
@@ -235,7 +235,7 @@ export async function updatePainelInformacao(
   if (!text) {
     throw new PainelInformacoesError(
       "invalid_information_text",
-      "Informe o texto da informacao.",
+      "Informe o texto da informação.",
       400,
     );
   }
@@ -281,7 +281,7 @@ export async function removePainelInformacao(input: {
   if (!Number.isInteger(infoId) || infoId <= 0) {
     throw new PainelInformacoesError(
       "invalid_information_id",
-      "Informe uma informacao valida.",
+      "Informe uma informação válida.",
       400,
     );
   }

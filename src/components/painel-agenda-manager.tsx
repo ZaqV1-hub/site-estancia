@@ -231,8 +231,8 @@ export function PainelAgendaManager({ data }: PainelAgendaManagerProps) {
       if (!response.ok || !payload?.ok) {
         throw new Error(
           payload && !payload.ok
-            ? payload.error?.message || "Nao foi possivel carregar o dia."
-            : "Nao foi possivel carregar o dia.",
+            ? payload.error?.message || "Não foi possível carregar o dia."
+            : "Não foi possível carregar o dia.",
         );
       }
 
@@ -251,7 +251,7 @@ export function PainelAgendaManager({ data }: PainelAgendaManagerProps) {
       }
 
       console.error("painel-agenda-day-selection-failed", error);
-      setSelectedDayError("Nao foi possivel carregar o dia agora.");
+      setSelectedDayError("Não foi possível carregar o dia agora.");
     } finally {
       if (requestSequenceRef.current === requestSequence) {
         setLoadingDate(null);
@@ -275,7 +275,7 @@ export function PainelAgendaManager({ data }: PainelAgendaManagerProps) {
               href={buildAgendaAddHref(data.month, data.year, selectedDate)}
               className="rounded-[8px] border border-[#d7e3d2] px-3 py-2 text-xs font-semibold text-[#275330] hover:bg-[#f7fbf5]"
             >
-              Adicionar data padrao
+              Adicionar data padrão
             </Link>
           </div>
 
@@ -347,7 +347,7 @@ export function PainelAgendaManager({ data }: PainelAgendaManagerProps) {
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-[#4f6472]">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded bg-[#8dc72b]" />
-              Padrao
+              Padrão
             </div>
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded bg-[#ff6138]" />
@@ -416,12 +416,12 @@ export function PainelAgendaManager({ data }: PainelAgendaManagerProps) {
                 href={buildAgendaAddHref(data.month, data.year, data.selectedDate)}
                 className="rounded-[8px] bg-[#2b8c46] px-3 py-2 text-sm font-semibold text-white"
               >
-                Adicionar data padrao
+                Adicionar data padrão
               </Link>
             )}
           </div>
           <p className="mt-3 text-xs leading-5 text-[#5d745f]">
-            Datas promocionais e eventos devem ser criados na area de Site.
+            Datas promocionais e eventos devem ser criados na área de Site.
           </p>
         </section>
       </div>
@@ -445,7 +445,7 @@ export function PainelAgendaManager({ data }: PainelAgendaManagerProps) {
               <thead className="bg-[#f7fbf5] text-left text-[#35503b]">
                 <tr>
                   <th className="px-3 py-2.5 text-xs font-semibold">Compra</th>
-                  <th className="px-3 py-2.5 text-xs font-semibold">Usuario</th>
+                  <th className="px-3 py-2.5 text-xs font-semibold">Usuário</th>
                   <th className="px-3 py-2.5 text-xs font-semibold">Telefone</th>
                   <th className="px-3 py-2.5 text-xs font-semibold">Celular</th>
                   <th className="px-3 py-2.5 text-xs font-semibold">E-mail</th>
@@ -477,7 +477,7 @@ export function PainelAgendaManager({ data }: PainelAgendaManagerProps) {
                         ? formatPainelAgendaDateLabel(voucher.useDate)
                         : "-"}
                     </td>
-                    <td className="px-3 py-3">{voucher.used ? "Sim" : "Nao"}</td>
+                    <td className="px-3 py-3">{voucher.used ? "Sim" : "Não"}</td>
                   </tr>
                 ))}
               </tbody>

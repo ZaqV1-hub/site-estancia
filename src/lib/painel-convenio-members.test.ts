@@ -64,7 +64,7 @@ describe("validateConveniadoActivation", () => {
         endDate: "2026-05-01",
         today: "2026-05-08",
       }),
-    ).toThrow(/vigencia invalida/i);
+    ).toThrow(/vigência inválida/i);
   });
 });
 

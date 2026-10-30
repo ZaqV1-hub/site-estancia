@@ -1,3 +1,4 @@
+import { listPainelPurchases, type PainelPurchaseListItem } from "@/lib/painel-compras";
 import { formatCpf, sanitizeCpf } from "@/lib/cpf";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 import {
@@ -80,6 +81,7 @@ export type PainelUsuarioSiteDetail = PainelUsuarioSiteListItem & {
   complement: string;
   lastLoginLabel: string;
   userType: "ASSOCIADO / CONVENIADO" | "ASSOCIADO" | "CONVENIADO" | "NORMAL";
+  purchases?: PainelPurchaseListItem[];
   agreements: PainelUsuarioSiteAgreement[];
 };
 
@@ -183,7 +185,7 @@ function paginate(total: number, page: number, per: number) {
 function assertCpf(value: unknown) {
   const cpf = sanitizeCpf(String(value ?? ""));
   if (cpf.length !== 11) {
-    throw new PainelUsuarioSiteError("invalid_site_user_cpf", "Informe um CPF valido.", 400);
+    throw new PainelUsuarioSiteError("invalid_site_user_cpf", "Informe um CPF válido.", 400);
   }
   return cpf;
 }
@@ -287,7 +289,7 @@ async function getUsuarioSiteRaw(cpf: string) {
   if (!row) {
     throw new PainelUsuarioSiteError(
       "site_user_not_found",
-      "Usuario do site nao encontrado.",
+      "Usuário do site não encontrado.",
       404,
     );
   }
@@ -453,6 +455,7 @@ export async function getPainelUsuarioSite(cpf: unknown) {
     complement: normalizeText(row.complemento) || "-",
     lastLoginLabel: formatLastLoginLabel(row.dtulogin, row.hrulogin),
     userType: mapUserType(relationships.hasAssociate, relationships.agreements.length),
+    purchases: (await listPainelPurchases({filters:{cpf:normalizedCpf},allRows:true})).items,
     agreements: relationships.agreements,
   } satisfies PainelUsuarioSiteDetail;
 }
@@ -488,7 +491,7 @@ export async function updatePainelUsuarioSiteStatus(input: {
   if (actorCpf && actorCpf === normalizedCpf) {
     throw new PainelUsuarioSiteError(
       "site_user_self_status_forbidden",
-      "Nao e permitido alterar o seu proprio status.",
+      "Não é permitido alterar o seu próprio status.",
       403,
     );
   }

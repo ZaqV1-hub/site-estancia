@@ -166,7 +166,7 @@ export function renderPainelCompraConvenioExportTable(
     "TotalValores",
   ];
 
-  const head = headers.map((header) => `<th>${header}</th>`).join("");
+  const head = headers.map((header) => `<th>${header.replace("Convenios", "Convênios")}</th>`).join("");
   const body = rows
     .map(
       (row) =>

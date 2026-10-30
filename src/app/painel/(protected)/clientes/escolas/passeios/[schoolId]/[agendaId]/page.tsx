@@ -8,7 +8,7 @@ import {
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Detalhe do Passeio Escolar | Estancia",
+  title: "Painel - Detalhe do Passeio Escolar | Estância",
   robots: {
     index: false,
     follow: false,
@@ -66,7 +66,7 @@ export default async function PainelClientesEscolasPasseiosDetalhePage({
       csvHref={csvHref}
       pdfHref={pdfHref}
       backHref={`/painel/clientes/escolas/passeios?schoolId=${report.trip.schoolId}`}
-      backLabel="Voltar ao modulo"
+      backLabel="Voltar ao módulo"
       resetHref={`/painel/clientes/escolas/passeios/${report.trip.schoolId}/${report.trip.agendaId}`}
       navCurrent="schoolTrips"
     />

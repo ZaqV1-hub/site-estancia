@@ -1,4 +1,6 @@
 import type { PoolClient } from "pg";
+import { listSchoolTrips } from "@/lib/b2b-school-calendar";
+import { mergeSchoolCalendarDays } from "@/lib/school-calendar-merge";
 import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
 import { calendarEventDate } from "@/lib/calendar-event-link";
 import { assertCalendarDate, getSaoPauloToday, isEventOnlyProduct, resolveCalendarValidityDate } from "@/lib/calendar-validity";
@@ -184,8 +186,11 @@ export async function getCalendarMonth(month: number, year: number): Promise<Cal
     loadVoucherRows(start,end), readEstanciaContent(),
   ]);
   const rules = await Promise.all(result.rows.map((row)=>mapRule(row, undefined, content)));
-  return { month,year,today:getSaoPauloToday(),days:rules.map((rule)=>({ date:rule.date,rule,
-    summary:summarizeCalendarPurchases(buildCalendarPurchases(rows,content.products,rule.date)) })) };
+  let schoolTrips: Awaited<ReturnType<typeof listSchoolTrips>> = [];
+  let schoolTripsUnavailable = false;
+  try { schoolTrips = await listSchoolTrips(start,end); } catch { schoolTripsUnavailable=true; console.warn('school-calendar-read-unavailable'); }
+  return { month,year,today:getSaoPauloToday(),schoolTripsUnavailable,days:mergeSchoolCalendarDays(rules.map((rule)=>({ date:rule.date,rule,
+    summary:summarizeCalendarPurchases(buildCalendarPurchases(rows,content.products,rule.date)) })), schoolTrips) };
 }
 
 export async function getCalendarDay(date: string): Promise<CalendarDay> {
@@ -193,7 +198,10 @@ export async function getCalendarDay(date: string): Promise<CalendarDay> {
   await ensureCalendarTables();
   const [rule, rows, content] = await Promise.all([getCalendarRule(date), loadVoucherRows(date,date), readEstanciaContent()]);
   const purchases = buildCalendarPurchases(rows,content.products,date);
-  return { date,rule,purchases,summary:summarizeCalendarPurchases(purchases),products:content.products,
+  let schoolTrips: Awaited<ReturnType<typeof listSchoolTrips>> = [];
+  let schoolTripsUnavailable = false;
+  try { schoolTrips = await listSchoolTrips(date,date); } catch { schoolTripsUnavailable=true; console.warn('school-calendar-read-unavailable'); }
+  return { date,rule,purchases,schoolTrips,schoolTripsUnavailable,summary:summarizeCalendarPurchases(purchases),products:content.products,
     event: rule?.type==="event" ? content.events.find((event)=>event.id===rule.eventId)??null : null };
 }
 

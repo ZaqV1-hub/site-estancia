@@ -69,7 +69,7 @@ export function PainelHomePage({
   return (
     <div className="space-y-6 text-[#35503b]">
       <section className="panel-section px-5 py-5">
-        <p className="panel-eyebrow">Visao geral</p>
+        <p className="panel-eyebrow">Visão geral</p>
         <div className="mt-3 grid gap-5 xl:grid-cols-[1fr_0.85fr]">
           <div>
             <h2 className="text-[30px] font-black leading-tight text-[#17351f]">
@@ -110,7 +110,7 @@ export function PainelHomePage({
       </section>
 
       <section className="panel-section p-5">
-        <p className="panel-eyebrow">Acesso rapido</p>
+        <p className="panel-eyebrow">Acesso rápido</p>
         <div className="mt-4 grid gap-3 md:grid-cols-4">
           {visibleQuickLinks.map((item) => (
             <Link
@@ -145,10 +145,10 @@ export function PainelHomePage({
           <article className="panel-section p-5">
             <p className="panel-eyebrow">Site</p>
             <h3 className="mt-2 text-[24px] font-black text-[#17351f]">
-              Imagens e atracoes
+              Imagens e atrações
             </h3>
             <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
-              Organize imagens da home, versoes mobile e desktop, atracoes e chamadas
+              Organize imagens da home, versões mobile e desktop, atrações e chamadas
               do site.
             </p>
             <Link

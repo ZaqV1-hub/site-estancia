@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         ok: false,
         error: {
           code: "painel_compras_list_failed",
-          message: "Nao foi possivel carregar a lista de compras.",
+          message: "Não foi possível carregar a lista de compras.",
         },
       },
       { status: 500 },

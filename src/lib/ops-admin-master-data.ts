@@ -142,7 +142,7 @@ const resourceConfigs: Record<OpsAdminMasterDataResource, AdminResourceConfig> =
   },
   "price-tables": {
     resource: "price-tables",
-    label: "tabela de preco",
+    label: "tabela de preço",
     table: "tabpreco",
     primaryKey: "idtabpreco",
     primaryKeyType: "integer",
@@ -161,7 +161,7 @@ const resourceConfigs: Record<OpsAdminMasterDataResource, AdminResourceConfig> =
   },
   information: {
     resource: "information",
-    label: "informacao",
+    label: "informação",
     table: "informacao",
     primaryKey: "idinformacao",
     primaryKeyType: "integer",
@@ -177,7 +177,7 @@ const resourceConfigs: Record<OpsAdminMasterDataResource, AdminResourceConfig> =
   },
   "membership-categories": {
     resource: "membership-categories",
-    label: "categoria de socio",
+    label: "categoria de sócio",
     table: "sociocateg",
     primaryKey: "idsociocateg",
     primaryKeyType: "integer",
@@ -189,7 +189,7 @@ const resourceConfigs: Record<OpsAdminMasterDataResource, AdminResourceConfig> =
   },
   agreements: {
     resource: "agreements",
-    label: "convenio",
+    label: "convênio",
     table: "convenio",
     primaryKey: "idconvenio",
     primaryKeyType: "integer",
@@ -240,7 +240,7 @@ const resourceConfigs: Record<OpsAdminMasterDataResource, AdminResourceConfig> =
   },
   "internal-users": {
     resource: "internal-users",
-    label: "usuario interno",
+    label: "usuário interno",
     table: "usuario",
     primaryKey: "cpf",
     primaryKeyType: "text",
@@ -274,7 +274,7 @@ const resourceConfigs: Record<OpsAdminMasterDataResource, AdminResourceConfig> =
   },
   "site-users": {
     resource: "site-users",
-    label: "usuario do site",
+    label: "usuário do site",
     table: "usuario",
     primaryKey: "cpf",
     primaryKeyType: "text",
@@ -290,7 +290,7 @@ const resourceConfigs: Record<OpsAdminMasterDataResource, AdminResourceConfig> =
   },
   members: {
     resource: "members",
-    label: "socio",
+    label: "sócio",
     table: "socio",
     primaryKey: "cpf",
     primaryKeyType: "text",
@@ -363,14 +363,14 @@ export function asOpsAdminMasterDataError(error: unknown) {
   ) {
     return new OpsAdminMasterDataError(
       "admin_master_data_in_use",
-      "Nao e possivel excluir: ha relacionamentos no sistema.",
+      "Não é possível excluir: há relacionamentos no sistema.",
       409,
     );
   }
 
   return new OpsAdminMasterDataError(
     "admin_master_data_unavailable",
-    "Nao foi possivel atualizar o cadastro administrativo agora.",
+    "Não foi possível atualizar o cadastro administrativo agora.",
     502,
   );
 }
@@ -382,7 +382,7 @@ function getConfig(resource: string | null | undefined) {
   if (!config) {
     throw new OpsAdminMasterDataError(
       "invalid_admin_master_data_resource",
-      "Informe um cadastro administrativo valido.",
+      "Informe um cadastro administrativo válido.",
       400,
     );
   }
@@ -446,7 +446,7 @@ function normalizeFieldValue(field: AdminField, value: unknown) {
     if (field.required && !cpf) {
       throw new OpsAdminMasterDataError(
         "invalid_admin_master_data_payload",
-        `Informe ${field.name} valido.`,
+        `Informe ${field.name} válido.`,
         400,
       );
     }
@@ -472,7 +472,7 @@ function normalizeFieldValue(field: AdminField, value: unknown) {
     if (field.maxLength && email.length > field.maxLength) {
       throw new OpsAdminMasterDataError(
         "invalid_admin_master_data_payload",
-        `${field.name} deve ter no maximo ${field.maxLength} caracteres.`,
+        `${field.name} deve ter no máximo ${field.maxLength} caracteres.`,
         400,
       );
     }
@@ -480,7 +480,7 @@ function normalizeFieldValue(field: AdminField, value: unknown) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(email)) {
       throw new OpsAdminMasterDataError(
         "invalid_admin_master_data_payload",
-        `Informe ${field.name} valido.`,
+        `Informe ${field.name} válido.`,
         400,
       );
     }
@@ -502,7 +502,7 @@ function normalizeFieldValue(field: AdminField, value: unknown) {
     if (field.maxLength && password.length > field.maxLength) {
       throw new OpsAdminMasterDataError(
         "invalid_admin_master_data_payload",
-        `${field.name} deve ter no maximo ${field.maxLength} caracteres.`,
+        `${field.name} deve ter no máximo ${field.maxLength} caracteres.`,
         400,
       );
     }
@@ -524,7 +524,7 @@ function normalizeFieldValue(field: AdminField, value: unknown) {
     if (field.maxLength && text.length > field.maxLength) {
       throw new OpsAdminMasterDataError(
         "invalid_admin_master_data_payload",
-        `${field.name} deve ter no maximo ${field.maxLength} caracteres.`,
+        `${field.name} deve ter no máximo ${field.maxLength} caracteres.`,
         400,
       );
     }
@@ -552,7 +552,7 @@ function normalizeFieldValue(field: AdminField, value: unknown) {
     if (!Number.isInteger(numeric) || numeric <= 0) {
       throw new OpsAdminMasterDataError(
         "invalid_admin_master_data_payload",
-        `Informe ${field.name} valido.`,
+        `Informe ${field.name} válido.`,
         400,
       );
     }
@@ -560,7 +560,7 @@ function normalizeFieldValue(field: AdminField, value: unknown) {
     if (field.allowedIntegers && !field.allowedIntegers.includes(numeric)) {
       throw new OpsAdminMasterDataError(
         "invalid_admin_master_data_payload",
-        `Informe ${field.name} valido.`,
+        `Informe ${field.name} válido.`,
         400,
       );
     }
@@ -574,7 +574,7 @@ function normalizeFieldValue(field: AdminField, value: unknown) {
     if (field.required && !date) {
       throw new OpsAdminMasterDataError(
         "invalid_admin_master_data_payload",
-        `Informe data valida para ${field.name}.`,
+        `Informe data válida para ${field.name}.`,
         400,
       );
     }
@@ -607,7 +607,7 @@ function normalizeFieldValue(field: AdminField, value: unknown) {
     if (field.required) {
       throw new OpsAdminMasterDataError(
         "invalid_admin_master_data_payload",
-        `Informe ${field.name} valido.`,
+        `Informe ${field.name} válido.`,
         400,
       );
     }
@@ -624,7 +624,7 @@ function normalizeFieldValue(field: AdminField, value: unknown) {
   if (field.required) {
     throw new OpsAdminMasterDataError(
       "invalid_admin_master_data_payload",
-      `Informe status valido para ${field.name}.`,
+      `Informe status válido para ${field.name}.`,
       400,
     );
   }
@@ -679,7 +679,7 @@ function assertIdentifier(config: AdminResourceConfig, id: unknown) {
     if (!Number.isInteger(normalized) || normalized <= 0) {
       throw new OpsAdminMasterDataError(
         "invalid_admin_master_data_payload",
-        "Informe um id valido.",
+        "Informe um id válido.",
         400,
       );
     }
@@ -692,7 +692,7 @@ function assertIdentifier(config: AdminResourceConfig, id: unknown) {
   if (!normalized) {
     throw new OpsAdminMasterDataError(
       "invalid_admin_master_data_payload",
-      "Informe uma chave primaria valida.",
+      "Informe uma chave primária válida.",
       400,
     );
   }
@@ -760,7 +760,7 @@ async function assertItemExists(
   if (!result.rows[0]) {
     throw new OpsAdminMasterDataError(
       "admin_master_data_not_found",
-      "Cadastro administrativo nao encontrado.",
+      "Cadastro administrativo não encontrado.",
       404,
     );
   }
@@ -775,7 +775,7 @@ function assertActionSupported(
   if (!supportedActions.includes(action)) {
     throw new OpsAdminMasterDataError(
       "admin_master_data_action_not_supported",
-      "Este cadastro nao permite esta operacao.",
+      "Este cadastro não permite esta operação.",
       400,
     );
   }
@@ -803,7 +803,7 @@ async function createInternalUser(
   if (existing && existing.idpapel !== null) {
     throw new OpsAdminMasterDataError(
       "admin_master_data_already_exists",
-      "Ja existe um usuario interno cadastrado com esta chave primaria.",
+      "Já existe um usuário interno cadastrado com esta chave primária.",
       409,
     );
   }
@@ -916,7 +916,7 @@ export async function createOpsAdminMasterData(
     if (id === null || id === undefined || id === "") {
       throw new OpsAdminMasterDataError(
         "admin_master_data_create_failed",
-        "Nao foi possivel criar o cadastro administrativo.",
+        "Não foi possível criar o cadastro administrativo.",
         502,
       );
     }
@@ -997,7 +997,7 @@ export async function updateOpsAdminMasterData(
         currentId === id
           ? `${config.label} #${id} alterado no BFF.`
           : `${config.label} #${id} alterado para #${currentId} no BFF.`,
-      motivo: normalizeText(input.reason) || `Edicao de ${config.label} no BFF`,
+      motivo: normalizeText(input.reason) || `Edição de ${config.label} no BFF`,
       usuarioNome: normalizeActorName(input.actor),
       detalhes: {
         resource: config.resource,
@@ -1053,7 +1053,7 @@ export async function deleteOpsAdminMasterData(
       origem: "ops-admin",
       acao: "master_delete",
       descricao: `${config.label} #${id} excluido no BFF.`,
-      motivo: normalizeText(input.reason) || `Exclusao de ${config.label} no BFF`,
+      motivo: normalizeText(input.reason) || `Exclusão de ${config.label} no BFF`,
       usuarioNome: normalizeActorName(input.actor),
       detalhes: {
         resource: config.resource,

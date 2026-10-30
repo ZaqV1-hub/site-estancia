@@ -1,4 +1,5 @@
 import type { B2cProduct } from "@/lib/b2c-catalog-defaults";
+import type { SchoolTripSummary } from "@/lib/b2b-school-calendar";
 
 export type CalendarValidity = "day" | "1d" | "7d" | "30d" | "6m";
 export const calendarValidityLabels: Record<CalendarValidity, string> = {
@@ -30,13 +31,16 @@ export type CalendarSummary = {
   passports: CalendarBar[]; addonItems: CalendarBar[];
 };
 export type CalendarDay = {
+  schoolTrips?: SchoolTripSummary[];
+  schoolTripsUnavailable?: boolean;
   date: string; rule: CalendarRule | null; summary: CalendarSummary;
   purchases: CalendarPurchase[]; products: B2cProduct[];
   event?: {id:string;title:string;pageTitle:string;pageContent:string;pageEnabled:boolean} | null;
 };
 export type CalendarMonth = {
+  schoolTripsUnavailable?: boolean;
   month: number; year: number; today: string;
-  days: Array<{ date: string; rule: CalendarRule; summary: CalendarSummary }>;
+  days: Array<{ date: string; rule: CalendarRule; summary: CalendarSummary; schoolTrips?: SchoolTripSummary[]; b2bOnly?: boolean }>;
 };
 export type SaveCalendarDateInput = {
   agendaId?: number | null; date: string; status: "abe" | "fec";

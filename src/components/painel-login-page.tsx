@@ -88,15 +88,15 @@ export function getPainelLoginFeedback(
       buttonLabel: "Validando acesso...",
       statusTitle: "Entrando no painel",
       statusDescription:
-        "Estamos validando suas credenciais e preparando a sua sessao.",
+        "Estamos validando suas credenciais e preparando a sua sessão.",
     };
   }
 
   if (phase === "redirecting") {
     return {
       buttonLabel: "Abrindo painel...",
-      statusTitle: "Login concluido",
-      statusDescription: "Redirecionando voce para a area interna do painel.",
+      statusTitle: "Login concluído",
+      statusDescription: "Redirecionando você para a área interna do painel.",
     };
   }
 
@@ -136,7 +136,7 @@ export function PainelLoginPage({
 
     const isPanelSeedLogin = normalizedCpf === "22181922845";
     if ((!isValidCpf(normalizedCpf) && !isPanelSeedLogin) || password.length < 1 || password.length > 20) {
-      setError("CPF ou senha invalidos.");
+      setError("CPF ou senha inválidos.");
       return;
     }
 
@@ -166,7 +166,7 @@ export function PainelLoginPage({
         setError(
           payload && !payload.ok
             ? payload.error.message
-            : "Nao foi possivel abrir a sessao do painel agora.",
+            : "Não foi possível abrir a sessão do painel agora.",
         );
         return;
       }
@@ -182,7 +182,7 @@ export function PainelLoginPage({
       });
     } catch (requestError) {
       console.error("painel-login-submit-failed", requestError);
-      setError("Nao foi possivel abrir a sessao do painel agora.");
+      setError("Não foi possível abrir a sessão do painel agora.");
     } finally {
       if (!keepBusy) {
         setPhase("idle");

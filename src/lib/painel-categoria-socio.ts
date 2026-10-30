@@ -102,7 +102,7 @@ async function getPainelCategoriaSocioRaw(id: unknown) {
   if (!Number.isInteger(categoryId) || categoryId <= 0) {
     throw new PainelCategoriaSocioError(
       "invalid_membership_category_id",
-      "Informe uma categoria de socio valida.",
+      "Informe uma categoria de sócio válida.",
       400,
     );
   }
@@ -115,7 +115,7 @@ async function getPainelCategoriaSocioRaw(id: unknown) {
   if (!found) {
     throw new PainelCategoriaSocioError(
       "membership_category_not_found",
-      "Categoria de socio nao encontrada.",
+      "Categoria de sócio não encontrada.",
       404,
     );
   }
@@ -195,7 +195,7 @@ export async function createPainelCategoriaSocio(values: PainelCategoriaSocioFor
   if (!name) {
     throw new PainelCategoriaSocioError(
       "invalid_membership_category_name",
-      "Informe o nome da categoria de socio.",
+      "Informe o nome da categoria de sócio.",
       400,
     );
   }
@@ -203,7 +203,7 @@ export async function createPainelCategoriaSocio(values: PainelCategoriaSocioFor
   if (!Number.isInteger(priceTableId) || priceTableId <= 0) {
     throw new PainelCategoriaSocioError(
       "invalid_membership_category_price_table",
-      "Informe uma tabela de preco valida.",
+      "Informe uma tabela de preço válida.",
       400,
     );
   }
@@ -227,7 +227,7 @@ export async function updatePainelCategoriaSocio(
   if (!Number.isInteger(categoryId) || categoryId <= 0) {
     throw new PainelCategoriaSocioError(
       "invalid_membership_category_id",
-      "Informe uma categoria de socio valida.",
+      "Informe uma categoria de sócio válida.",
       400,
     );
   }
@@ -235,7 +235,7 @@ export async function updatePainelCategoriaSocio(
   if (!name) {
     throw new PainelCategoriaSocioError(
       "invalid_membership_category_name",
-      "Informe o nome da categoria de socio.",
+      "Informe o nome da categoria de sócio.",
       400,
     );
   }
@@ -243,7 +243,7 @@ export async function updatePainelCategoriaSocio(
   if (!Number.isInteger(priceTableId) || priceTableId <= 0) {
     throw new PainelCategoriaSocioError(
       "invalid_membership_category_price_table",
-      "Informe uma tabela de preco valida.",
+      "Informe uma tabela de preço válida.",
       400,
     );
   }
@@ -269,7 +269,7 @@ export async function removePainelCategoriaSocio(input: {
   if (!Number.isInteger(categoryId) || categoryId <= 0) {
     throw new PainelCategoriaSocioError(
       "invalid_membership_category_id",
-      "Informe uma categoria de socio valida.",
+      "Informe uma categoria de sócio válida.",
       400,
     );
   }

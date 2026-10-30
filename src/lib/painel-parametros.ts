@@ -31,13 +31,28 @@ export class PainelParametrosError extends Error {
   }
 }
 
+const messageAccentEntities: Record<string, string> = {
+  aacute: "á", agrave: "à", acirc: "â", atilde: "ã",
+  eacute: "é", ecirc: "ê", iacute: "í",
+  oacute: "ó", ocirc: "ô", otilde: "õ",
+  uacute: "ú", uuml: "ü", ccedil: "ç",
+};
+
+function displayParameterMessage(value: string) {
+  return value.replace(/&([a-z]+);/gi, (entity, name: string) => {
+    if (!Object.hasOwn(messageAccentEntities, name.toLowerCase())) return entity;
+    const accent = messageAccentEntities[name.toLowerCase()];
+    return name[0] === name[0].toUpperCase() ? accent.toUpperCase() : accent;
+  });
+}
+
 function groupLabel(group: string) {
   if (group === "msgper") {
     return "Mensagem Personalizada";
   }
 
   if (group === "segadm") {
-    return "Seguranca Administrativa";
+    return "Segurança Administrativa";
   }
 
   return group;
@@ -71,7 +86,7 @@ export async function listPainelParametros() {
       description: parameter.description,
       input: parameter.input,
       required: parameter.required,
-      value: parameter.value,
+      value: parameter.input === "textarea" ? displayParameterMessage(parameter.value) : parameter.value,
     });
 
     groups.set(parameter.group, existing);
@@ -87,8 +102,19 @@ export async function savePainelParametros(input: {
     cpf?: string | null;
   };
 }) {
+  const current = input.parameters.some((parameter) => parameter.group === "msgper")
+    ? await listOpsAdminParameters()
+    : [];
+
   return updateOpsAdminParameters({
     actor: input.actor,
-    parameters: input.parameters,
+    parameters: input.parameters.map((parameter) => {
+      const original = current.find((item) =>
+        item.group === parameter.group && item.id === parameter.id && item.input === "textarea",
+      );
+      return original && parameter.value === displayParameterMessage(original.value)
+        ? { ...parameter, value: original.value }
+        : parameter;
+    }),
   });
 }

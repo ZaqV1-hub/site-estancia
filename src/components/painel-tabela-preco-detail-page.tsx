@@ -19,7 +19,7 @@ export function PainelTabelaPrecoDetailPage({
           items={[
             { href: "/painel", label: "Home" },
             { href: "/painel/administrativo", label: "Administrativo" },
-            { href: "/painel/tabela-preco", label: "Tabela de Preco" },
+            { href: "/painel/tabela-preco", label: "Tabela de Preço" },
             { label: data.name },
           ]}
         />

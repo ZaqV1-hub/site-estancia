@@ -10,7 +10,7 @@ import {
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Bilheteria | Estancia",
+  title: "Painel - Bilheteria | Estância",
   robots: {
     index: false,
     follow: false,
@@ -64,7 +64,7 @@ export default async function PainelBilheteriaPage({
           "message" in cause &&
           typeof (cause as PainelBilheteriaWorkstationError).message === "string"
             ? (cause as PainelBilheteriaWorkstationError).message
-            : "Nao foi possivel consultar este ingresso agora.";
+            : "Não foi possível consultar este ingresso agora.";
       }
     }
 
@@ -82,7 +82,7 @@ export default async function PainelBilheteriaPage({
         current="overview"
         isManager={session.legacyRoleId === 1}
         title="Bilheteria"
-        description="Posto operacional da bilheteria, com validacao por voucher, consulta por cliente e consulta rapida do historico."
+        description="Posto operacional da bilheteria, com validação por voucher, consulta por cliente e consulta rápida do histórico."
         actorName={session.actorName}
       />
 
@@ -97,7 +97,7 @@ export default async function PainelBilheteriaPage({
         <section className="panel-section p-6">
           <p className="panel-eyebrow">Bilheteria</p>
           <h2 className="mt-2 text-[34px] font-black leading-tight text-[#17351f]">
-            Agenda nao aberta
+            Agenda não aberta
           </h2>
           <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
             A bilheteria so fica ativa quando existe agenda aberta para hoje.

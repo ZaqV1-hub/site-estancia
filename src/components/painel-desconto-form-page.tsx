@@ -120,7 +120,7 @@ export function PainelDescontoFormPage({
         </label>
 
         <label className="block text-sm font-semibold text-[#5a5a5a]">
-          Aplicacao *
+          Aplicação *
           <select
             className="mt-1 w-full max-w-[420px] border border-[#c8c8c8] bg-white px-3 py-2 text-sm text-[#444]"
             defaultValue={initialValues.tipo_aplicacao}

@@ -50,8 +50,8 @@ const parameterDefinitions: OpsAdminParameterDefinition[] = [
   {
     group: "msgper",
     id: "codval",
-    label: "Codigo valido",
-    description: "Mensagem exibida quando um codigo de indicacao valido e aplicado.",
+    label: "Código válido",
+    description: "Mensagem exibida quando um código de indicação válido é aplicado.",
     defaultValue:
       "O c&oacute;digo de indica&ccedil;&atilde;o ##cod## do(a) representante ##rep## foi aplicado",
     input: "textarea",
@@ -60,8 +60,8 @@ const parameterDefinitions: OpsAdminParameterDefinition[] = [
   {
     group: "msgper",
     id: "codven",
-    label: "Codigo vencido",
-    description: "Mensagem exibida quando um codigo de indicacao esta vencido.",
+    label: "Código vencido",
+    description: "Mensagem exibida quando um código de indicação está vencido.",
     defaultValue: "O c&oacute;digo de indica&ccedil;&atilde;o ##cod## est&aacute; vencido",
     input: "textarea",
     required: true,
@@ -69,8 +69,8 @@ const parameterDefinitions: OpsAdminParameterDefinition[] = [
   {
     group: "msgper",
     id: "codine",
-    label: "Codigo inexistente",
-    description: "Mensagem exibida quando um codigo de indicacao nao e localizado.",
+    label: "Código inexistente",
+    description: "Mensagem exibida quando um código de indicação não é localizado.",
     defaultValue: "N&atilde;o localizamos o c&oacute;digo de indica&ccedil;&atilde;o ##cod##",
     input: "textarea",
     required: true,
@@ -97,7 +97,7 @@ export function asOpsAdminParametersError(error: unknown) {
 
   return new OpsAdminParametersError(
     "admin_parameters_unavailable",
-    "Nao foi possivel atualizar os parametros administrativos agora.",
+    "Não foi possível atualizar os parâmetros administrativos agora.",
     502,
   );
 }
@@ -126,7 +126,7 @@ function normalizeParameterUpdate(update: OpsAdminParameterUpdate) {
   if (!definition) {
     throw new OpsAdminParametersError(
       "invalid_admin_parameter",
-      "Informe um parametro administrativo valido.",
+      "Informe um parâmetro administrativo válido.",
       400,
     );
   }
@@ -136,7 +136,7 @@ function normalizeParameterUpdate(update: OpsAdminParameterUpdate) {
   if (definition.required && !value) {
     throw new OpsAdminParametersError(
       "invalid_admin_parameter",
-      "Parametro obrigatorio sem valor.",
+      "Parâmetro obrigatório sem valor.",
       400,
     );
   }
@@ -200,7 +200,7 @@ export async function updateOpsAdminParameters(
   if (updates.length === 0) {
     throw new OpsAdminParametersError(
       "invalid_admin_parameters_payload",
-      "Informe ao menos um parametro para atualizar.",
+      "Informe ao menos um parâmetro para atualizar.",
       400,
     );
   }
@@ -228,10 +228,10 @@ export async function updateOpsAdminParameters(
     const auditLogId = await registerOpsAuditLog(client, {
       origem: "ops-admin",
       acao: "parameters_update",
-      descricao: "Parametros administrativos atualizados no BFF.",
+      descricao: "Parâmetros administrativos atualizados no BFF.",
       motivo:
         normalizeText(input.reason) ||
-        "Atualizacao operacional de parametros administrativos no BFF",
+        "Atualização operacional de parâmetros administrativos no BFF",
       usuarioNome: normalizeActorName(input.actor),
       detalhes: {
         parameters: normalizedUpdates.map((update) => ({
@@ -261,7 +261,7 @@ export async function updateOpsAdminParameters(
       action: "update" as const,
       parameters,
       auditLogId,
-      message: "Parametros atualizados com sucesso.",
+      message: "Parâmetros atualizados com sucesso.",
     };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);

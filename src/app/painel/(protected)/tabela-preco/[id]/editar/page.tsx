@@ -4,7 +4,7 @@ import { getPainelTabelaPreco } from "@/lib/painel-tabela-preco";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Editar Tabela de Preco | Estancia",
+  title: "Painel - Editar Tabela de Preço | Estância",
   robots: {
     index: false,
     follow: false,

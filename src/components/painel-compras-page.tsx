@@ -1,4 +1,3 @@
-import { Buffer } from "node:buffer";
 import Link from "next/link";
 import type { PainelPurchaseListResult } from "@/lib/painel-compras";
 
@@ -16,22 +15,22 @@ const typeOptions = [
 
 const purchaseStatusOptions = [
   { value: "pend", label: "Em processamento" },
-  { value: "conc", label: "Concluida" },
+  { value: "conc", label: "Concluída" },
   { value: "canc", label: "Cancelada" },
 ];
 
 const gatewayPaymentMethodOptions = [
-  { value: "1", label: "Cartao de credito" },
+  { value: "1", label: "Cartão de crédito" },
   { value: "2", label: "Boleto" },
   { value: "11", label: "Pix" },
 ];
 
 const ticketPaymentMethodOptions = [
   { value: "dinhe", label: "Dinheiro" },
-  { value: "debit", label: "Debito" },
-  { value: "credi", label: "Credito" },
+  { value: "debit", label: "Débito" },
+  { value: "credi", label: "Crédito" },
   { value: "chequ", label: "Cheque" },
-  { value: "tranb", label: "Trans. Bancaria" },
+  { value: "tranb", label: "Trans. Bancária" },
   { value: "corte", label: "Cortesia" },
   { value: "pix", label: "PIX" },
 ];
@@ -49,14 +48,14 @@ const paymentMethodOptions = [
 
 const gatewayStatusOptions = [
   { value: "1", label: "Aguardando pagamento" },
-  { value: "2", label: "Em analise" },
+  { value: "2", label: "Em análise" },
   { value: "3", label: "Paga" },
-  { value: "4", label: "Disponivel" },
+  { value: "4", label: "Disponível" },
   { value: "5", label: "Em disputa" },
   { value: "6", label: "Devolvida" },
   { value: "7", label: "Cancelada" },
   { value: "8", label: "Chargeback debitado" },
-  { value: "9", label: "Em contestacao" },
+  { value: "9", label: "Em contestação" },
 ];
 
 function buildComprasHref(
@@ -170,10 +169,7 @@ function toDateInputValue(value: string | null) {
 }
 
 function buildLegacyUserHref(cpf: string) {
-  return `/ingresso/painel/usuario-site/detalhe/cpf/${Buffer.from(
-    cpf,
-    "utf8",
-  ).toString("base64")}`;
+  return `/painel/usuario-site/${encodeURIComponent(cpf)}`;
 }
 
 export function PainelComprasPage({
@@ -290,7 +286,7 @@ export function PainelComprasPage({
               <thead><tr>
                 <th scope="col">Compra</th><th scope="col">Comprador</th><th scope="col">Data da visita</th>
                 <th scope="col">Origem</th><th className="calendar-number" scope="col">Pessoas</th>
-                <th className="calendar-number" scope="col">Valor</th><th scope="col">Situação</th>
+                <th className="calendar-number" scope="col">Adicionais</th><th className="calendar-number" scope="col">Valor</th><th scope="col">Situação</th>
               </tr></thead>
               <tbody>{result.items.map((item) => (
                 <tr key={item.purchaseId}>
@@ -304,7 +300,7 @@ export function PainelComprasPage({
                   <td className="calendar-nowrap">{item.visitDate ?? "—"}</td>
                   <td><span className="calendar-list-origin">{item.originLabel ?? item.typeLabel}</span></td>
                   <td className="calendar-number">{item.people ?? "—"}</td>
-                  <td className="calendar-number calendar-nowrap">R$ {item.visitValue ?? item.totalValue}
+                  <td className="calendar-number">{item.addons ?? 0}</td><td className="calendar-number calendar-nowrap">R$ {item.visitValue ?? item.totalValue}
                     {item.visitValue && item.visitValue !== item.totalValue && <small>Total da compra: R$ {item.totalValue}</small>}
                   </td>
                   <td><span className={`calendar-list-status calendar-list-status-${item.voucherStatus ?? "inactive"}`}>{item.voucherStatusLabel ?? item.statusLabel}</span></td>
@@ -320,13 +316,13 @@ export function PainelComprasPage({
             <small className="calendar-muted">Operador: {actorName || actorCpf || "Sessão operacional"}</small>
           </div>
           <div className="calendar-list-actions">
-            <Link className="calendar-button-secondary" href={exportHref}>Exportar</Link>
+            <Link className="calendar-button-secondary" href={exportHref}>Exportar Excel</Link><Link className="calendar-button-secondary" target="_blank" href={`${exportHref}${exportHref.includes("?") ? "&" : "?"}format=pdf`}>Exportar PDF</Link>
             {filtersActive && <Link className="calendar-button-secondary" href={listHref}>Limpar filtros</Link>}
             {previousHref && <Link className="calendar-button-secondary" href={previousHref}>Página anterior</Link>}
             {nextHref && <Link className="calendar-button-secondary" href={nextHref}>Próxima página</Link>}
           </div>
         </footer>
-        {canRefreshPurchases && <p className="calendar-muted">Atualizacao manual em fase futura</p>}
+        {canRefreshPurchases && <p className="calendar-muted">Atualização manual em fase futura</p>}
       </div>
     </section>
   );

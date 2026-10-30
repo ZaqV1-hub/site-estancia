@@ -23,7 +23,7 @@ function errorResponse(code: string, message: string, status: number) {
 function painelAuthRequiredResponse() {
   return errorResponse(
     "painel_auth_required",
-    "Sessao autenticada do painel obrigatoria para esta rota.",
+    "Sessão autenticada do painel obrigatória para esta rota.",
     401,
   );
 }
@@ -46,7 +46,7 @@ export async function authorizePainelApiAccess(
       ok: false as const,
       response: errorResponse(
         "painel_forbidden",
-        "Sessao do painel sem permissao para este modulo.",
+        "Sessão do painel sem permissão para este módulo.",
         403,
       ),
     };
@@ -63,7 +63,7 @@ export async function authorizePainelApiAccess(
       ok: false as const,
       response: errorResponse(
         "painel_forbidden",
-        "Sessao do painel sem permissao para este modulo.",
+        "Sessão do painel sem permissão para este módulo.",
         403,
       ),
     };

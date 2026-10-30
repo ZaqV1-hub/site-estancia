@@ -48,7 +48,7 @@ describe("validatePainelSocioActivation", () => {
         endDate: "2026-05-10",
         today: "2026-05-10",
       }),
-    ).toThrow(/vigencia invalida/i);
+    ).toThrow(/vigência inválida/i);
   });
 });
 

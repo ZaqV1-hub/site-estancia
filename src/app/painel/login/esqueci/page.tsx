@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PainelForgotPasswordPage } from "@/components/painel-password-reset-pages";
 
 export const metadata: Metadata = {
-  title: "Painel - Esqueci Minha Senha | Estancia",
+  title: "Painel - Esqueci Minha Senha | Estância",
   robots: {
     index: false,
     follow: false,

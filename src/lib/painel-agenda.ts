@@ -213,7 +213,7 @@ function assertIsoDate(value: string, fieldName: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     throw new PainelAgendaError(
       "agenda_invalid_date",
-      `Informe ${fieldName} em formato valido.`,
+      `Informe ${fieldName} em formato válido.`,
       400,
     );
   }
@@ -228,7 +228,7 @@ function assertIsoDate(value: string, fieldName: string) {
   ) {
     throw new PainelAgendaError(
       "agenda_invalid_date",
-      `Informe ${fieldName} em formato valido.`,
+      `Informe ${fieldName} em formato válido.`,
       400,
     );
   }
@@ -486,7 +486,7 @@ function validateMutationInput(input: PainelAgendaMutationInput) {
   if (!painelAgendaTypeLabels[input.type]) {
     throw new PainelAgendaError(
       "agenda_invalid_type",
-      "Selecione um tipo de agenda valido.",
+      "Selecione um tipo de agenda válido.",
       400,
     );
   }
@@ -494,7 +494,7 @@ function validateMutationInput(input: PainelAgendaMutationInput) {
   if (!painelAgendaStatusLabels[input.status]) {
     throw new PainelAgendaError(
       "agenda_invalid_status",
-      "Selecione um status de agenda valido.",
+      "Selecione um status de agenda válido.",
       400,
     );
   }
@@ -708,7 +708,7 @@ export async function upsertPainelAgendaRange(input: PainelAgendaMutationInput) 
       acao: "upsert_range",
       descricao: `Agenda atualizada de ${formatPainelAgendaDateLabel(
         normalized.startDate,
-      )} ate ${formatPainelAgendaDateLabel(normalized.endDate)}.`,
+      )} até ${formatPainelAgendaDateLabel(normalized.endDate)}.`,
       motivo: normalized.reason,
       usuarioNome:
         normalized.actor.name || normalized.actor.cpf || "Painel agenda",
@@ -806,7 +806,7 @@ export async function deletePainelAgenda(
     if (!agenda) {
       throw new PainelAgendaError(
         "agenda_not_found",
-        "Agenda nao encontrada.",
+        "Agenda não encontrada.",
         404,
       );
     }

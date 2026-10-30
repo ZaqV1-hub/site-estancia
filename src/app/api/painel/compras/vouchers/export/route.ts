@@ -1,8 +1,8 @@
+import { exportPainelTable } from "@/lib/painel-table-export";
 import { NextResponse } from "next/server";
 import {
   listPainelPurchaseVouchers,
   mapPainelPurchaseVoucherListExportRows,
-  renderPainelPurchaseListExportTable,
 } from "@/lib/painel-compras";
 import { requirePainelApiAccess } from "@/lib/painel-api-auth";
 
@@ -24,15 +24,7 @@ export async function GET(request: Request) {
       allRows: true,
     });
     const rows = mapPainelPurchaseVoucherListExportRows(result);
-    const body = renderPainelPurchaseListExportTable(rows, "Lista de vouchers");
-
-    return new NextResponse(body, {
-      status: 200,
-      headers: {
-        "content-type": "application/vnd.ms-excel; charset=utf-8",
-        "content-disposition": 'attachment; filename="compras-vouchers.xls"',
-      },
-    });
+    return await exportPainelTable(rows, "Ingressos e adicionais", "ingressos-adicionais", url.searchParams.get("format"));
   } catch (error) {
     console.error("painel-compras-vouchers-export-failed", error);
 
@@ -41,7 +33,7 @@ export async function GET(request: Request) {
         ok: false,
         error: {
           code: "painel_compras_vouchers_export_failed",
-          message: "Nao foi possivel exportar os vouchers.",
+          message: "Não foi possível exportar os vouchers.",
         },
       },
       { status: 500 },

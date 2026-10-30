@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         ok: false,
         error: {
           code: "painel_compras_vouchers_list_failed",
-          message: "Nao foi possivel carregar a lista de vouchers.",
+          message: "Não foi possível carregar a lista de vouchers.",
         },
       },
       { status: 500 },

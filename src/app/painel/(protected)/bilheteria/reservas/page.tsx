@@ -9,7 +9,7 @@ import { listPainelBilheteriaHistory } from "@/lib/painel-bilheteria";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
-  title: "Painel - Reservas | Estancia",
+  title: "Painel - Reservas | Estância",
   robots: {
     index: false,
     follow: false,

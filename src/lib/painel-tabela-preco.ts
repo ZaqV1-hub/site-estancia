@@ -128,7 +128,7 @@ async function getPainelTabelaPrecoRaw(id: unknown) {
   if (!Number.isInteger(tableId) || tableId <= 0) {
     throw new PainelTabelaPrecoError(
       "invalid_price_table_id",
-      "Informe uma tabela de preco valida.",
+      "Informe uma tabela de preço válida.",
       400,
     );
   }
@@ -141,7 +141,7 @@ async function getPainelTabelaPrecoRaw(id: unknown) {
   if (!found) {
     throw new PainelTabelaPrecoError(
       "price_table_not_found",
-      "Tabela de preco nao encontrada.",
+      "Tabela de preço não encontrada.",
       404,
     );
   }
@@ -200,7 +200,7 @@ export async function createPainelTabelaPreco(values: PainelTabelaPrecoFormValue
   if (!name) {
     throw new PainelTabelaPrecoError(
       "invalid_price_table_name",
-      "Informe o nome da tabela de preco.",
+      "Informe o nome da tabela de preço.",
       400,
     );
   }
@@ -227,7 +227,7 @@ export async function updatePainelTabelaPreco(
   if (!Number.isInteger(tableId) || tableId <= 0) {
     throw new PainelTabelaPrecoError(
       "invalid_price_table_id",
-      "Informe uma tabela de preco valida.",
+      "Informe uma tabela de preço válida.",
       400,
     );
   }
@@ -235,7 +235,7 @@ export async function updatePainelTabelaPreco(
   if (!name) {
     throw new PainelTabelaPrecoError(
       "invalid_price_table_name",
-      "Informe o nome da tabela de preco.",
+      "Informe o nome da tabela de preço.",
       400,
     );
   }
@@ -284,7 +284,7 @@ export async function removePainelTabelaPreco(input: {
   if (!Number.isInteger(tableId) || tableId <= 0) {
     throw new PainelTabelaPrecoError(
       "invalid_price_table_id",
-      "Informe uma tabela de preco valida.",
+      "Informe uma tabela de preço válida.",
       400,
     );
   }

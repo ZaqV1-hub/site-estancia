@@ -94,7 +94,7 @@ export function PainelCodIndicaPage({ data }: Props) {
   }
 
   async function handleRemove(codigo: string) {
-    if (!window.confirm(`Excluir o codigo ${codigo}?`)) {
+    if (!window.confirm(`Excluir o código ${codigo}?`)) {
       return;
     }
 
@@ -112,18 +112,18 @@ export function PainelCodIndicaPage({ data }: Props) {
         | null;
 
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error?.message || "Falha ao excluir o codigo.");
+        throw new Error(payload?.error?.message || "Falha ao excluir o código.");
       }
 
       setFeedback({
         tone: "success",
-        message: payload.data?.message || "Codigo removido com sucesso.",
+        message: payload.data?.message || "Código removido com sucesso.",
       });
       startTransition(() => router.refresh());
     } catch (error) {
       setFeedback({
         tone: "error",
-        message: error instanceof Error ? error.message : "Falha ao excluir o codigo.",
+        message: error instanceof Error ? error.message : "Falha ao excluir o código.",
       });
     } finally {
       setPendingCode(null);
@@ -161,7 +161,7 @@ export function PainelCodIndicaPage({ data }: Props) {
             </p>
           ) : (
             <p className="mb-4 text-[17px] text-[#5a5a5a]">
-              Nenhum codigo de indicacao encontrado.
+              Nenhum código de indicação encontrado.
             </p>
           )}
 
@@ -171,14 +171,14 @@ export function PainelCodIndicaPage({ data }: Props) {
                 <thead className="bg-[#5f84a3] text-left text-white">
                   <tr>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">
-                      Codigo de Indicacao
+                      Código de Indicação
                     </th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">
                       Representante
                     </th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Validade</th>
                     <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Status</th>
-                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Acoes</th>
+                    <th className="border border-[#6f8ea8] px-4 py-3 font-normal">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -257,7 +257,7 @@ export function PainelCodIndicaPage({ data }: Props) {
                   className="rounded-full border border-[#c9d8e3] px-4 py-2 text-sm font-semibold text-[#205a7f]"
                   href={previousHref}
                 >
-                  Pagina anterior
+                  Página anterior
                 </Link>
               ) : null}
               {nextHref ? (
@@ -265,7 +265,7 @@ export function PainelCodIndicaPage({ data }: Props) {
                   className="rounded-full border border-[#c9d8e3] px-4 py-2 text-sm font-semibold text-[#205a7f]"
                   href={nextHref}
                 >
-                  Proxima pagina
+                  Próxima página
                 </Link>
               ) : null}
             </div>
@@ -277,12 +277,12 @@ export function PainelCodIndicaPage({ data }: Props) {
         <ul className="space-y-3 text-[15px]">
           <li>
             <Link className="text-[#1d68a2] underline" href="/painel/cod-indica">
-              Lista de codigos
+              Lista de códigos
             </Link>
           </li>
           <li>
             <Link className="text-[#1d68a2] underline" href="/painel/cod-indica/cadastro">
-              Adicionar codigo
+              Adicionar código
             </Link>
           </li>
           <li>
@@ -296,7 +296,7 @@ export function PainelCodIndicaPage({ data }: Props) {
           <h2 className="text-[22px] text-[#666666]">Filtrar</h2>
           <form action="/painel/cod-indica" className="mt-4 space-y-4" method="get">
             <label className="block text-[15px] font-semibold text-[#5a5a5a]">
-              Codigo
+              Código
               <input
                 className="mt-1 w-full border border-[#d7d7d7] px-3 py-2 text-sm text-[#444]"
                 defaultValue={data.filters.codigo}
@@ -323,7 +323,7 @@ export function PainelCodIndicaPage({ data }: Props) {
               />
             </label>
             <label className="block text-[15px] font-semibold text-[#5a5a5a]">
-              Validade ate
+              Validade até
               <input
                 className="mt-1 w-full border border-[#d7d7d7] px-3 py-2 text-sm text-[#444]"
                 defaultValue={data.filters.validadeAte}

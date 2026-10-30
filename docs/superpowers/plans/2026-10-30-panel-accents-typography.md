@@ -1,44 +1,45 @@
-# Panel accents and typography implementation plan
+# Administrative panel accents and typography
 
-> **For agentic workers:** Use the applicable Superpowers diagnostic, parallel-work and independent review workflows. User authorized execution, branch synchronization and production publication; preserve the selected develop checkout.
+Date: 2026-10-30. Status: complete.
 
-**Goal:** Correct Portuguese accents and make administrative typography consistent with the purchase screen, preserving Isaac production changes.
-**Architecture:** Recover the exact source snapshot from the VM because Isaac changes are not on origin, then edit presentation strings and shared scoped panel CSS. Preserve identifiers/URLs/enums/SQL/auth/data/exports. No redesign, schema or new dependencies beyond the existing Isaac snapshot.
-**Stack:** Next16.4.3/React19/Rubik/Postgres/Windows standalone/IIS.
-**Baseline:** f47132de68c9f4fbbada484c7969b63d0d8ad8af; clean local develop at start. Main/develop pulled fast-forward and already current.
+## Objective and scope
 
-## T1 — synchronize and protect Isaac work
-- [x] Inspect origin branches and VM state read-only. Origin unchanged; VM has16tracked edits plus14newsource/assets.
-- [x] Capture complete binary patch and new src/public-brand files privately. Snapshot patch149540bytes sha256868dbb60ae78d6ebc0f1b9e31f08a98fe6a580ffa3812237ca57b7becc11dc04. Do not include.next backups, secrets or uploads.
-- [x] Apply exact snapshot locally after git apply --check. Keep VM source untouched until final deployment safety snapshot/reconciliation. VM mainf47132d, Running, build_yg9NOYfLzVzben2pVAW5,Next16.4.3.
-- [x] Install locked dependencies added by Isaac; inspect baseline tests/build for actual compatibility regressions without undoing his feature changes.
+Correct Portuguese accents and align administrative typography with Purchases. Synchronize develop and main, preserve Isaac's production changes, validate locally and publish to the existing Windows/IIS production site. No redesign, schema changes or new dependencies beyond Isaac's existing ExcelJS dependency.
 
-## T2 — visible copy only
-- [x] Worker1 owns src/components/painel*.tsx,school-trips-panel.tsx and corresponding presentation tests; root owns CSS. Correct visible labels/placeholders/feedback/accessibility text in Portuguese.
-- [x] Worker2 owns panel/ops lib display labels/errors and corresponding tests, plus panel route metadata/visible titles. Never alter machine strings/keys/routes/status codes/data matching.
-- [x] Review every diff; trivial spelling edits need no text-mirroring tests. Update existing assertions only where visible output changed.
+Baseline: `f47132de68c9f4fbbada484c7969b63d0d8ad8af`.
+Application release: `ebc96ce378e9d9306df2683e6f374ea343c12e08`.
+Production build: `8vHcEV5rUMHpjyEJ60ehO`, Next.js 16.4.3.
 
-## T3 — typography diagnosis and smallest fix
-- [x] Compare computed family/weight/size/spacing for purchase and admin headings/body/forms/tables. Inspect scoped CSS, global styles and local component classes before editing.
-- [x] Make only shared scoped panel changes or minimal legacy heading class adjustments required by proof. Preserve sizes where hierarchy differs intentionally, mono values where operationally needed, print/public site design and accessibility.
-- [x] Verify representative users/site-users/parameters/clients/conventions/discounts/complimentary/ticket-office pages alongside purchase in desktop/mobile clear/dark, without mutating production business data.
+## Completed plan
 
-## T4 — proof and publication
-- [x] Targeted checks and full suite/lint/build/types. Fix only actual integration regressions found in the imported snapshot; preserve Isaac B2B/calendar/export behavior.
-- [x] Independent read-only final revision review. Browser text/font samples and no page overflow; exports remain valid and protected.
-- [x] Fresh private VM source/database/availability/build backup. Recheck Isaac snapshot hashes immediately before deployment; stop if new edits appeared.
-- [ ] Commit imported source and polish; push codex/develop, verify SHA, promote main, return local develop.
-- [ ] Reconcile VM only against already-backed-up unchanged snapshot, fast-forward exact release, deploy existing rollback script. Preserve all old backups/untracked generated data.
-- [ ] Confirm runtime16.4.3, health/service/version, HTTPS administrative copy/font/exports read-only. End short signed verification session and verify protected401.
+- [x] Pull main and develop with fast-forward only. Both remote branches were already current; Isaac's changes existed only as uncommitted files on the VM.
+- [x] Capture and import the complete VM binary patch, 16 tracked changes and 14 new source/font files. Preserve generated build backups, environment, data and uploads. Recheck every captured source hash immediately before reconciliation.
+- [x] Correct visible component text, metadata and API messages. Preserve routes, enums, database values, SQL, CSV import headers and authorization contracts. Display the legacy Funcionario role as Funcionário without changing the role enum.
+- [x] Decode named Portuguese accent entities in parameter textareas for display. Preserve password values, placeholders and untouched stored messages; keep existing save validation and transactions.
+- [x] Diagnose typography in the browser. Rubik was already shared; legacy sizes and weights differed. Scope the correction to panel screen styles: primary headings 24/700, table headers 11/700, table body 14, labels 13.5/600 and controls 14.5/400. Preserve print styles and intentional monospace values.
+- [x] Correct the observed dark calendar contrast issue caused by Isaac's light backgrounds combined with dark-theme text. Preserve calendar colors and behavior in light mode.
+- [x] Reconcile existing tests with Isaac's deployed export/UI contracts. Open real XLSX files in tests rather than mocking the obsolete HTML exporter.
+- [x] Complete local checks and independent read-only review. Review the imported source, human-only string changes, parameter adapter, CSS and test deltas; resolve the relevant findings.
+- [x] Back up VM sources, environment, availability and the production database privately. Verify the database archive list and SHA-256 before publication.
+- [x] Push develop, verify its release SHA, then fast-forward and push main. Return the local checkout to develop.
+- [x] Reconcile only unchanged, backed-up VM source paths and fast-forward the exact release. Deploy through the existing Windows rollback script.
+- [x] Verify production runtime, public/protected routes, administrative typography, accents, exports and B2B reads. End the short verification session and confirm protected access returns 401.
 
-## Continuity
-Root owns Git/package/lock/build/ports/CSS/DB/VM and final integration. Workers have disjoint files and no Git/build/server/DB/browser/VM authority. No existing Graphify graph expected; use source contracts directly. Production credentials from prior temporary account expired; do not reactivate or reset it without request. Testing local DB only, no SMTP/payments. Publication remains authorized.
+## Verification evidence
 
-## Verified integration — before publication
-- Locked npm ci passed. Imported Isaac export/UI contracts reconciled in existing tests (real XLSX is opened, not mocked HTML). No operational identifiers/enums/import column names changed.
-- 258 test files / 808 tests passed; focused real XLSX2/2 and APIs12/12. Fresh production build and explicit TypeScript passed. ESLint0errors/10existingwarnings; git diff --check clean.
-- 15 isolated local calendar HTTP/SQL scenarios passed;5purchase summary fixtures generated valid real PDFs, parsed1/2/5pages for dayuse/school/24school and1page for pending/cancelled. Real XLSX and printable HTML exports plus protected401 and day report verified.
-- Real compiled browser (no injected style):10desktop and10mobile pages, Rubik, primary titles24/700, table14, headers11/700, labels13.5/600, controls14.5/400. Width1440/1440 and390/390, no replacement characters. Params legacy named accent entities displayed correctly; existing values unchanged by read.
-- Legacy Funcionario role enum preserved, sidebar display Funcionário. Additional minimal dark calendar background correction required by observed Isaac light-background/dark-ink mismatch; compiled contrast11.88:1, no horizontal overflow.
-- External B2B connection intentionally absent locally; unavailable-state tested. Production B2B read verification remains required. No real payments or SMTP sent.
-- Private VM source/env/availability snapshot backed up and exact16tracked+14newfiles reverified unchanged, original build preserved for deployment script rollback. Availability SHA256e6f49cba61a65823e328c70d7d26a1a557b4092c1906ce8bcc904ef3e1e0cdc4. DB archive207909bytes, pg_restore list verified, SHA2561670132ceec30c127fa364a1a2b7fe66b171ef2b83cbbc4ed072cd0feedefd7b. Exact snapshot recheck repeats immediately before reconciliation.
+- 258 test files and 808 tests passed. Focused export/API checks passed. Fresh production build and explicit TypeScript check passed. ESLint reported zero errors and 10 existing warnings. Git whitespace checks passed, including the imported files.
+- Fifteen isolated local calendar HTTP/SQL scenarios passed. Five purchase-summary fixtures produced valid PDFs, including day-use, school, large school, pending and cancelled purchases. Real XLSX, printable HTML reports and unauthenticated export rejection passed.
+- Ten desktop and ten mobile local pages were checked against the compiled build, without injected CSS. Rubik and the intended sizes/weights were confirmed. Document widths matched 1440 and 390 pixels; no replacement characters or literal accent entities remained in the checked UI. Dark calendar text contrast measured 11.88:1.
+- Production passed 35 read-only HTTP checks: public pages, 11 administrative pages, unauthenticated 401 responses, matching calendar/day/list totals, day reports, purchase/voucher XLSX and printable reports, used-voucher details and real purchase-summary PDFs.
+- The production B2B connection is available. School trip 27/18, participant filters, its 24-row Excel export and printable report passed. B2B was intentionally unavailable in the isolated local environment; its unavailable state was verified there.
+- HTTPS browser checks confirmed administrative accents, parameter Unicode, Rubik and the purchase typography scale on desktop and mobile. No document overflow was observed. Dark calendar backgrounds and gray used-voucher cells were confirmed. No console errors appeared on the final detail page.
+- The service is Running, tracked VM sources are clean, availability is byte-identical to the pre-reconciliation snapshot and the report font matches its standalone copy.
+- Logout returned 200, subsequent protected calendar access returned 401 and the browser session cookie was removed.
+
+Private evidence is in `.local/panel-polish-20261030/`. No secrets, database archives or production source snapshots were added to Git.
+
+## Deployment notes and remaining limits
+
+The first remote wrapper stopped on an npm deprecation warning because it piped native stderr through a PowerShell caller using Stop. Confirmed that no deploy process remained, restored the previous build and verified HTTP 200. The retry used Start-Process with separate OS-level log files and completed successfully. Windows compilation took 5.3 minutes. An OEM log-decoding error was handled by reading the successful completion log safely and independently checking the runtime; it did not trigger another deployment.
+
+The previous build remains available as `.next-deploy-backup-20261030124109`. No production business writes, real payments or email sends were performed by verification. The final follow-up commit changes only this record; application sources remain the tested release above. The local standalone server remains available at `http://127.0.0.1:3002` (PID 33195, session 1512); no further background work is claimed.

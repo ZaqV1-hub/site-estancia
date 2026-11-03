@@ -20,11 +20,18 @@ const detail: PainelPurchaseDetail = {
   userName: "OPERADOR", referralCode: null, gatewayPaymentId: "pay-551", gatewayStatusCode: "3",
   gatewayStatusLabel: "Paga", vouchers: [passport, addon, { ...addon, voucherId: 9003, voucherNumber: "ABC-125" }],
 };
-function render(value = detail) {
-  return renderToStaticMarkup(<PainelCompraDetailPage detail={value} actorName="WAGNER" actorCpf="00000000191" canManageHistory />);
+function render(value = detail, canValidate = true) {
+  return renderToStaticMarkup(<PainelCompraDetailPage detail={value} actorName="WAGNER" actorCpf="00000000191" canManageHistory canValidate={canValidate} />);
 }
 
 describe("PainelCompraDetailPage", () => {
+  it("offers validation for the purchase's unused tickets only to authorized operators", () => {
+    expect(render()).toContain("Validar todos os ingressos");
+    expect(render(detail, false)).not.toContain("Validar todos os ingressos");
+    expect(render({ ...detail, vouchers: [addon, { ...passport, used: "s" }] }))
+      .toMatch(/<button[^>]*disabled=""[^>]*>Validar todos os ingressos/);
+  });
+
   it("resume seis campos operacionais e mantém metadados e PDF no financeiro abaixo", () => {
     const html = render();
     const overview = html.match(/<dl[^>]*>(.*?)<\/dl>/)?.[1] ?? "";

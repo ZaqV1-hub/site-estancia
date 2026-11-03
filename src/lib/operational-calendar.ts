@@ -76,6 +76,7 @@ export function buildCalendarPurchases(rows: CalendarVoucherRow[], products: B2c
     if (!vouchers.length) continue;
     const originalDate = vouchers.find((voucher) => voucher.originalDate)?.originalDate ?? null;
     purchases.push({ id, customerId: first.cpf ?? "", customerName: first.nmusuario ?? "Comprador", email: first.email,
+      type: first.tpcompra,
       origin: first.tpcompra === "ponli" ? "site" : "bilheteria",
       status: vouchers.every((voucher) => voucher.used) ? "Utilizado" : "Disponível",
       people: vouchers.filter((voucher) => voucher.kind === "passport").length,

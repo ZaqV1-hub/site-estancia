@@ -21,7 +21,7 @@ export type CalendarVoucher = {
 };
 export type CalendarPurchase = {
   id: number; customerId: string; customerName: string; email: string | null;
-  origin: "site" | "bilheteria"; status: string; people: number; addons: number;
+  type?: string; origin: "site" | "bilheteria"; status: string; people: number; addons: number;
   valueCents: number; originalDate: string | null; vouchers: CalendarVoucher[];
 };
 export type CalendarBar = { title: string; quantity: number };

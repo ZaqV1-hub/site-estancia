@@ -11,6 +11,7 @@ type PainelCompraDetailPageProps = {
   actorName: string | null;
   actorCpf: string | null;
   canManageHistory: boolean;
+  canValidate?: boolean;
 };
 
 type PurchaseItemSummary = {
@@ -81,8 +82,11 @@ function summarizePurchaseItems(vouchers: PainelPurchaseDetail["vouchers"]) {
   return Array.from(grouped.values());
 }
 
-export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageHistory }: PainelCompraDetailPageProps) {
+export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageHistory, canValidate }: PainelCompraDetailPageProps) {
   const passports = detail.vouchers.filter(isPassport);
+  const validatableTicketIds = detail.status === "conc" && (detail.type === "ponli" || detail.type === "reser")
+    ? passports.filter((voucher) => voucher.used === "n").map((voucher) => voucher.voucherId)
+    : [];
   const addons = detail.vouchers.filter((voucher) => !isPassport(voucher));
   const items = summarizePurchaseItems(addons);
   const hasSchoolData = detail.vouchers.some((voucher) => voucher.schoolName || voucher.className || voucher.periodName || voucher.voucherType === "escol");
@@ -184,7 +188,7 @@ export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageH
           {detail.gatewayPaymentId ? <><div><dt>ID Pagamento</dt><dd>{detail.gatewayPaymentId}</dd></div><div><dt>Status do gateway</dt><dd>{detail.gatewayStatusCode ? `Cielo ${detail.gatewayStatusCode} - ${detail.gatewayStatusLabel}` : "-"}</dd></div></> : null}
         </dl>
       </div>
-      <PainelCompraDetailActions actorCpf={actorCpf} actorName={actorName} canManageHistory={canManageHistory} purchaseId={detail.purchaseId} voucherIds={detail.vouchers.map((voucher) => voucher.voucherId)} />
+      <PainelCompraDetailActions actorCpf={actorCpf} actorName={actorName} canManageHistory={canManageHistory} validatableTicketIds={canValidate ? validatableTicketIds : undefined} purchaseId={detail.purchaseId} voucherIds={detail.vouchers.map((voucher) => voucher.voucherId)} />
     </div>
   </section>;
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { SchoolTripsPanel } from "@/components/school-trips-panel";
+import { ValidateTicketsButton } from "@/components/validate-tickets-button";
 import { ReportPrintButton } from "@/components/report-print-button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -16,6 +17,14 @@ export function movableCalendarVoucherIds(purchases: CalendarPurchase[], selecte
   return purchases.filter((purchase) => selectedIds.includes(purchase.id)).flatMap((purchase) => purchase.vouchers.filter((voucher) => !voucher.used && !voucher.invalid).map((voucher) => voucher.id));
 }
 
+export function validatableCalendarTicketIds(purchases: CalendarPurchase[], selectedIds: number[]) {
+  return purchases
+    .filter((purchase) => selectedIds.includes(purchase.id) && (purchase.type === "ponli" || purchase.type === "reser"))
+    .flatMap((purchase) => purchase.vouchers
+      .filter((voucher) => voucher.kind === "passport" && !voucher.used && !voucher.invalid)
+      .map((voucher) => voucher.id));
+}
+
 function CalendarBars({ title, caption, items }: { title: string; caption: string; items: CalendarBar[] }) {
   const sold = items.filter((item) => item.quantity > 0);
   const maximum = Math.max(1, ...sold.map((item) => item.quantity));
@@ -24,7 +33,7 @@ function CalendarBars({ title, caption, items }: { title: string; caption: strin
 
 function shortDate(date: string) { return date.slice(0, 10).split("-").reverse().join("/"); }
 
-export function OperationalDayReport({ data }: { data: CalendarDay }) {
+export function OperationalDayReport({ data, canValidate = false }: { data: CalendarDay; canValidate?: boolean }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [origin, setOrigin] = useState<"all" | "site" | "bilheteria">("all");
@@ -37,6 +46,7 @@ export function OperationalDayReport({ data }: { data: CalendarDay }) {
   const purchases = filterCalendarPurchases(data.purchases, search, origin);
   const movablePurchases = purchases.filter((purchase) => purchase.vouchers.some((voucher) => !voucher.used && !voucher.invalid));
   const voucherIds = movableCalendarVoucherIds(data.purchases, selectedIds);
+  const ticketIds = canValidate ? validatableCalendarTicketIds(data.purchases, selectedIds) : [];
   const selectedAll = movablePurchases.length > 0 && movablePurchases.every((purchase) => selectedIds.includes(purchase.id));
   const sourceTotal = summary.siteCents + summary.boxOfficeCents;
   const sitePercent = sourceTotal ? Math.round(summary.siteCents / sourceTotal * 100) : 0;
@@ -67,7 +77,7 @@ export function OperationalDayReport({ data }: { data: CalendarDay }) {
     <section className="calendar-card">
       <div className="calendar-page-header calendar-purchases-header"><div><p className="calendar-eyebrow">Compras desta data</p><h2>Lista de compras e vouchers</h2></div><Link className="calendar-text-link" href={`/painel/compras?calendar=1&dtagenda%5Bde%5D=${shortDate(data.date)}&dtagenda%5Bate%5D=${shortDate(data.date)}`}>Ver lista de compras e vouchers</Link></div>
       <div className="calendar-purchase-filters"><div className="calendar-filter-row" aria-label="Origem das compras">{([["all", "Todas"], ["site", "Site"], ["bilheteria", "Bilheteria"]] as const).map(([value, label]) => <button key={value} className={`calendar-filter ${origin === value ? "is-active" : ""}`} type="button" aria-pressed={origin === value} onClick={() => setOrigin(value)}>{label}</button>)}</div><input aria-label="Buscar compra ou comprador" className="calendar-input calendar-search" type="search" placeholder="Buscar por ID ou comprador" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-      {!!selectedIds.length && <div className="calendar-selection-bar"><b>{selectedIds.length} compras selecionadas · {voucherIds.length} vouchers disponíveis</b><button className="calendar-button-secondary calendar-button-small calendar-bulk-clear" type="button" onClick={() => setSelectedIds([])}>Limpar seleção</button><button className="calendar-button-secondary calendar-button-small" type="button" disabled={!voucherIds.length} onClick={() => setRescheduling({ purchaseIds: selectedIds, voucherIds })}>Mover ou editar vouchers</button></div>}
+      {!!selectedIds.length && <div className="calendar-selection-bar"><b>{selectedIds.length} compras selecionadas · {voucherIds.length} vouchers disponíveis</b><button className="calendar-button-secondary calendar-button-small calendar-bulk-clear" type="button" onClick={() => setSelectedIds([])}>Limpar seleção</button><button className="calendar-button-secondary calendar-button-small" type="button" disabled={!voucherIds.length} onClick={() => setRescheduling({ purchaseIds: selectedIds, voucherIds })}>Mover ou editar vouchers</button>{canValidate && <ValidateTicketsButton voucherIds={ticketIds} label="Validar ingressos das compras selecionadas" />}</div>}
       <div className="calendar-table-scroll"><table className="calendar-purchases-table"><thead><tr><th><input type="checkbox" aria-label="Selecionar todas as compras disponíveis" checked={selectedAll} disabled={!movablePurchases.length} onChange={(e) => setSelectedIds(e.target.checked ? [...new Set([...selectedIds, ...movablePurchases.map((purchase) => purchase.id)])] : selectedIds.filter((id) => !movablePurchases.some((purchase) => purchase.id === id)))} /></th><th>Compra</th><th>Comprador</th><th>Origem</th><th className="calendar-number">Pessoas</th><th className="calendar-number">Adic.</th><th className="calendar-number">Valor</th><th>Validade</th><th>Situação</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{purchases.map((purchase) => { const validities = [...new Set(purchase.vouchers.map((voucher) => voucher.validUntil).filter(Boolean))] as string[]; const movable = purchase.vouchers.filter((voucher) => !voucher.used && !voucher.invalid); return <tr key={purchase.id} className={selectedIds.includes(purchase.id) ? "is-selected" : undefined}><td><input type="checkbox" aria-label={`Selecionar compra ${purchase.id}`} checked={selectedIds.includes(purchase.id)} disabled={!movable.length} onChange={(e) => setSelectedIds(e.target.checked ? [...selectedIds, purchase.id] : selectedIds.filter((id) => id !== purchase.id))} /></td><td><Link href={`/painel/compras/${purchase.id}`}>#{purchase.id}</Link></td><td><strong>{purchase.customerId ? <Link href={`/painel/usuario-site/${encodeURIComponent(purchase.customerId)}`}>{purchase.customerName}</Link> : purchase.customerName}</strong>{purchase.originalDate && <span className="calendar-chip calendar-rescheduled-chip">Reagendada de {shortDate(purchase.originalDate)}</span>}</td><td><span className={`calendar-badge ${purchase.origin === "bilheteria" ? "calendar-origin-box" : "calendar-origin-site"}`}>{purchase.origin === "site" ? "Site" : "Bilheteria"}</span></td><td className="calendar-number">{purchase.people}</td><td className="calendar-number">{purchase.addons}</td><td className="calendar-number calendar-nowrap">{calendarMoney(purchase.valueCents)}</td><td>{validities.length ? validities.map((value) => <small key={value}>Até {shortDate(value)}</small>) : <span>Não informada</span>}</td><td><span className="calendar-badge calendar-ok-chip">{purchase.status}</span></td><td><button className="calendar-text-link" type="button" aria-label={`Editar vouchers da compra ${purchase.id}`} disabled={!movable.length} onClick={() => setRescheduling({ purchaseIds: [purchase.id], voucherIds: movable.map((voucher) => voucher.id) })}>Editar</button></td></tr>; })}</tbody></table></div>
       {!purchases.length && <p className="calendar-empty-state">Nenhuma compra encontrada para esta data e estes filtros.</p>}
       <p className="calendar-hint">Marque várias compras para mover em lote, por exemplo quando chove. Para uma compra só, use Editar na linha.</p>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PainelCompraDetailPage } from "@/components/painel-compra-detail-page";
 import { getPainelPurchaseDetail } from "@/lib/painel-compras";
+import { hasLegacyPanelResource } from "@/lib/painel-access";
 import { requirePainelAccess } from "@/lib/painel-session";
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default async function PainelCompraDetailRoute({
     <PainelCompraDetailPage
       actorCpf={session.actorCpf}
       actorName={session.actorName}
+      canValidate={hasLegacyPanelResource(session.legacyResources, "vis_bilhet")}
       canManageHistory={session.legacyRoleId === 1}
       detail={detail}
     />

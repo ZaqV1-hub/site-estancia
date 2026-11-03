@@ -2,10 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ValidateTicketsButton } from "@/components/validate-tickets-button";
 
 type PainelCompraDetailActionsProps = {
   purchaseId: number;
   voucherIds: number[];
+  validatableTicketIds?: number[];
   actorName: string | null;
   actorCpf: string | null;
   canManageHistory: boolean;
@@ -28,6 +30,7 @@ async function readErrorPayload(response: Response, fallback: string) {
 export function PainelCompraDetailActions({
   purchaseId,
   voucherIds,
+  validatableTicketIds,
   actorName,
   actorCpf,
 }: PainelCompraDetailActionsProps) {
@@ -85,6 +88,7 @@ export function PainelCompraDetailActions({
       <div className="calendar-card">
         <p className="calendar-eyebrow">Ingressos</p><h2>Ações</h2>
         <div className="calendar-purchase-ticket-actions">
+          {validatableTicketIds && <ValidateTicketsButton voucherIds={validatableTicketIds} label="Validar todos os ingressos" />}
           <a
             className="calendar-button-secondary"
             href={`/painel/bilheteria/compras/${purchaseId}/imprimir`}

@@ -1,7 +1,7 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { OperationalDayReport, filterCalendarPurchases, movableCalendarVoucherIds } from "./operational-day-report";
+import { OperationalDayReport, filterCalendarPurchases, movableCalendarVoucherIds, validatableCalendarTicketIds } from "./operational-day-report";
 import type { CalendarDay, CalendarPurchase } from "@/lib/operational-calendar-contracts";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
@@ -40,6 +40,17 @@ describe("day report", () => {
     expect(filterCalendarPurchases([purchase], "23", "site")).toHaveLength(1);
     expect(filterCalendarPurchases([purchase], "", "bilheteria")).toHaveLength(0);
   });
+  it("selects only unused passports from supported purchases on the displayed day", () => {
+    const [ticket] = purchase.vouchers;
+    const rows: CalendarPurchase[] = [
+      { ...purchase, type: "reser", vouchers: [...purchase.vouchers, { ...ticket, id: 3, kind: "addon" }] },
+      { ...purchase, id: 24, type: "bilhe", vouchers: [{ ...ticket, id: 4 }] },
+      { ...purchase, id: 25, type: "ponli", vouchers: [{ ...ticket, id: 5 }] },
+    ];
+
+    expect(validatableCalendarTicketIds(rows, [23, 24])).toEqual([1]);
+  });
+
   it("moves only unused valid vouchers belonging to selected day rows", () => {
     expect(movableCalendarVoucherIds([purchase], [23])).toEqual([1]);
     expect(movableCalendarVoucherIds([purchase], [24])).toEqual([]);

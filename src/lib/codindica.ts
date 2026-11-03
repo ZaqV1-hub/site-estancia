@@ -363,10 +363,13 @@ export function calculateCodindicaCartTotals(input: {
   record: CodindicaRow | null;
   parameters: CodindicaParametroRow[];
   totalValue: number;
+  passportSubtotal: number;
 }) {
   const totalGross = normalizeMoney(input.totalValue);
 
-  if (totalGross <= 0) {
+  const passportSubtotal = normalizeMoney(input.passportSubtotal);
+
+  if (passportSubtotal <= 0) {
     throw new CodindicaValidationError(
       "Selecione pelo menos um ingresso pago para continuar.",
     );
@@ -379,9 +382,9 @@ export function calculateCodindicaCartTotals(input: {
   const discountKind = normalizeDiscountKind(record.tpdesconto);
   const discountAmount = Math.min(
     discountKind === "percentual"
-      ? normalizeMoney(totalGross * (configuredDiscount / 100))
+      ? normalizeMoney(passportSubtotal * (configuredDiscount / 100))
       : normalizeMoney(configuredDiscount),
-    totalGross,
+    passportSubtotal,
   );
 
   return {

@@ -33,6 +33,7 @@ export async function POST(request: Request) {
           cpf: typeof payload?.cpf === "string" ? payload.cpf : null,
           items: Array.isArray(payload?.items)
             ? (payload.items as Array<{
+                productId?: string;
                 type: string;
                 quantity: number;
                 discountId?: number | null;

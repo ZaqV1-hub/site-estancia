@@ -12,7 +12,6 @@ import {
   PAINEL_BILHETERIA_SALE_DRAFT_KEY,
   type PainelBilheteriaSaleDraft,
   type PainelBilheteriaSaleDraftCourtesy,
-  type PainelBilheteriaSaleDraftItem,
 } from "@/lib/painel-bilheteria-sales";
 
 type ReferenceDataResponse = {
@@ -115,7 +114,7 @@ function SalesIcon({ kind }: { kind: "ticket" | "discount" | "summary" | "plus" 
 }
 
 function calculatePurchaseDiscount(
-  subtotal: number,
+  passportSubtotal: number,
   discountId: string,
   discounts: OpsDiscount[],
 ) {
@@ -128,11 +127,12 @@ function calculatePurchaseDiscount(
   const value = parseMoney(discount.value);
 
   if (discount.applicationType === "percentual") {
-    return money(subtotal * (value / 100));
+    const discountedSubtotal = Math.max(0, money(passportSubtotal - passportSubtotal * (value / 100)));
+    return money(passportSubtotal - discountedSubtotal);
   }
 
   if (discount.applicationType === "valor_fixo") {
-    return Math.min(subtotal, money(value));
+    return Math.min(passportSubtotal, money(value));
   }
 
   return 0;
@@ -142,7 +142,7 @@ function readAgendaPrice(product: B2cProduct) {
   return parseMoney(getB2cBoxOfficePrice(product));
 }
 
-function resolveSaleDraftItemType(product: B2cProduct) {
+function resolveSaleDraftItemType(product: B2cProduct): B2cProduct["voucherType"] {
   if (product.type === "addon") {
     return "espec";
   }
@@ -213,7 +213,7 @@ export function PainelBilheteriaSalesBuilder({
     [agendaId, agendas],
   );
 
-  const saleItems: PainelBilheteriaSaleDraftItem[] = useMemo(
+  const saleItems = useMemo(
     () =>
       saleLines.flatMap((line) => {
         const product = products.find((item) => item.id === line.selection);
@@ -228,6 +228,8 @@ export function PainelBilheteriaSalesBuilder({
         return [
           {
             type: resolveSaleDraftItemType(product),
+            productId: product.id,
+            productType: product.type,
             quantity: line.quantity,
             label: product.title,
             baseUnitValue: basePrice.toFixed(2),
@@ -236,7 +238,7 @@ export function PainelBilheteriaSalesBuilder({
           },
         ];
       }),
-    [products, saleLines, selectedAgenda],
+    [products, saleLines],
   );
 
   const courtesyDrafts: PainelBilheteriaSaleDraftCourtesy[] = useMemo(
@@ -271,13 +273,18 @@ export function PainelBilheteriaSalesBuilder({
     () => money(saleItems.reduce((total, item) => total + parseMoney(item.totalValue), 0)),
     [saleItems],
   );
+  const passportSubtotal = money(
+    saleItems
+      .filter((item) => item.productType === "passport")
+      .reduce((total, item) => total + parseMoney(item.totalValue), 0),
+  );
   const selectedDiscount = useMemo(
     () => discounts.find((item) => String(item.id) === purchaseDiscountId.trim()) ?? null,
     [discounts, purchaseDiscountId],
   );
   const discountValue = useMemo(
-    () => calculatePurchaseDiscount(subtotalValue, purchaseDiscountId, discounts),
-    [discounts, purchaseDiscountId, subtotalValue],
+    () => calculatePurchaseDiscount(passportSubtotal, purchaseDiscountId, discounts),
+    [discounts, purchaseDiscountId, passportSubtotal],
   );
   const saleTotal = money(Math.max(0, subtotalValue - discountValue));
   const canProceed =

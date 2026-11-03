@@ -122,5 +122,10 @@ export async function buildB2cCartSummary(lineItems: B2cCartLineItem[]) {
     addonQuantity,
     voucherCount: passportQuantity + addonQuantity,
     totalValue: normalizeMoney(total),
+    passportSubtotal: normalizeMoney(
+      lines
+        .filter((line) => line.type === "passport")
+        .reduce((sum, line) => sum + parseMoney(line.totalValue), 0),
+    ),
   };
 }

@@ -14,7 +14,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/operational-calendar", () => ({ getCalendarRule: mocks.getCalendarRule }));
 
-vi.mock("@/lib/b2c-catalog", () => ({ listB2cProducts: async () => [{ id: "adult", title: "Passaporte", voucherType: "norma", type: "passport", active: true }, { id: "child", title: "Passaporte Infantil", voucherType: "infan", type: "passport", active: true }, { id: "exempt", title: "Isento", voucherType: "norma", type: "passport", active: true }] }));
+vi.mock("@/lib/b2c-catalog", () => ({ listB2cProducts: async () => [{ id: "adult", title: "Passaporte", voucherType: "norma", type: "passport", active: true }, { id: "child", title: "Passaporte Infantil", voucherType: "infan", type: "passport", active: true }, { id: "exempt", title: "Isento", voucherType: "norma", type: "passport", active: true },
+  { id: "special-passport", title: "Estacionamento", voucherType: "espec", type: "passport", active: true },
+  { id: "parking-addon", title: "Estacionamento", voucherType: "espec", type: "addon", active: true },
+] }));
 
 vi.mock("node:crypto", () => ({
   randomInt: mocks.randomInt,
@@ -296,6 +299,43 @@ describe("ops-box-office-sales", () => {
     });
     expect(mocks.clientQuery).toHaveBeenCalledWith("ROLLBACK");
     expect(mocks.registerOpsAuditLog).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["percentual", "10.00", "90.00", "97.00", "10.00", "norma"],
+    ["valor_fixo", "110.00", "0.00", "7.00", "100.00", "norma"],
+    ["percentual", "10.00", "90.00", "97.00", "10.00", "espec"],
+  ])("applies %s sale discounts only to passports", async (kind, value, passportPrice, total, discount, passportType) => {
+    mocks.clientQuery.mockImplementation(async (sql: string, values?: unknown[]) => {
+      if (sql.includes("FROM agenda")) {
+        return { rows: [{ idagenda: 88, vlnormalbil: "100.00", vlinfantbil: "70.00" }] };
+      }
+      if (sql.includes("FROM descontos")) {
+        return { rows: [{ id: 7, nome: "Promoção", tipo_aplicacao: kind, valor: value }] };
+      }
+      if (sql.includes("INSERT INTO compra (")) {
+        expect(values).toEqual([null, "debit", total, discount]);
+        return { rows: [{ idcompra: 325 }] };
+      }
+      if (sql.includes("INSERT INTO voucher")) {
+        expect(values?.slice(3, 6)).toEqual([passportType, passportPrice, "s"]);
+        expect(values?.slice(15, 18)).toEqual(["espec", "7.00", "n"]);
+        return { rows: [{ idvoucher: 9400 }, { idvoucher: 9401 }] };
+      }
+      return { rows: [] };
+    });
+
+    await expect(createOperationalBoxOfficeSale({
+      agendaId: 88,
+      items: [
+        passportType === "espec"
+          ? { productId: "special-passport", type: "espec", quantity: 1, label: "Estacionamento", unitValue: "100.00" }
+          : { type: "norma", quantity: 1 },
+        { productId: "parking-addon", type: "espec", quantity: 1, label: "Estacionamento", unitValue: "7.00" },
+      ],
+      purchaseDiscountId: 7,
+      payments: [{ method: "debit", value: total }],
+    })).resolves.toMatchObject({ totalValue: total, voucherCount: 2 });
   });
 
   it("uses the explicit unit price for special add-ons", async () => {

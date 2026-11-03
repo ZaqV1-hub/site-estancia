@@ -11,7 +11,7 @@ describe("PurchasePage helpers", () => {
     );
   });
 
-  it("restaura apenas itens ainda disponiveis no rascunho da compra", () => {
+  it.each([undefined, "passports"] as const)("restaura itens disponiveis e valida o escopo do desconto (%s)", (discountScope) => {
     const draft = sanitizePurchaseDraft(
       {
         step: "review",
@@ -23,6 +23,7 @@ describe("PurchasePage helpers", () => {
         codindica: "ABC123",
         appliedCodindica: "ABC123",
         appliedDiscount: "10.00",
+        discountScope,
       },
       [
         {
@@ -61,8 +62,8 @@ describe("PurchasePage helpers", () => {
         addon: 1,
       },
       codindica: "ABC123",
-      appliedCodindica: "ABC123",
-      appliedDiscount: "10.00",
+      appliedCodindica: discountScope ? "ABC123" : null,
+      appliedDiscount: discountScope ? "10.00" : "0.00",
     });
     expect(draft?.quantities).not.toHaveProperty("expired");
   });

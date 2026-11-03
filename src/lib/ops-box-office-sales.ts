@@ -61,6 +61,7 @@ type IdempotentSaleRow = {
 };
 
 export type BoxOfficeSaleItemInput = {
+  productId?: string;
   type: "norma" | "infan" | "espec" | "isent" | string;
   quantity: number;
   discountId?: number | null;
@@ -94,6 +95,7 @@ export type CreateBoxOfficeSaleInput = {
 };
 
 type NormalizedSaleItem = {
+  productId: string;
   type: "norma" | "infan" | "espec" | "isent";
   label: string;
   quantity: number;
@@ -114,6 +116,7 @@ type NormalizedPayment = {
 };
 
 type VoucherDraft = {
+  productId?: string;
   type: "norma" | "infan" | "espec" | "isent" | "corte";
   prefix: string;
   value: number;
@@ -208,7 +211,7 @@ async function resolveVoucherValidityDate(agenda: BoxOfficeAgendaRow, client: Po
     if (rule.status !== "abe") throw new BoxOfficeSaleError("agenda_closed", "Esta data está fechada para vendas.", 409);
     const products = await listB2cProducts();
     for (const item of items) {
-      const product = products.find((product) => product.active && product.title === item.label && (product.voucherType === item.type || (item.type === "isent" && product.type === "passport")));
+      const product = products.find((product) => product.active && (!item.productId || product.id === item.productId) && product.title === item.label && (product.voucherType === item.type || (item.type === "isent" && product.type === "passport")));
       if (!product || !(product.type === "passport" ? rule.passportIds : rule.addonIds).includes(product.id)) {
         throw new BoxOfficeSaleError("product_unavailable_for_date", "Selecione passaportes e adicionais do catálogo disponível nesta data.", 409);
       }
@@ -304,6 +307,7 @@ function normalizeItems(items: BoxOfficeSaleItemInput[] | undefined) {
     return [
       {
         type,
+        productId: normalizeText(item.productId),
         label: label || labelForItemType(type),
         quantity,
         legacyDiscountId:
@@ -629,6 +633,7 @@ function buildPaidVoucherDrafts(
     for (let index = 0; index < item.quantity; index += 1) {
       drafts.push({
         type: item.type,
+        productId: item.productId,
         prefix: prefixForVoucherType(item.type),
         value: unitPrice,
         discountId: discount?.id ?? null,
@@ -643,7 +648,7 @@ function buildPaidVoucherDrafts(
   return drafts;
 }
 
-function applyPurchaseDiscountToDrafts(
+async function applyPurchaseDiscountToDrafts(
   drafts: VoucherDraft[],
   discount: BoxOfficeDiscountRow | null,
 ) {
@@ -654,7 +659,22 @@ function applyPurchaseDiscountToDrafts(
     };
   }
 
-  const subtotal = money(drafts.reduce((total, draft) => total + draft.value, 0));
+  const specialPassports = drafts.some((draft) => draft.type === "espec" && draft.productId)
+    ? (await listB2cProducts()).filter(
+        (product) => product.active && product.type === "passport" && product.voucherType === "espec",
+      )
+    : [];
+  const nextDrafts = drafts.map((draft) => ({ ...draft }));
+  const passports = nextDrafts.filter(
+    (draft) => draft.value > 0 && (
+      draft.type === "norma" ||
+      draft.type === "infan" ||
+      (draft.type === "espec" && specialPassports.some(
+        (product) => product.id === draft.productId && normalizeText(product.title) === draft.description,
+      ))
+    ),
+  );
+  const subtotal = money(passports.reduce((total, draft) => total + draft.value, 0));
 
   if (subtotal <= 0) {
     return {
@@ -673,14 +693,11 @@ function applyPurchaseDiscountToDrafts(
     };
   }
 
-  const nextDrafts = drafts.map((draft) => ({ ...draft }));
   let remainingDiscount = totalDiscount;
   let remainingBase = subtotal;
 
-  for (let index = 0; index < nextDrafts.length; index += 1) {
-    const draft = nextDrafts[index];
-
-    if (index === nextDrafts.length - 1) {
+  for (const [index, draft] of passports.entries()) {
+    if (index === passports.length - 1) {
       draft.value = money(Math.max(0, draft.value - remainingDiscount));
       draft.discountFlag = remainingDiscount > 0 ? "s" : "n";
       break;
@@ -983,7 +1000,7 @@ export async function createOperationalBoxOfficeSale(
       explicitPurchaseDiscountId === null,
     );
     const { drafts: paidDrafts, totalDiscount } = explicitPurchaseDiscountId
-      ? applyPurchaseDiscountToDrafts(basePaidDrafts, purchaseDiscount)
+      ? await applyPurchaseDiscountToDrafts(basePaidDrafts, purchaseDiscount)
       : {
           drafts: basePaidDrafts,
           totalDiscount: 0,

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createOnlinePurchase } from "@/lib/purchase-repository";
+import { createOnlinePurchase, previewOnlinePurchaseCodindica } from "@/lib/purchase-repository";
 
 const mocks = vi.hoisted(() => ({
   getCalendarRule: vi.fn(),
@@ -56,6 +56,26 @@ describe("purchase-repository", () => {
   });
 
   it.each([false, true])("creates B2C vouchers preserving descriptions and configured validity (%s)", async (configured) => {
+    const code = configured ? "ABC123" : undefined;
+    if (code) {
+      mocks.query.mockImplementation(async (sql: string) => ({
+        rows: sql.includes("FROM codindica")
+          ? [{ codindica: code, stcodindica: "ati", tpdesconto: "percentual", vldescnormal: "10.00" }]
+          : [],
+      }));
+    }
+    const selection = {
+      lineItems: [
+        { productId: "passaporte-explorador", quantity: 2 },
+        { productId: "passaporte-infantil", quantity: 1 },
+        { productId: "cafe-da-manha", quantity: 3 },
+      ],
+    };
+    const totalValue = code ? "318.00" : "345.00";
+    if (code) {
+      await expect(previewOnlinePurchaseCodindica(123, selection, code))
+        .resolves.toMatchObject({ subtotal: "345.00", discountAmount: "27.00", totalValue });
+    }
     if (configured) mocks.getCalendarRule.mockResolvedValue({ configured: true, status: "abe", validity: "7d" });
     const voucherInserts: Array<{ sql: string; values?: unknown[] }> = [];
 
@@ -65,7 +85,7 @@ describe("purchase-repository", () => {
       }
 
       if (sql.includes("INSERT INTO compra")) {
-        expect(values).toEqual(["52998224725", "345.00", null, null]);
+        expect(values).toEqual(["52998224725", totalValue, code ? "27.00" : null, code ?? null]);
         return { rows: [{ idcompra: 901 }] };
       }
 
@@ -78,20 +98,10 @@ describe("purchase-repository", () => {
     });
 
     await expect(
-      createOnlinePurchase(
-        "52998224725",
-        123,
-        {
-          lineItems: [
-            { productId: "passaporte-explorador", quantity: 2 },
-            { productId: "passaporte-infantil", quantity: 1 },
-            { productId: "cafe-da-manha", quantity: 3 },
-          ],
-        },
-      ),
+      createOnlinePurchase("52998224725", 123, selection, code),
     ).resolves.toMatchObject({
       purchaseId: 901,
-      totalValue: "345.00",
+      totalValue,
       voucherCount: 6,
     });
 

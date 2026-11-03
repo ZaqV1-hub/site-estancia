@@ -399,6 +399,7 @@ export async function createOnlinePurchase(
           record: codindicaResult.rows[0] ?? null,
           parameters: parametroResult.rows,
           totalValue: Number(cart.totalValue),
+          passportSubtotal: Number(cart.passportSubtotal),
         });
       } catch (error) {
         if (error instanceof CodindicaValidationError) {
@@ -502,7 +503,9 @@ export async function createOnlinePurchase(
       return {
         purchaseId,
         legacyEncodedId: encodeLegacyId(purchaseId),
-        totalValue: cart.totalValue,
+        totalValue: cartCodindicaTotals
+          ? normalizeMoney(cartCodindicaTotals.totalPaid)
+          : cart.totalValue,
         voucherCount: cart.voucherCount,
       };
     } catch (error) {
@@ -916,6 +919,7 @@ export async function previewOnlinePurchaseCodindica(
       record: codindicaResult.rows[0] ?? null,
       parameters: parametroResult.rows,
       totalValue: Number(cart.totalValue),
+      passportSubtotal: Number(cart.passportSubtotal),
     });
 
     return {

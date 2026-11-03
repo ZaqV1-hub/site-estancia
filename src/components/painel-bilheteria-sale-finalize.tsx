@@ -181,6 +181,7 @@ export function PainelBilheteriaSaleFinalize() {
           agendaId: draft.agendaId,
           cpf: draft.cpf,
           items: draft.items.map((item) => ({
+            productId: item.productId,
             type: item.type,
             quantity: item.quantity,
             label: item.label,

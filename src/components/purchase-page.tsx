@@ -35,6 +35,7 @@ type PurchaseDraft = {
   codindica: string;
   appliedCodindica: string | null;
   appliedDiscount: string;
+  discountScope?: "passports";
 };
 
 function formatCurrency(value: number | string) {
@@ -149,6 +150,8 @@ export function sanitizePurchaseDraft(
     ([productId, quantity]) => passportIds.has(productId) && quantity > 0,
   );
 
+  const hasCurrentDiscount = draft.discountScope === "passports";
+
   return {
     step:
       hasPassport && (draft.step === "addons" || draft.step === "review")
@@ -157,9 +160,10 @@ export function sanitizePurchaseDraft(
     quantities,
     codindica: String(draft.codindica ?? ""),
     appliedCodindica:
-      typeof draft.appliedCodindica === "string" ? draft.appliedCodindica : null,
+      hasCurrentDiscount && typeof draft.appliedCodindica === "string" ? draft.appliedCodindica : null,
     appliedDiscount:
-      typeof draft.appliedDiscount === "string" ? draft.appliedDiscount : "0.00",
+      hasCurrentDiscount && typeof draft.appliedDiscount === "string" ? draft.appliedDiscount : "0.00",
+    discountScope: "passports",
   };
 }
 
@@ -355,6 +359,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
         codindica,
         appliedCodindica,
         appliedDiscount,
+        discountScope: "passports",
       } satisfies PurchaseDraft),
     );
   }, [
@@ -424,6 +429,7 @@ export function PurchasePage({ agenda, user, products }: PurchasePageProps) {
         codindica,
         appliedCodindica,
         appliedDiscount,
+        discountScope: "passports",
       } satisfies PurchaseDraft),
     );
   }

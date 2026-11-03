@@ -1,6 +1,7 @@
 export const PAINEL_BILHETERIA_SALE_DRAFT_KEY = "painel-bilheteria-sale-draft";
 
 export type PainelBilheteriaSaleDraftItem = {
+  productId?: string;
   type: "norma" | "infan" | "espec" | "isent";
   quantity: number;
   label: string;

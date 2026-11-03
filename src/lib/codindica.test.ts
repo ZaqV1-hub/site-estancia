@@ -106,7 +106,10 @@ describe("codindica", () => {
     ).toThrowError(CodindicaValidationError);
   });
 
-  it("applies percentage discount on the final cart total", () => {
+  it.each([
+    ["percentual", "10.00", 20],
+    ["fixo", "230.00", 200],
+  ])("applies %s cart discount only to passports", (kind, value, discount) => {
     const result = calculateCodindicaCartTotals({
       code: "ABC123",
       record: {
@@ -114,9 +117,9 @@ describe("codindica", () => {
         stcodindica: "ati",
         validade: "2099-12-31",
         nmrepresentante: "Equipe",
-        tpdesconto: "percentual",
+        tpdesconto: kind,
         flpromocional: "n",
-        vldescnormal: "10.00",
+        vldescnormal: value,
         vldescinfant: "10.00",
         vldescpromonormal: "0.00",
         vldescpromoinfant: "0.00",
@@ -128,10 +131,11 @@ describe("codindica", () => {
       },
       parameters: [],
       totalValue: 250,
+      passportSubtotal: 200,
     });
 
     expect(result.totalGross).toBe(250);
-    expect(result.discountAmount).toBe(25);
-    expect(result.totalPaid).toBe(225);
+    expect(result.discountAmount).toBe(discount);
+    expect(result.totalPaid).toBe(250 - discount);
   });
 });

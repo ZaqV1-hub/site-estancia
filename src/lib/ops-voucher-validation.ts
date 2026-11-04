@@ -601,7 +601,7 @@ export async function validateVoucherByNumber(
       );
     }
 
-    if (voucher.tpcompra !== "ponli") {
+    if (voucher.tpcompra !== "ponli" && !(["reser", "bilhe"].includes(voucher.tpcompra ?? "") && isReservationPaid(voucher))) {
       throw new VoucherOperationError(
         "voucher_payment_required",
         buildReservationPaymentMessage(voucher),
@@ -625,7 +625,7 @@ export async function validateVoucherByNumber(
       );
     }
 
-    if (!isOnlinePurchasePaid(voucher)) {
+    if (voucher.tpcompra === "ponli" && !isOnlinePurchasePaid(voucher)) {
       throw new VoucherOperationError(
         "voucher_payment_status_invalid",
         `A transacao do voucher ${voucher.numvoucher ?? ""} nao esta confirmada para validacao.`,
@@ -758,7 +758,7 @@ export async function validatePurchaseVouchers(
           skippedVoucherNumbers.push(voucher.numvoucher ?? String(voucher.idvoucher));
           continue;
         }
-      } else if (voucher.tpcompra === "reser") {
+      } else if ((voucher.tpcompra === "reser" || voucher.tpcompra === "bilhe")) {
         if (!isReservationPaid(voucher)) {
           throw new VoucherOperationError(
             "voucher_payment_required",
@@ -916,7 +916,7 @@ export async function validateSelectedVouchers(
         if (usage.status !== "ok") {
           throw new VoucherOperationError(usage.code, usage.message, 409);
         }
-      } else if (voucher.tpcompra === "reser") {
+      } else if ((voucher.tpcompra === "reser" || voucher.tpcompra === "bilhe")) {
         if (!isReservationPaid(voucher)) {
           throw new VoucherOperationError(
             "voucher_payment_required",
@@ -1064,7 +1064,7 @@ export async function validateSchoolTripVouchers(
         if (usage.status !== "ok") {
           throw new VoucherOperationError(usage.code, usage.message, 409);
         }
-      } else if (voucher.tpcompra === "reser") {
+      } else if ((voucher.tpcompra === "reser" || voucher.tpcompra === "bilhe")) {
         if (!isReservationPaid(voucher)) {
           throw new VoucherOperationError(
             "voucher_payment_required",

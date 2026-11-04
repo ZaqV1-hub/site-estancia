@@ -1,3 +1,6 @@
+"use client";
+import { useState } from "react";
+import { VoucherBulkValidation } from "@/components/voucher-bulk-validation";
 import Link from "next/link";
 import { PanelActionIcon } from "./panel-action-icon";
 import type {
@@ -7,6 +10,7 @@ import type {
 
 type PainelCompraVouchersPageProps = {
   result: PainelPurchaseVoucherListResult;
+  canValidate?: boolean;
 };
 
 const voucherTypeOptions = [
@@ -87,7 +91,9 @@ function dateInput(value:string|null) {
   if(!value)return "";
   return /^\d{2}\/\d{2}\/\d{4}$/.test(value)?value.split("/").reverse().join("-"):value;
 }
-export function PainelCompraVouchersPage({result}:PainelCompraVouchersPageProps) {
+export function PainelCompraVouchersPage({result, canValidate = false}:PainelCompraVouchersPageProps) {
+  const [selected, setSelected] = useState<number[]>([]);
+  const eligible = result.items.filter(item => item.canValidate === true).map(item => item.voucherId);
   const previousHref=result.page>1?buildVoucherListHref(result.filters,result.page-1):null;
   const nextHref=result.page<result.totalPages?buildVoucherListHref(result.filters,result.page+1):null;
   const filtersActive=hasActiveFilters(result.filters);
@@ -116,10 +122,11 @@ export function PainelCompraVouchersPage({result}:PainelCompraVouchersPageProps)
         <div className="calendar-filter-actions"><button className="calendar-button" type="submit"><PanelActionIcon kind="filter"/>Filtrar</button>{filtersActive&&<Link className="calendar-button-secondary" href="/painel/compras/vouchers">Limpar filtros</Link>}</div>
       </form>
     </section>
+    {canValidate && <section className="calendar-card"><div className="calendar-inline-actions"><VoucherBulkValidation voucherIds={selected.filter(id => eligible.includes(id))} onSuccess={() => setSelected([])}/><VoucherBulkValidation voucherIds={eligible} label="Validar todos os disponíveis desta página" onSuccess={() => setSelected([])}/></div><p className="calendar-hint">A seleção e a ação de todos incluem somente os ingressos disponíveis da página atual, conforme os filtros aplicados.</p></section>}
     {(["passport","addon"] as const).map(kind=>{
       const items=result.items.filter(item=>(item.kind??"passport")===kind);
       return <section className="calendar-card calendar-voucher-section" key={kind}><header className="calendar-section-header"><div><p className="calendar-eyebrow">{kind==="passport"?"Acesso ao parque":"Comprados com o ingresso"}</p><h2>{kind==="passport"?"Ingressos":"Itens adicionais"}</h2></div><span className="calendar-chip">{items.length} nesta página</span></header>
-        <div className="calendar-table-scroll"><table className="calendar-purchases-table"><thead><tr>{["Compra","ID voucher","Voucher","Data da visita","Item","Valor"].map(h=><th scope="col" key={h} className={h==="Valor"?"calendar-number":undefined}>{h}</th>)}</tr></thead><tbody>{items.length?items.map(item=><tr key={`${item.purchaseId}-${item.voucherId}`}><td><Link href={`/painel/compras/${item.purchaseId}`}>#{item.purchaseId}</Link></td><td>{item.voucherId}</td><td>{item.voucherNumber??"—"}</td><td>{item.visitDate??"—"}{item.originalDate&&<small className="calendar-voucher-meta">Reagendado de {item.originalDate}</small>}{item.validUntil&&<small className="calendar-voucher-meta">Válido até {item.validUntil}</small>}</td><td>{item.ticketTypeLabel}</td><td className="calendar-number calendar-nowrap">R$ {item.unitValue}</td></tr>):<tr><td colSpan={6} className="calendar-empty-state">Nenhum {kind==="passport"?"ingresso":"item adicional"} encontrado nesta página.</td></tr>}</tbody></table></div>
+        <div className="calendar-table-scroll"><table className="calendar-purchases-table"><thead><tr>{canValidate && <th><input type="checkbox" aria-label={`Selecionar todos: ${kind === "passport" ? "ingressos" : "adicionais"}`} checked={items.some(item => eligible.includes(item.voucherId)) && items.filter(item => eligible.includes(item.voucherId)).every(item => selected.includes(item.voucherId))} onChange={event => { const ids=items.filter(item=>eligible.includes(item.voucherId)).map(item=>item.voucherId); setSelected(event.target.checked ? [...new Set([...selected,...ids])] : selected.filter(id=>!ids.includes(id))); }}/></th>}{["Compra","ID voucher","Voucher","Data da visita","Item","Valor"].map(h=><th scope="col" key={h} className={h==="Valor"?"calendar-number":undefined}>{h}</th>)}</tr></thead><tbody>{items.length?items.map(item=><tr key={`${item.purchaseId}-${item.voucherId}`}>{canValidate && <td><input type="checkbox" aria-label={`Selecionar voucher ${item.voucherNumber ?? item.voucherId}`} disabled={!eligible.includes(item.voucherId)} checked={selected.includes(item.voucherId)} onChange={event=>setSelected(event.target.checked ? [...selected,item.voucherId] : selected.filter(id=>id!==item.voucherId))}/></td>}<td><Link href={`/painel/compras/${item.purchaseId}`}>#{item.purchaseId}</Link></td><td>{item.voucherId}</td><td>{item.voucherNumber??"—"}</td><td>{item.visitDate??"—"}{item.originalDate&&<small className="calendar-voucher-meta">Reagendado de {item.originalDate}</small>}{item.validUntil&&<small className="calendar-voucher-meta">Válido até {item.validUntil}</small>}</td><td>{item.ticketTypeLabel}</td><td className="calendar-number calendar-nowrap">R$ {item.unitValue}</td></tr>):<tr><td colSpan={canValidate?7:6} className="calendar-empty-state">Nenhum {kind==="passport"?"ingresso":"item adicional"} encontrado nesta página.</td></tr>}</tbody></table></div>
       </section>;
     })}
     <footer className="calendar-list-footer"><span className="calendar-muted">Página {result.page} de {result.totalPages} · {result.total} vouchers encontrados</span><div className="calendar-inline-actions">{previousHref&&<Link className="calendar-button-secondary" href={previousHref}>Página anterior</Link>}{nextHref&&<Link className="calendar-button-secondary" href={nextHref}>Próxima página</Link>}</div></footer>

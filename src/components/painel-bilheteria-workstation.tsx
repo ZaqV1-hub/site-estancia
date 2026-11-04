@@ -1,5 +1,6 @@
 "use client";
 
+import { PainelModal } from "@/components/painel-modal";
 import Link from "next/link";
 import { useState } from "react";
 import { legacyPanelContracts } from "@/lib/legacy-panel-contracts";
@@ -38,6 +39,7 @@ type PainelBilheteriaWorkstationProps = {
   actorName?: string | null;
   actorCpf?: string | null;
   isManager?: boolean;
+  salesAvailable?: boolean;
   initialTicketLookupState?: {
     isOpen: boolean;
     lookup: string;
@@ -146,6 +148,7 @@ export function PainelBilheteriaWorkstation({
   actorName = null,
   actorCpf = null,
   isManager = false,
+  salesAvailable = true,
   initialTicketLookupState,
 }: PainelBilheteriaWorkstationProps) {
   const contract = legacyPanelContracts.bilheteriaIndex;
@@ -486,7 +489,7 @@ export function PainelBilheteriaWorkstation({
     const lookup = ticketLookup.trim();
 
     if (!lookup) {
-      setTicketLookupError("Informe o ID do ingresso para consultar.");
+      setTicketLookupError("Informe o ID ou código do ingresso para consultar.");
       setTicketLookupResult(null);
       return;
     }
@@ -679,6 +682,8 @@ export function PainelBilheteriaWorkstation({
                     </span>
                     <span aria-hidden="true" className="text-xl leading-none">{">"}</span>
                   </button>
+                ) : action.key === "sales" && !salesAvailable ? (
+                  <span key={action.key} aria-disabled="true" className="calendar-button-secondary opacity-60">Vendas indisponíveis · agenda fechada</span>
                 ) : (
                   <Link
                     key={action.key}
@@ -720,37 +725,11 @@ export function PainelBilheteriaWorkstation({
         </section>
       ) : null}
 
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="painel-bilheteria-ticket-lookup-title"
-        className={`fixed inset-0 z-50 flex items-center justify-center bg-[rgba(11,34,53,0.48)] px-4 py-6 transition ${
-          ticketLookupOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-        }`}
-      >
-        <div className="w-full max-w-[460px] rounded-[28px] border border-[#dbe7d7] bg-white shadow-[0_24px_64px_rgba(24,67,34,0.2)]">
-          <div className="flex items-center justify-between gap-3 border-b border-[#dbe7d7] px-5 py-4">
-            <h2
-              id="painel-bilheteria-ticket-lookup-title"
-              className="text-lg font-black text-[#17351f]"
-            >
-              {contract.modals?.find((modal) => modal.id === "ticket-lookup")?.title ||
-                "Consultar Ingresso"}
-            </h2>
-            <button
-              type="button"
-              onClick={handleCloseTicketLookup}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#dbe7d7] text-[#5d745f]"
-              aria-label="Fechar consulta de ingresso"
-            >
-              ×
-            </button>
-          </div>
-
+      <PainelModal title="Consultar ingresso" open={ticketLookupOpen} onClose={handleCloseTicketLookup}>
           <div className="grid gap-4 px-5 py-5">
             <form onSubmit={handleTicketLookupSubmit} className="grid gap-3">
               <label className="grid gap-2 text-sm font-semibold text-[#35503b]">
-                Inserir ID do Ingresso
+                ID ou código do ingresso
                 <input
                   value={ticketLookup}
                   onChange={(event) => {
@@ -759,7 +738,7 @@ export function PainelBilheteriaWorkstation({
                     setTicketWhatsappError(null);
                     setTicketWhatsappSuccess(null);
                   }}
-                  placeholder="ID do Ingresso"
+                  placeholder="Ex.: 123 ou A4867"
                   className="estancia-field min-h-[42px] px-4 py-2.5 text-sm"
                 />
               </label>
@@ -854,8 +833,7 @@ export function PainelBilheteriaWorkstation({
               </div>
             </form>
           </div>
-        </div>
-      </section>
+      </PainelModal>
 
       {customerLookup ? (
         <section className="rounded-[28px] border border-[#dbe7d7] bg-white p-5 shadow-[0_16px_36px_rgba(24,67,34,0.08)]">

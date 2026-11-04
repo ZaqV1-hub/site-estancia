@@ -1,3 +1,4 @@
+import { hasLegacyPanelResource } from "@/lib/painel-access";
 import type { Metadata } from "next";
 import { PainelCompraVouchersPage } from "@/components/painel-compra-vouchers-page";
 import { listPainelPurchaseVouchers } from "@/lib/painel-compras";
@@ -18,12 +19,12 @@ export default async function PainelCompraVouchersPageRoute({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  await requirePainelAccess("vis_compra", "/painel/compras/vouchers");
+  const session = await requirePainelAccess("vis_compra", "/painel/compras/vouchers");
   const query = await searchParams;
   const result = await listPainelPurchaseVouchers({
     page: Array.isArray(query.page) ? query.page[0] : query.page,
     filters: query,
   });
 
-  return <PainelCompraVouchersPage result={result} />;
+  return <PainelCompraVouchersPage result={result} canValidate={hasLegacyPanelResource(session.legacyResources, "vis_bilhet")} />;
 }

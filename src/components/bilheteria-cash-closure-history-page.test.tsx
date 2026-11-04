@@ -1,7 +1,9 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { BilheteriaCashClosureHistoryPage } from "@/components/bilheteria-cash-closure-history-page";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const history = {
   items: [
@@ -33,7 +35,7 @@ describe("BilheteriaCashClosureHistoryPage", () => {
     );
 
     expect(html).toContain("Historico de fechamentos");
-    expect(html).toContain("Data do fechamento");
+    expect(html).toContain("Data do caixa");
     expect(html).toContain("Acoes");
     expect(html).toContain("Visualizar");
     expect(html).not.toContain("Operador");

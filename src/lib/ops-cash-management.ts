@@ -251,7 +251,8 @@ export async function ensureCashMovementsTable(client: PoolClient) {
 }
 
 export async function getOrCreateOpenCashPeriod(client: PoolClient) {
-  await ensureCashPeriodsTable(client);
+  const { synchronizeDailyCashPeriods } = await import("@/lib/ops-cash-closures");
+  await synchronizeDailyCashPeriods(client);
 
   const openResult = await client.query<CashPeriodRow>(
     `
@@ -279,7 +280,7 @@ export async function getOrCreateOpenCashPeriod(client: PoolClient) {
       INSERT INTO caixa_periodos (
         aberto_em,
         created_at
-      ) VALUES (NOW(), NOW())
+      ) VALUES (date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo') AT TIME ZONE 'America/Sao_Paulo', NOW())
       RETURNING
         id,
         aberto_em::text AS aberto_em,
@@ -311,7 +312,7 @@ export async function listCashMovementsByType(
       FROM movimentacao_caixa
       WHERE tipo = $1
         AND ($2::timestamptz IS NULL OR data_hora >= $2::timestamptz)
-        AND data_hora <= COALESCE($3::timestamptz, CURRENT_TIMESTAMP)
+        AND data_hora < COALESCE($3::timestamptz, CURRENT_TIMESTAMP)
       ORDER BY data_hora ASC, id ASC
     `,
     [type, openedAt, closedAt ?? null],
@@ -392,8 +393,8 @@ async function getCashSalesTotal(client: PoolClient, openedAt: string | null) {
           AND c.stcompra = 'conc'
           AND c.formapag IS NOT NULL
           AND c.formapag <> 'N/A'
-          AND ($1::timestamptz IS NULL OR (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= $1::timestamptz)
-          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) <= CURRENT_TIMESTAMP
+          AND ($1::timestamptz IS NULL OR (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= ($1::timestamptz AT TIME ZONE 'America/Sao_Paulo'))
+          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) <= (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')
         GROUP BY v.idcompra
       ),
       payment_totals AS (
@@ -407,8 +408,8 @@ async function getCashSalesTotal(client: PoolClient, openedAt: string | null) {
           AND c.stcompra = 'conc'
           AND c.formapag IS NOT NULL
           AND c.formapag <> 'N/A'
-          AND ($1::timestamptz IS NULL OR (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= $1::timestamptz)
-          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) <= CURRENT_TIMESTAMP
+          AND ($1::timestamptz IS NULL OR (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= ($1::timestamptz AT TIME ZONE 'America/Sao_Paulo'))
+          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) <= (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')
         GROUP BY cp.idcompra, TRIM(cp.forma_pagamento)
       )
       SELECT
@@ -481,8 +482,13 @@ export async function getOperationalCashSummary(): Promise<OperationalCashSummar
   const client = await pool.connect();
 
   try {
+    await client.query("BEGIN");
     const { summary } = await buildOperationalCashSummary(client);
+    await client.query("COMMIT");
     return summary;
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw error;
   } finally {
     client.release();
   }

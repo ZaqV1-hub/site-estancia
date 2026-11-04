@@ -84,7 +84,7 @@ function summarizePurchaseItems(vouchers: PainelPurchaseDetail["vouchers"]) {
 
 export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageHistory, canValidate }: PainelCompraDetailPageProps) {
   const passports = detail.vouchers.filter(isPassport);
-  const validatableTicketIds = detail.status === "conc" && (detail.type === "ponli" || detail.type === "reser")
+  const validatableTicketIds = detail.status === "conc" && (detail.type === "ponli" || detail.type === "reser" || detail.type === "bilhe")
     ? passports.filter((voucher) => voucher.used === "n").map((voucher) => voucher.voucherId)
     : [];
   const addons = detail.vouchers.filter((voucher) => !isPassport(voucher));

@@ -21,6 +21,7 @@ vi.mock("@/lib/ingresso-db", () => ({
 
 vi.mock("@/lib/ops-audit-log", () => ({
   registerOpsAuditLog,
+  ensureOpsAuditLogTable: vi.fn(),
 }));
 
 describe("ops-cash-management", () => {
@@ -35,6 +36,8 @@ describe("ops-cash-management", () => {
 
   it("returns the current cash summary for the open period", async () => {
     query.mockImplementation(async (sql: string, values?: unknown[]) => {
+      if (sql.includes("::date < (CURRENT_TIMESTAMP")) return { rows: [] };
+
       if (sql.includes("FROM caixa_periodos") && sql.includes("fechado_em IS NULL")) {
         return {
           rows: [
@@ -137,6 +140,8 @@ describe("ops-cash-management", () => {
       ) {
         return { rows: [] };
       }
+
+      if (sql.includes("::date < (CURRENT_TIMESTAMP")) return { rows: [] };
 
       if (normalizedSql.includes("FROM caixa_periodos") && normalizedSql.includes("fechado_em IS NULL")) {
         return {
@@ -269,6 +274,8 @@ describe("ops-cash-management", () => {
         return { rows: [] };
       }
 
+      if (sql.includes("::date < (CURRENT_TIMESTAMP")) return { rows: [] };
+
       if (sql.includes("FROM caixa_periodos") && sql.includes("fechado_em IS NULL")) {
         return {
           rows: [
@@ -328,6 +335,8 @@ describe("ops-cash-management", () => {
       ) {
         return { rows: [] };
       }
+
+      if (sql.includes("::date < (CURRENT_TIMESTAMP")) return { rows: [] };
 
       if (normalizedSql.includes("FROM caixa_periodos") && normalizedSql.includes("fechado_em IS NULL")) {
         return {
@@ -476,6 +485,8 @@ describe("ops-cash-management", () => {
       ) {
         return { rows: [] };
       }
+
+      if (sql.includes("::date < (CURRENT_TIMESTAMP")) return { rows: [] };
 
       if (normalizedSql.includes("FROM caixa_periodos") && normalizedSql.includes("fechado_em IS NULL")) {
         return {

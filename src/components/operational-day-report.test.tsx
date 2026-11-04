@@ -48,7 +48,7 @@ describe("day report", () => {
       { ...purchase, id: 25, type: "ponli", vouchers: [{ ...ticket, id: 5 }] },
     ];
 
-    expect(validatableCalendarTicketIds(rows, [23, 24])).toEqual([1]);
+    expect(validatableCalendarTicketIds(rows, [23, 24])).toEqual([1, 4]);
   });
 
   it("moves only unused valid vouchers belonging to selected day rows", () => {

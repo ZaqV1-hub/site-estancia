@@ -141,6 +141,7 @@ export type PainelPurchaseVoucherListFilters = {
 };
 
 export type PainelPurchaseVoucherListItem = {
+  canValidate?: boolean;
   kind?: "passport" | "addon";
   purchaseId: number;
   voucherId: number;
@@ -1241,6 +1242,7 @@ function mapPainelPurchaseVoucherListItem(
     location: String(row.tpcompra ?? "").trim(),
     locationLabel: formatPurchaseLocationLabel(row.tpcompra),
     unitValue: formatMoneyLabel(row.vlunicompra),
+    canValidate: row.stusado === "n" && row.stcompra === "conc",
     purchaseStatusLabel: formatPurchaseStatusLabel(row.stcompra),
     usedLabel: formatVoucherUsedLabel(row.stusado),
     usedDate: formatDateLabel(row.dtuso),

@@ -984,6 +984,7 @@ describe("listPainelPurchaseVouchers", () => {
           usedDate: null,
           usedTime: null,
           purchaseTypeLabel: "Compra",
+          canValidate: true,
           kind: "passport",
         },
       ],

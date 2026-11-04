@@ -1,3 +1,4 @@
+import { DailyOperationRefresh } from "@/components/daily-operation-refresh";
 import Link from "next/link";
 import { formatBilheteriaCashDateLong } from "@/lib/bilheteria-cash-view-model";
 
@@ -18,6 +19,7 @@ export function BilheteriaCashHeader({
 }: Props) {
   return (
     <header className="panel-section flex flex-wrap items-center justify-between gap-4 px-5 py-4">
+      <DailyOperationRefresh/>
       <div>
         <p className="panel-eyebrow">Bilheteria</p>
         <h2 className="text-[24px] font-black capitalize leading-tight text-[#17351f]">

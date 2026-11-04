@@ -52,6 +52,7 @@ type TripVoucherRow = {
 };
 
 type TicketLookupRow = {
+  stusado: string | null;
   idvoucher: number;
   idcompra: number | null;
   dtcompra: string | null;
@@ -232,10 +233,10 @@ export async function lookupPainelBilheteriaTicketByVoucherId(
   const lookup = String(rawVoucherId ?? "").trim();
   const voucherId = Number(lookup);
 
-  if (!lookup || !Number.isInteger(voucherId) || voucherId <= 0) {
+  if (!lookup || !/^[A-Za-z0-9-]+$/.test(lookup) || lookup.length > 64) {
     throw new PainelBilheteriaWorkstationError(
       "invalid_ticket_lookup",
-      "Informe um ID do ingresso válido para consultar.",
+      "Informe um ID ou código do ingresso válido para consultar.",
     );
   }
 
@@ -246,13 +247,15 @@ export async function lookupPainelBilheteriaTicketByVoucherId(
         voucher.idvoucher,
         voucher.idcompra,
         compra.dtcompra::text AS dtcompra,
-        voucher.dtuso::text AS dtuso
+        voucher.dtuso::text AS dtuso,
+        voucher.stusado
       FROM voucher
       LEFT JOIN compra ON compra.idcompra = voucher.idcompra
-      WHERE voucher.idvoucher = $1
+      WHERE voucher.idvoucher = $1 OR UPPER(voucher.numvoucher) = $2
+      ORDER BY CASE WHEN voucher.idvoucher = $1 THEN 0 ELSE 1 END, voucher.idvoucher
       LIMIT 1
     `,
-    [voucherId],
+    [Number.isSafeInteger(voucherId) && voucherId > 0 && voucherId <= 2147483647 ? voucherId : null, lookup.toUpperCase()],
   );
   const row = result.rows[0] ?? null;
 
@@ -270,7 +273,7 @@ export async function lookupPainelBilheteriaTicketByVoucherId(
     purchaseId: row.idcompra ?? null,
     purchaseDate: row.dtcompra ? row.dtcompra.slice(0, 10) : null,
     usedDate: row.dtuso ? row.dtuso.slice(0, 10) : null,
-    used: Boolean(String(row.dtuso ?? "").trim()),
+    used: row.stusado === "s" || row.stusado === "inv" || Boolean(String(row.dtuso ?? "").trim()),
   };
 }
 

@@ -210,7 +210,7 @@ export function OperationalEventEditor({ products, event = null, rule = null, in
                 <div className="calendar-actions calendar-event-footer">
                     {isModal && eventDate && <Link href={`/painel/agenda/${eventDate}`} className="calendar-button-secondary calendar-event-details">Mais detalhes</Link>}
                     {isModal && onCancel && <button type="button" className="calendar-button-secondary" onClick={onCancel}>Cancelar</button>}
-                    <button type="submit" className="calendar-button" disabled={pending || (isModal && Boolean(eventDate) && (loadingRule || !currentRule))}>{pending ? "Salvando…" : isModal ? "Salvar evento" : step === 1 && mode === "date" ? "Continuar" : "Publicar evento"}</button>
+                    <button type="submit" className="calendar-button" disabled={pending || (isModal && Boolean(eventDate) && (loadingRule || !currentRule))}>{pending ? "Salvando…" : isModal ? "Salvar evento" : step === 1 && mode === "date" ? "Continuar" : event ? "Salvar alterações" : "Publicar evento"}</button>
                     {!isModal && (step === 2 ? <button type="button" className="calendar-button-secondary" onClick={() => setStep(1)}>Voltar ao passo 1</button> : <Link href={fromCalendar ? "/painel/agenda" : "/painel/site"} className="calendar-button-secondary">Cancelar</Link>)}
                 </div>
             </form>

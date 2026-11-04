@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createOperationalBoxOfficeSale } from "@/lib/ops-box-office-sales";
 
 const mocks = vi.hoisted(() => ({
@@ -47,6 +47,8 @@ vi.mock("@/lib/ticket-service", () => ({
 
 describe("ops-box-office-sales", () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-25T15:00:00Z"));
     vi.clearAllMocks();
     mocks.getCalendarRule.mockResolvedValue(null);
     let randomIndex = 0;
@@ -72,6 +74,8 @@ describe("ops-box-office-sales", () => {
       sentVoucherIds: [9001],
     });
   });
+
+  afterEach(() => vi.useRealTimers());
 
   it.each([false, true])("creates sale and applies only configured date validity (%s)", async (configured) => {
     if (configured) mocks.getCalendarRule.mockResolvedValue({ configured: true, status: "abe", validity: "7d", passportIds: ["adult", "child", "exempt"], addonIds: [] });
@@ -308,7 +312,7 @@ describe("ops-box-office-sales", () => {
   ])("applies %s sale discounts only to passports", async (kind, value, passportPrice, total, discount, passportType) => {
     mocks.clientQuery.mockImplementation(async (sql: string, values?: unknown[]) => {
       if (sql.includes("FROM agenda")) {
-        return { rows: [{ idagenda: 88, vlnormalbil: "100.00", vlinfantbil: "70.00" }] };
+        return { rows: [{ idagenda: 88, dtagenda: "2026-07-25", stagenda: "abe", vlnormalbil: "100.00", vlinfantbil: "70.00" }] };
       }
       if (sql.includes("FROM descontos")) {
         return { rows: [{ id: 7, nome: "Promoção", tipo_aplicacao: kind, valor: value }] };

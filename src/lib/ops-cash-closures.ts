@@ -4,7 +4,6 @@ import { ensureOpsAuditLogTable, registerOpsAuditLog } from "@/lib/ops-audit-log
 import {
   buildOperationalCashSummary,
   ensureCashPeriodsTable,
-  getOrCreateOpenCashPeriod,
   listCashMovementsByType,
   type OperationalCashSummary,
 } from "@/lib/ops-cash-management";
@@ -331,32 +330,6 @@ export async function listOperationalCashClosures(input?: {
   }
 }
 
-async function lockCashPeriod(client: PoolClient, periodId: number) {
-  const result = await client.query<{
-    id: number;
-    aberto_em: string | null;
-    fechado_em: string | null;
-    operador: string | null;
-    folha_id: number | null;
-  }>(
-    `
-      SELECT
-        id,
-        aberto_em::text AS aberto_em,
-        fechado_em::text AS fechado_em,
-        operador,
-        folha_id
-      FROM caixa_periodos
-      WHERE id = $1
-      LIMIT 1
-      FOR UPDATE
-    `,
-    [periodId],
-  );
-
-  return result.rows[0] ?? null;
-}
-
 async function createCashClosureRecord(
   client: PoolClient,
   periodId: number,
@@ -389,14 +362,6 @@ async function createCashClosureRecord(
   );
 
   return result.rows[0]?.id ?? null;
-}
-
-async function getCurrentTimeText(client: PoolClient) {
-  const result = await client.query<{ current_at: string }>(
-    "SELECT NOW()::text AS current_at",
-  );
-
-  return String(result.rows[0]?.current_at ?? "").trim();
 }
 
 async function getNextLocalMidnightForPeriod(
@@ -487,8 +452,8 @@ async function markClosedVouchersForPeriod(
         AND c.idcompra = v.idcompra
         AND c.tpcompra = 'ponli'
         AND (
-          (v.dtuso::timestamp + COALESCE(v.hruso, '00:00'::time))
-          BETWEEN $2::timestamptz AND $3::timestamptz
+          (v.dtuso::timestamp + COALESCE(v.hruso, '00:00'::time)) >= ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+          AND (v.dtuso::timestamp + COALESCE(v.hruso, '00:00'::time)) < ($3::timestamptz AT TIME ZONE 'America/Sao_Paulo')
         )
     `,
     [periodId, openedAt, closedAt],
@@ -504,8 +469,8 @@ async function markClosedVouchersForPeriod(
         AND c.idcompra = v.idcompra
         AND c.tpcompra <> 'ponli'
         AND (
-          (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time))
-          BETWEEN $2::timestamptz AND $3::timestamptz
+          (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) < ($3::timestamptz AT TIME ZONE 'America/Sao_Paulo')
         )
     `,
     [periodId, openedAt, closedAt],
@@ -536,8 +501,8 @@ async function getCashSalesTotalForRange(
           AND c.stcompra = 'conc'
           AND c.formapag IS NOT NULL
           AND c.formapag <> 'N/A'
-          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time))
-            BETWEEN $1::timestamptz AND $2::timestamptz
+          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= ($1::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+            AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) < ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
         GROUP BY v.idcompra
       ),
       payment_totals AS (
@@ -551,8 +516,8 @@ async function getCashSalesTotalForRange(
           AND c.stcompra = 'conc'
           AND c.formapag IS NOT NULL
           AND c.formapag <> 'N/A'
-          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time))
-            BETWEEN $1::timestamptz AND $2::timestamptz
+          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= ($1::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+            AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) < ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
         GROUP BY cp.idcompra, TRIM(cp.forma_pagamento)
       )
       SELECT
@@ -661,7 +626,7 @@ async function findNextStaleOpenCashPeriod(client: PoolClient) {
         folha_id
       FROM caixa_periodos
       WHERE fechado_em IS NULL
-        AND (aberto_em AT TIME ZONE 'America/Sao_Paulo')::date < CURRENT_DATE
+        AND (aberto_em AT TIME ZONE 'America/Sao_Paulo')::date < (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date
       ORDER BY aberto_em ASC
       LIMIT 1
       FOR UPDATE
@@ -805,76 +770,8 @@ export async function closeOperationalCashClosure(
     );
   }
 
-  const pool = getIngressoDbPool();
-  const client = await pool.connect();
+  throw new OperationalCashClosureError("cash_daily_auto_close", "O caixa permanece aberto até o fim do dia e fecha automaticamente à meia-noite de São Paulo. Consulte o relatório para conferir os valores.", 409);
 
-  try {
-    await client.query("BEGIN");
-
-    await ensureCashPeriodsTable(client);
-    await ensureCashClosuresTable(client);
-
-    const openPeriod = await getOrCreateOpenCashPeriod(client);
-    const lockedPeriod = await lockCashPeriod(client, openPeriod.id);
-
-    if (!lockedPeriod) {
-      throw new OperationalCashClosureError(
-        "cash_period_not_found",
-        "Periodo de caixa aberto nao encontrado.",
-        404,
-      );
-    }
-
-    if (lockedPeriod.fechado_em) {
-      throw new OperationalCashClosureError(
-        "cash_period_already_closed",
-        "O periodo de caixa atual ja foi fechado.",
-        409,
-      );
-    }
-
-    const openedAt = String(lockedPeriod.aberto_em ?? "").trim();
-
-    if (!openedAt) {
-      throw new OperationalCashClosureError(
-        "cash_period_opened_at_missing",
-        "Periodo de caixa sem data de abertura valida.",
-        409,
-      );
-    }
-
-    const closedAt = await getCurrentTimeText(client);
-    const closedClosure = await closeCashPeriodInternal(client, {
-      periodId: lockedPeriod.id,
-      openedAt,
-      operatorName,
-      reason,
-      automatic: false,
-      closedAt,
-      actor: input.actor,
-    });
-
-    const nextPeriodId = await openNextCashPeriod(client, closedAt);
-    const { summary: currentSummary } = await buildOperationalCashSummary(client);
-
-    await client.query("COMMIT");
-
-    return {
-      action: "close",
-      periodId: lockedPeriod.id,
-      nextPeriodId: nextPeriodId ?? currentSummary.period.id,
-      closure: closedClosure.detail,
-      closedSummary: closedClosure.summary,
-      currentSummary,
-      auditLogId: closedClosure.auditLogId,
-      message: "Caixa fechado com sucesso.",
-    };
-  } catch (error) {
-    await client.query("ROLLBACK").catch(() => undefined);
-    throw error;
-  } finally {
-    client.release();
-  }
 }
 
 export async function autoCloseOperationalCashClosures(
@@ -896,6 +793,35 @@ export async function autoCloseOperationalCashClosures(
   try {
     await client.query("BEGIN");
 
+    const { closedPeriodIds, closureIds, auditLogIds } = await synchronizeDailyCashPeriods(client, reason, input.actor);
+
+    const { summary: currentSummary } = await buildOperationalCashSummary(client);
+
+    await client.query("COMMIT");
+
+    return {
+      action: "auto_close",
+      closedCount: closedPeriodIds.length,
+      closedPeriodIds,
+      closureIds,
+      currentSummary,
+      auditLogIds,
+      message:
+        closedPeriodIds.length > 0
+          ? `${closedPeriodIds.length} periodo(s) anterior(es) fechados automaticamente.`
+          : "Nenhum periodo anterior elegivel para fechamento automatico.",
+    };
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+// Runs inside the caller transaction; the shared lock prevents duplicate daily periods.
+export async function synchronizeDailyCashPeriods(client: PoolClient, reason = "Virada automática do caixa diário", actor?: CashClosureActor | null) {
+    await client.query("SELECT pg_advisory_xact_lock(731031)");
     await ensureCashPeriodsTable(client);
     await ensureCashClosuresTable(client);
     await ensureOpsAuditLogTable(client);
@@ -904,7 +830,7 @@ export async function autoCloseOperationalCashClosures(
     const closureIds: number[] = [];
     const auditLogIds: number[] = [];
 
-    for (let index = 0; index < 90; index += 1) {
+    for (let index = 0; index < 3660; index += 1) {
       const stalePeriod = await findNextStaleOpenCashPeriod(client);
 
       if (!stalePeriod) {
@@ -929,7 +855,7 @@ export async function autoCloseOperationalCashClosures(
         reason,
         automatic: true,
         closedAt,
-        actor: input.actor,
+        actor,
       });
 
       closedPeriodIds.push(stalePeriod.id);
@@ -942,26 +868,6 @@ export async function autoCloseOperationalCashClosures(
       await openNextCashPeriod(client, closedAt);
     }
 
-    const { summary: currentSummary } = await buildOperationalCashSummary(client);
-
-    await client.query("COMMIT");
-
-    return {
-      action: "auto_close",
-      closedCount: closedPeriodIds.length,
-      closedPeriodIds,
-      closureIds,
-      currentSummary,
-      auditLogIds,
-      message:
-        closedPeriodIds.length > 0
-          ? `${closedPeriodIds.length} periodo(s) anterior(es) fechados automaticamente.`
-          : "Nenhum periodo anterior elegivel para fechamento automatico.",
-    };
-  } catch (error) {
-    await client.query("ROLLBACK").catch(() => undefined);
-    throw error;
-  } finally {
-    client.release();
-  }
+    if (closedPeriodIds.length === 3660) throw new OperationalCashClosureError("cash_daily_backlog_limit", "Histórico de caixa excede dez anos de períodos pendentes. A operação foi cancelada sem alterações.", 409);
+    return { closedPeriodIds, closureIds, auditLogIds };
 }

@@ -1,8 +1,6 @@
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 import { getOperationalCashClosureDetail, listOperationalCashClosures } from "@/lib/ops-cash-closures";
 import {
-  buildOperationalCashSummary,
-  ensureCashPeriodsTable,
   getOperationalCashSummary,
   listCashMovementsByType,
 } from "@/lib/ops-cash-management";
@@ -100,7 +98,7 @@ async function querySiteRows(client: import("pg").PoolClient, openedAt: string, 
       WHERE c.tpcompra = 'ponli'
         AND v.stusado = 's'
         AND (v.dtuso::timestamp + COALESCE(v.hruso, '00:00'::time)) >= ($1::timestamptz AT TIME ZONE 'America/Sao_Paulo')
-        AND (v.dtuso::timestamp + COALESCE(v.hruso, '00:00'::time)) <= ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+        AND (v.dtuso::timestamp + COALESCE(v.hruso, '00:00'::time)) < ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
       GROUP BY v.tpvoucher, COALESCE(NULLIF(BTRIM(v.descricao), ''), v.tpvoucher)
       ORDER BY COALESCE(NULLIF(BTRIM(v.descricao), ''), v.tpvoucher)
     `,
@@ -128,8 +126,8 @@ async function queryBoxOfficeRows(
         AND c.stcompra = 'conc'
         AND c.formapag IS NOT NULL
         AND c.formapag <> 'N/A'
-        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= $1::timestamptz
-        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) <= $2::timestamptz
+        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= ($1::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) < ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
         AND v.tpvoucher <> 'corte'
         AND v.tpvoucher <> 'espec'
         AND v.stusado <> 'inv'
@@ -166,8 +164,8 @@ async function queryDiscountRows(
         AND c.stcompra = 'conc'
         AND c.formapag IS NOT NULL
         AND c.formapag <> 'N/A'
-        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= $1::timestamptz
-        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) <= $2::timestamptz
+        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= ($1::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) < ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
         AND v.tpvoucher <> 'corte'
         AND v.tpvoucher <> 'espec'
         AND v.stusado <> 'inv'
@@ -224,8 +222,8 @@ async function queryCourtesyRows(
       LEFT JOIN cortesias ct ON ct.id = v.autorizado_por_id
       WHERE v.tpvoucher = 'corte'
         AND v.stusado <> 'inv'
-        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= $1::timestamptz
-        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) <= $2::timestamptz
+        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= ($1::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+        AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) < ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
       GROUP BY COALESCE(ct.nome, 'Bilheteria'), v.identificacao
       ORDER BY COALESCE(ct.nome, 'Bilheteria')
     `,
@@ -263,8 +261,8 @@ async function queryPaymentTotals(
           AND c.stcompra = 'conc'
           AND c.formapag IS NOT NULL
           AND c.formapag <> 'N/A'
-          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= $1::timestamptz
-          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) <= $2::timestamptz
+          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= ($1::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) < ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
           AND v.stusado <> 'inv'
         GROUP BY v.idcompra
       ),
@@ -279,8 +277,8 @@ async function queryPaymentTotals(
           AND c.stcompra = 'conc'
           AND c.formapag IS NOT NULL
           AND c.formapag <> 'N/A'
-          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= $1::timestamptz
-          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) <= $2::timestamptz
+          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) >= ($1::timestamptz AT TIME ZONE 'America/Sao_Paulo')
+          AND (c.dtcompra + COALESCE(c.hrcompra, '00:00'::time)) < ($2::timestamptz AT TIME ZONE 'America/Sao_Paulo')
         GROUP BY cp.idcompra, TRIM(cp.forma_pagamento)
       )
       SELECT
@@ -382,10 +380,9 @@ export async function getBilheteriaCashClosureReport(
     }
   }
 
+  const summary = await getOperationalCashSummary();
   const client = await getIngressoDbPool().connect();
   try {
-    await ensureCashPeriodsTable(client);
-    const { summary } = await buildOperationalCashSummary(client);
     const openedAt = summary.period.openedAt;
     const closedAt = new Date().toISOString();
 
@@ -409,6 +406,7 @@ export async function listBilheteriaCashClosureHistory(input?: {
   page?: number;
   pageSize?: number;
 }) {
+  await getOperationalCashSummary();
   const page = input?.page && input.page > 0 ? input.page : 1;
   const pageSize = input?.pageSize && input.pageSize > 0 ? input.pageSize : 30;
   const offset = (page - 1) * pageSize;

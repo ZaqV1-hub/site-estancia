@@ -276,9 +276,9 @@ export async function saveCalendarDate(input: SaveCalendarDateInput, actor: Cale
           type==="event"?input.eventTitle:null,type==="event"?input.eventDescription:null]);
       agendaId=Number(inserted.rows[0].idagenda);
     } else {
-      await client.query(`UPDATE agenda SET stagenda=$2,tpagenda=$3,
-        nmpromocional=CASE WHEN $3='promo' THEN $4 ELSE NULL END,
-        dspromocional=CASE WHEN $3='promo' THEN COALESCE($5,dspromocional) ELSE NULL END WHERE idagenda=$1`,
+      await client.query(`UPDATE agenda SET stagenda=$2,tpagenda=$3::varchar,
+        nmpromocional=CASE WHEN $3::varchar='promo' THEN $4 ELSE NULL END,
+        dspromocional=CASE WHEN $3::varchar='promo' THEN COALESCE($5,dspromocional) ELSE NULL END WHERE idagenda=$1`,
         [agendaId,input.status,type==="event"?"promo":"padra",input.eventTitle??null,input.eventDescription??null]);
     }
     await client.query(`INSERT INTO estancia_calendar_rules

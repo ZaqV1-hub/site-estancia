@@ -50,7 +50,8 @@ describe("BilheteriaCashClosurePage", () => {
     expect(html).toContain("Resumo");
     expect(html).toContain("Detalhado");
     expect(html).toContain("Imprimir fechamento");
-    expect(html).toContain("FECHAR CAIXA");
+    expect(html).toContain("encerra automaticamente à meia-noite");
+    expect(html).not.toContain("FECHAR CAIXA");
     expect(html).toContain('href="/painel/bilheteria/fechamento-caixa/historico"');
     expect(html).toContain('href="/painel/bilheteria/fechamento-caixa/edicoes"');
   });

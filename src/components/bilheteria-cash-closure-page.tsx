@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { BilheteriaCashHeader } from "@/components/bilheteria-cash-header";
 import {
   formatBilheteriaCashDateTime,
@@ -20,23 +19,7 @@ type Props = {
   report: BilheteriaCashClosureReportModel;
 };
 
-type CloseCashResponse = {
-  ok: true;
-  data: {
-    closure: {
-      id: number;
-    };
-    message: string;
-  };
-} | {
-  ok: false;
-  error: {
-    message: string;
-  };
-};
-
 export function BilheteriaCashClosurePage({
-  actorCpf = null,
   actorName = null,
   closureId,
   isHistorical,
@@ -44,14 +27,12 @@ export function BilheteriaCashClosurePage({
   printHref,
   report,
 }: Props) {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"resumo" | "detalhado">("resumo");
-  const [feedback, setFeedback] = useState<{
+  const [feedback] = useState<{
     tone: "error" | "success";
     message: string;
   } | null>(null);
-  const [showCloseModal, setShowCloseModal] = useState(false);
-  const [isPending, startTransition] = useTransition();
+
 
   const fundRows = useMemo(() => report.funds, [report.funds]);
   const sangriaRows = useMemo(() => report.sangrias, [report.sangrias]);
@@ -77,57 +58,6 @@ export function BilheteriaCashClosurePage({
     try {
       printWin.opener = null;
     } catch {}
-  }
-
-  function handleCloseCash(formData: FormData) {
-    const operatorName = String(formData.get("operatorName") ?? "").trim();
-    startTransition(async () => {
-      setFeedback(null);
-
-      try {
-        const response = await fetch("/api/painel/bilheteria/cash-closures", {
-          body: JSON.stringify({
-            actor: {
-              cpf: actorCpf,
-              name: actorName,
-            },
-            operatorName,
-            reason: "Fechamento realizado pela tela dedicada da bilheteria.",
-          }),
-          credentials: "same-origin",
-          headers: { "content-type": "application/json" },
-          method: "POST",
-        });
-
-        const payload = (await response.json().catch(() => null)) as CloseCashResponse | null;
-        if (!response.ok || !payload || !payload.ok) {
-          setFeedback({
-            tone: "error",
-            message:
-              payload && !payload.ok
-                ? payload.error.message
-                : "Nao foi possivel fechar o caixa agora.",
-          });
-          return;
-        }
-
-        setFeedback({
-          tone: "success",
-          message: payload.data.message,
-        });
-        setShowCloseModal(false);
-        openPrintWindow(`/painel/fechamentos/${payload.data.closure.id}/imprimir`);
-        router.refresh();
-      } catch (error) {
-        setFeedback({
-          tone: "error",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Falha ao fechar o caixa.",
-        });
-      }
-    });
   }
 
   function renderPaymentSummaryRows(
@@ -173,7 +103,7 @@ export function BilheteriaCashClosurePage({
           <div>
             <p className="panel-eyebrow">Caixa</p>
             <h1 className="text-[28px] font-black leading-tight text-[#17351f]">
-              Fechamento de caixa
+              Fechamento de caixa · {report.period.openedAt ? new Intl.DateTimeFormat("pt-BR", {timeZone:"America/Sao_Paulo"}).format(new Date(report.period.openedAt)) : "hoje"}
             </h1>
             {isHistorical ? <p className="mt-1 text-sm text-[#5a6b5d]">Historico salvo</p> : null}
           </div>
@@ -677,7 +607,7 @@ export function BilheteriaCashClosurePage({
           <div className="text-sm text-[#5f7387]">
             {isHistorical
               ? "Visualizacao de um fechamento ja concluido."
-              : "Revise os totais antes de imprimir ou concluir o fechamento do caixa."}
+              : "Caixa diário: encerra automaticamente à meia-noite de São Paulo. Você pode conferir e imprimir os valores durante o dia."}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {effectivePrintHref ? (
@@ -690,72 +620,19 @@ export function BilheteriaCashClosurePage({
               </button>
             ) : null}
 
-            {!isHistorical ? (
-              <button
-                className="rounded-[4px] bg-[#d33c3c] px-4 py-3 text-sm font-bold text-white"
-                onClick={() => setShowCloseModal(true)}
-                type="button"
-              >
-                FECHAR CAIXA
-              </button>
-            ) : (
+            {isHistorical ? (
               <Link
                 className="rounded-[4px] bg-[#6b7280] px-4 py-3 text-sm font-bold text-white"
                 href="/painel/bilheteria/fechamento-caixa/historico"
               >
                 Voltar
               </Link>
-            )}
+            ) : null}
           </div>
         </div>
       </section>
 
-      {showCloseModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-8">
-          <form
-            action={handleCloseCash}
-            className="w-full max-w-[360px] rounded-[8px] bg-white p-5 shadow-[0_18px_40px_rgba(0,0,0,0.24)]"
-          >
-            <div className="flex items-center justify-between border-b border-[#e6edf3] pb-3">
-              <h2 className="text-lg font-semibold text-[#1d3348]">Fechar Caixa</h2>
-              <button
-                className="text-2xl leading-none text-[#5f7387]"
-                onClick={() => setShowCloseModal(false)}
-                type="button"
-              >
-                ×
-              </button>
-            </div>
-            <div className="grid gap-4 py-4">
-              <label className="grid gap-2 text-sm font-semibold text-[#35576f]">
-                Nome do operador
-                <input
-                  className="rounded-[4px] border border-[#cbd5df] px-3 py-2 text-sm text-[#1d3348]"
-                  name="operatorName"
-                  required
-                />
-              </label>
-              <p className="text-sm text-[#1d3348]">Deseja fechar o caixa?</p>
-            </div>
-            <div className="flex justify-end gap-3 border-t border-[#e6edf3] pt-4">
-              <button
-                className="rounded-[8px] bg-[#e5e7eb] px-4 py-2 text-sm font-semibold text-[#1d3348]"
-                onClick={() => setShowCloseModal(false)}
-                type="button"
-              >
-                Nao
-              </button>
-              <button
-                className="rounded-[8px] bg-[#246b99] px-4 py-2 text-sm font-semibold text-white"
-                disabled={isPending}
-                type="submit"
-              >
-                {isPending ? "Executando..." : "Sim"}
-              </button>
-            </div>
-          </form>
-        </div>
-      ) : null}
+
     </div>
   );
 }

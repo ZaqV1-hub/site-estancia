@@ -965,6 +965,11 @@ export async function createOperationalBoxOfficeSale(
       );
     }
 
+    const saleDate = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+    if (agenda.stagenda !== "abe" || String(agenda.dtagenda ?? "").slice(0, 10) !== saleDate) {
+      throw new BoxOfficeSaleError("agenda_closed", "Vendas disponíveis somente com a agenda de hoje aberta. A validação de ingressos continua disponível.", 409);
+    }
+
     const explicitPurchaseDiscountId =
       Number.isInteger(Number(input.purchaseDiscountId)) && Number(input.purchaseDiscountId) > 0
         ? Number(input.purchaseDiscountId)

@@ -1,3 +1,4 @@
+import { DailyOperationRefresh } from "@/components/daily-operation-refresh";
 import Link from "next/link";
 import {
   type LegacyPanelActionContract,
@@ -188,6 +189,7 @@ export function PainelBilheteriaPageHeader({
 
   return (
     <header className="panel-section flex flex-wrap items-center justify-between gap-4 px-7 py-6">
+      <DailyOperationRefresh/>
       <div>
         <p className="panel-eyebrow">Bilheteria</p>
         <h1 className="mt-2 text-[28px] font-black capitalize leading-tight text-[#17351f]">

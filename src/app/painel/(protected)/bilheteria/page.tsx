@@ -86,24 +86,9 @@ export default async function PainelBilheteriaPage({
         actorName={session.actorName}
       />
 
-      {hasOpenAgendaToday ? (
-        <PainelBilheteriaWorkstation
-          actorName={session.actorName}
-          actorCpf={session.actorCpf}
-          isManager={session.legacyRoleId === 1}
-          initialTicketLookupState={initialTicketLookupState}
-        />
-      ) : (
-        <section className="panel-section p-6">
-          <p className="panel-eyebrow">Bilheteria</p>
-          <h2 className="mt-2 text-[34px] font-black leading-tight text-[#17351f]">
-            Agenda não aberta
-          </h2>
-          <p className="mt-3 text-[15px] leading-7 text-[#5f7564]">
-            A bilheteria so fica ativa quando existe agenda aberta para hoje.
-          </p>
-        </section>
-      )}
+      {!hasOpenAgendaToday && <section className="panel-section p-5" role="status"><p>Agenda fechada para vendas hoje. Consulta e validação de ingressos continuam disponíveis.</p></section>}
+      <PainelBilheteriaWorkstation actorName={session.actorName} actorCpf={session.actorCpf} isManager={session.legacyRoleId === 1} salesAvailable={hasOpenAgendaToday} initialTicketLookupState={initialTicketLookupState}/>
+
     </div>
   );
 }

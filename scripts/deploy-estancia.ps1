@@ -67,11 +67,10 @@ $hasStoppedService = $false
 
 New-Item -ItemType Directory -Path $stage | Out-Null
 try {
-  $archive = Join-Path $stage 'source.tar'
-  git archive --format=tar "--output=$archive" $Release
+  $archive = Join-Path $stage 'source.zip'
+  git archive --format=zip "--output=$archive" $Release
   if ($LASTEXITCODE -ne 0) { throw 'Unable to archive the release.' }
-  tar.exe -xf $archive -C $stage
-  if ($LASTEXITCODE -ne 0) { throw 'Unable to extract the release.' }
+  Expand-Archive -LiteralPath $archive -DestinationPath $stage
   Copy-Item -LiteralPath (Join-Path $root '.env.local') -Destination $stage
 
   Write-Output "Installing dependencies for $Release in staging."

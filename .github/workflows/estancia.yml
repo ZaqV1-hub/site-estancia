@@ -1,0 +1,58 @@
+name: Estância
+
+on:
+  pull_request:
+    branches: [main, codex/develop]
+  push:
+    branches: [main, codex/develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20.19.5'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build -- --webpack
+
+  deploy:
+    name: Publicar na VM Rincão
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    concurrency:
+      group: estancia-production
+      cancel-in-progress: false
+    steps:
+      - name: Compilar e publicar na VM
+        env:
+          ESTANCIA_DEPLOY_KEY: ${{ secrets.ESTANCIA_DEPLOY_KEY }}
+          ESTANCIA_SSH_KNOWN_HOSTS: ${{ vars.ESTANCIA_SSH_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${ESTANCIA_DEPLOY_KEY:?Configure ESTANCIA_DEPLOY_KEY}"
+          : "${ESTANCIA_SSH_KNOWN_HOSTS:?Configure ESTANCIA_SSH_KNOWN_HOSTS}"
+          umask 077
+          ssh_dir="$(mktemp -d)"
+          trap 'rm -rf "$ssh_dir"' EXIT
+          printf '%s\n' "$ESTANCIA_DEPLOY_KEY" > "$ssh_dir/key"
+          printf '%s\n' "$ESTANCIA_SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+          ssh -T -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$ssh_dir/known_hosts" \
+            -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=4 \
+            -i "$ssh_dir/key" Administrator@vpsw2762.publiccloud.com.br "deploy $GITHUB_SHA"

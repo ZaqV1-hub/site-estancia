@@ -89,6 +89,29 @@ No deploy em Windows com IIS, o recomendado e manter o Next.js rodando em um
 processo Node dedicado e usar o IIS apenas como reverse proxy para a porta local
 desse processo.
 
+### Publicação da Estância pelo GitHub
+
+O workflow **Estância** roda testes, lint e build em pushes e pull requests de
+`main` e `codex/develop`. Para publicar, abra **Actions → Estância → Run workflow**,
+selecione `main` e confirme. O GitHub roda as verificações antes de enviar o
+commit para a VM Rincão. A tarefa `EstanciaGitHubDeploy` continua executando
+na VM se a sessão SSH cair.
+
+A VM compila com Webpack numa pasta protegida enquanto o build atual atende
+o site. Depois, atualiza os fontes, troca o build e reinicia o serviço
+`site-estancia-next`. Se o Next.js ou o IIS falhar na checagem, a tarefa restaura
+o build anterior. Após uma publicação bem-sucedida, o build anterior fica em
+`.next.pre-rollback`. Se `main` avançar durante a compilação ou a VM tiver
+mudanças locais de código, a tarefa para antes de desligar o serviço.
+
+O workflow usa o segredo `ESTANCIA_DEPLOY_KEY` e a variável
+`ESTANCIA_SSH_KNOWN_HOSTS`. A chave dedicada na VM só pode chamar o
+`start-estancia-deploy.ps1`, instalado fora do checkout em
+`C:\ProgramData\EstanciaDeploy`. Esse launcher só aceita o commit atual de
+`main` e entrega a execução à tarefa do Windows. Mudanças no launcher
+exigem atualizar essa cópia na VM. O script `deploy-estancia.ps1` é lido do
+commit que está sendo publicado.
+
 ## Formularios institucionais
 
 Os formularios de grupos preservam a regra do WordPress: em producao, os

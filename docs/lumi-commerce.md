@@ -10,6 +10,9 @@ A ativação exige `LUMI_COMMERCE_ENABLED=true`, `LUMI_COMMERCE_SECRET`,
 `LUMI_TENANT_ID`, `LUMI_COMMERCE_DATABASE_NAME` e `LUMI_CHECKOUT_BASE_URL`.
 O banco configurado deve corresponder exatamente ao nome aprovado. A compra
 usa os mesmos produtos, disponibilidade, regras, preços e integração Cielo do site.
+O iniciador `run_next.cmd` usa `node --env-file=.env.local` para carregar o arquivo
+privado com suporte a valores entre aspas. Alterações nesse arquivo exigem
+reiniciar apenas o serviço do site e validar novamente o acesso autenticado.
 
 Antes de ativar, faça backup do banco e aplique `scripts/lumi-commerce-schema.sql`.
 A migração acrescenta duas colunas e uma tabela, preservando dados e sequências.

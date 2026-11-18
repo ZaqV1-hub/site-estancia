@@ -6,6 +6,7 @@ import { sendPurchaseTicketsWhatsApp } from "@/lib/ticket-service";
 import { mapCheckoutStatusPayload } from "@/lib/checkout-status";
 import {
   generateVoucherQrcodes,
+  downloadVoucherQrCode,
   TicketApiError,
 } from "@/lib/ticket-api";
 
@@ -232,7 +233,7 @@ export type PainelBilheteriaVoucherPrintModel = {
   price: string;
   tpcompra: string | null;
   visitDate: string | null;
-  validUntil: string;
+  validUntil: string | null;
   qrCodeUrl: string | null;
 };
 
@@ -1105,7 +1106,6 @@ export async function getPainelBilheteriaVoucherPrintModel(
         JOIN compra ON compra.idcompra = voucher.idcompra
         WHERE voucher.idvoucher = $1
         LIMIT 1
-        FOR UPDATE
       `,
       [voucherId],
     );
@@ -1119,7 +1119,7 @@ export async function getPainelBilheteriaVoucherPrintModel(
       );
     }
 
-    if (String(voucher.dtuso ?? "").trim()) {
+    if (voucher.stusado === "s" || String(voucher.dtuso ?? "").trim()) {
       throw new PainelBilheteriaError(
         "voucher_already_used",
         "Voucher já utilizado; não é possível reemitir/imprimir.",
@@ -1142,22 +1142,31 @@ export async function getPainelBilheteriaVoucherPrintModel(
       agendaDate = agendaResult.rows[0]?.dtagenda ?? null;
     }
 
-    const validUntil = new Date();
-    validUntil.setDate(validUntil.getDate() + 1);
-    const validUntilText = validUntil.toISOString().slice(0, 10);
+    if (voucher.stusado === "inv") {
+      throw new PainelBilheteriaError("voucher_invalidated", "Voucher invalidado; impressão indisponível.", 409);
+    }
+    const validUntilText = voucher.dtvalidade ? voucher.dtvalidade.slice(0, 10) : null;
 
-    await client.query(
-      `
-        UPDATE voucher
-        SET dtvalidade = $2::date
-        WHERE idvoucher = $1
-      `,
-      [voucherId, validUntilText],
-    );
+    const qrCodeMap = await generateVoucherQrcodes([
+      {
+        purchaseId: voucher.idcompra,
+        voucherId,
+        cpf: String(voucher.cpf ?? "").trim(),
+        type: voucher.tpvoucher,
+        purchaseLocation: voucher.tpcompra === "ponli" ? "Site" : "Bilheteria",
+        purchaseDate: voucher.dtcompra ? voucher.dtcompra.slice(0, 10) : null,
+        price: Number(voucher.vlunicompra ?? 0),
+        tpcompra: String(voucher.tpcompra ?? "").trim(),
+      },
+    ]);
+    const generatedQrCodeUrl = qrCodeMap[voucherId] ?? null;
+    if (!generatedQrCodeUrl) throw new PainelBilheteriaError("voucher_print_unavailable", "O serviço não retornou o QR Code deste ingresso. Tente novamente.", 502);
+
+    const qrCodeUrl = await downloadVoucherQrCode(generatedQrCodeUrl, voucher.idcompra, voucherId);
 
     await registerOpsAuditLog(client, {
       origem: "compra",
-      acao: "editar",
+      acao: "imprimir",
       compraId: voucher.idcompra,
       descricao: `Impressão operacional do voucher ${voucherId}.`,
       motivo: "Reemissão de QR individual no painel.",
@@ -1171,22 +1180,7 @@ export async function getPainelBilheteriaVoucherPrintModel(
         validUntil: validUntilText,
       },
     });
-
     await client.query("COMMIT");
-
-    const qrCodeMap = await generateVoucherQrcodes([
-      {
-        purchaseId: voucher.idcompra,
-        voucherId,
-        cpf: String(voucher.cpf ?? "").trim(),
-        type: voucher.tpvoucher,
-        purchaseLocation: "Bilheteria",
-        purchaseDate: voucher.dtcompra ? voucher.dtcompra.slice(0, 10) : null,
-        price: Number(voucher.vlunicompra ?? 0),
-        tpcompra: String(voucher.tpcompra ?? "").trim(),
-      },
-    ]);
-    const qrCodeUrl = qrCodeMap[voucherId] ?? null;
 
     return {
       purchaseId: voucher.idcompra,
@@ -1197,7 +1191,7 @@ export async function getPainelBilheteriaVoucherPrintModel(
       type: voucher.tpvoucher ?? null,
       typeLabel: resolveVoucherDisplayLabel(voucher),
       description: voucher.descricao,
-      purchaseLocation: "Bilheteria",
+      purchaseLocation: voucher.tpcompra === "ponli" ? "Site" : "Bilheteria",
       purchaseDate: voucher.dtcompra ? voucher.dtcompra.slice(0, 10) : null,
       price: formatMoney(voucher.vlunicompra),
       tpcompra: voucher.tpcompra ?? null,

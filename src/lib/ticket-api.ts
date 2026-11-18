@@ -90,3 +90,14 @@ export async function downloadImageAsDataUrl(url: string) {
 
   return `data:${contentType};base64,${buffer.toString("base64")}`;
 }
+
+// Local QR assets belong to the same service that generated them. Embed the
+// image so the print page never depends on a second public TLS connection.
+export async function downloadVoucherQrCode(url: string, purchaseId: number, voucherId: number) {
+  const asset = new URL(url);
+  const expectedPath = `/assets/qrcodes/${purchaseId}-${voucherId}.png`;
+  const downloadUrl = asset.pathname === expectedPath
+    ? new URL(expectedPath, `${getTicketsApiBaseUrl()}/`).toString()
+    : url;
+  return downloadImageAsDataUrl(downloadUrl);
+}

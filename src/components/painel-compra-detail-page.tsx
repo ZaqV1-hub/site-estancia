@@ -82,7 +82,7 @@ function summarizePurchaseItems(vouchers: PainelPurchaseDetail["vouchers"]) {
   return Array.from(grouped.values());
 }
 
-export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageHistory, canValidate }: PainelCompraDetailPageProps) {
+export function PainelCompraDetailPage({ detail, canValidate }: PainelCompraDetailPageProps) {
   const passports = detail.vouchers.filter(isPassport);
   const validatableTicketIds = detail.status === "conc" && (detail.type === "ponli" || detail.type === "reser" || detail.type === "bilhe")
     ? passports.filter((voucher) => voucher.used === "n").map((voucher) => voucher.voucherId)
@@ -131,9 +131,9 @@ export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageH
     <div className="calendar-card">
       <div className="calendar-section-header">
         <div><p className="calendar-eyebrow">Compra</p><h1 className="calendar-heading">Compra #{detail.purchaseId}</h1><p className="calendar-subtitle">{detail.userName || formatCpf(detail.cpf)} · {source}</p></div>
-        <div className="calendar-inline-actions">
+        <PainelCompraDetailActions purchaseId={detail.purchaseId} validatableTicketIds={canValidate ? validatableTicketIds : undefined}>
           {movable.length ? <CalendarPurchaseActions purchaseId={detail.purchaseId} voucherIds={movable.map((voucher) => voucher.voucherId)} peopleCount={movable.filter(isPassport).length} totalValue={formatMoneyLabel(movable.reduce((total, voucher) => total + parseMoneyLabel(voucher.unitValue), 0))} label="Mover ou editar validade" /> : null}
-        </div>
+        </PainelCompraDetailActions>
       </div>
       {reschedules.length ? <div className="calendar-purchase-reschedule-notice" role="note"><strong>Reagendada.</strong>{reschedules.map((voucher) => <p key={[voucher.originalDate, voucher.visitDate, voucher.validUntil, voucher.rescheduleReason].join("|")}>Visita original em {voucher.originalDate}{voucher.rescheduleReason ? ` (${voucher.rescheduleReason})` : ""}. Nova data: {voucher.visitDate ?? "Não informada"}. Validade: {voucher.validUntil ?? voucher.visitDate ?? "Não informada"}.</p>)}</div> : null}
       <dl className="calendar-purchase-summary">
@@ -174,8 +174,7 @@ export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageH
       <div className="calendar-card"><p className="calendar-eyebrow">Histórico</p><CalendarPurchaseActions key={detail.purchaseId} purchaseId={detail.purchaseId} voucherIds={[]} history historyVersion={JSON.stringify(detail.vouchers)} /></div>
     </div>
 
-    <div className="calendar-purchase-columns">
-      <div className="calendar-card">
+    <div className="calendar-card">
         <p className="calendar-eyebrow">Financeiro</p><h2>Pagamento</h2>
         <dl className="calendar-purchase-summary calendar-payment-summary">
           <div><dt>CPF</dt><dd>{formatCpf(detail.cpf)}</dd></div>
@@ -188,7 +187,6 @@ export function PainelCompraDetailPage({ detail, actorName, actorCpf, canManageH
           {detail.gatewayPaymentId ? <><div><dt>ID Pagamento</dt><dd>{detail.gatewayPaymentId}</dd></div><div><dt>Status do gateway</dt><dd>{detail.gatewayStatusCode ? `Cielo ${detail.gatewayStatusCode} - ${detail.gatewayStatusLabel}` : "-"}</dd></div></> : null}
         </dl>
       </div>
-      <PainelCompraDetailActions actorCpf={actorCpf} actorName={actorName} canManageHistory={canManageHistory} validatableTicketIds={canValidate ? validatableTicketIds : undefined} purchaseId={detail.purchaseId} voucherIds={detail.vouchers.map((voucher) => voucher.voucherId)} />
-    </div>
+
   </section>;
 }

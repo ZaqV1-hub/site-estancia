@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSiteUrl } from "@/lib/site-metadata";
 import { requestCustomerPasswordReset } from "@/lib/customer-password-reset";
 import { isValidCpf, sanitizeCpf } from "@/lib/user-repository";
 
@@ -39,7 +40,8 @@ export async function POST(request: Request) {
   try {
     const result = await requestCustomerPasswordReset({
       cpf,
-      origin: new URL(request.url).origin,
+      // IIS forwards the request to the local Next.js server.
+      origin: getSiteUrl(),
     });
 
     if (result.blocked) {

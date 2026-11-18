@@ -32,7 +32,7 @@ describe("PainelCompraDetailPage", () => {
       .toMatch(/<button[^>]*disabled=""[^>]*>Validar todos os ingressos/);
   });
 
-  it("resume seis campos operacionais e mantém metadados e PDF no financeiro abaixo", () => {
+  it("resume seis campos operacionais com ações no cabeçalho e metadados financeiros abaixo", () => {
     const html = render();
     const overview = html.match(/<dl[^>]*>(.*?)<\/dl>/)?.[1] ?? "";
     expect([...overview.matchAll(/<dt>(.*?)<\/dt>/g)].map((match) => match[1])).toEqual([
@@ -43,7 +43,10 @@ describe("PainelCompraDetailPage", () => {
     expect(financial).toContain("123.456.789-01");
     expect(financial).toContain("06/05/2026");
     expect(financial).toContain("Site");
-    expect(financial).toContain("/api/painel/compras/551/resumo");
+    const header = html.split("<dl")[0];
+    expect(header).toContain("/api/painel/compras/551/resumo");
+    expect(header).toContain("/painel/bilheteria/compras/551/imprimir");
+    expect(header).toContain('aria-label="Ações da compra"');
   });
 
   it.each([
@@ -96,7 +99,6 @@ describe("PainelCompraDetailPage", () => {
     expect(html).toContain("Editar data / validade");
     expect(html).toContain("/api/painel/compras/551/resumo");
     expect(html).toContain("/painel/bilheteria/compras/551/imprimir");
-    expect(html).toContain("Enviar por WhatsApp");
     expect(html).toContain("Gerar Resumo");
     expect(html).toContain('aria-label="Status da compra"');
     expect(html).toContain("ID Pagamento");

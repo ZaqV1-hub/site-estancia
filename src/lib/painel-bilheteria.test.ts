@@ -4,12 +4,13 @@ import {
   getPainelBilheteriaVoucherPrintModel,
 } from "@/lib/painel-bilheteria";
 
-const { query, connect, clientQuery, release, generateVoucherQrcodes, registerOpsAuditLog } = vi.hoisted(() => ({
+const { query, connect, clientQuery, release, generateVoucherQrcodes, downloadVoucherQrCode, registerOpsAuditLog } = vi.hoisted(() => ({
   query: vi.fn(),
   connect: vi.fn(),
   clientQuery: vi.fn(),
   release: vi.fn(),
   generateVoucherQrcodes: vi.fn(),
+  downloadVoucherQrCode: vi.fn(),
   registerOpsAuditLog: vi.fn(),
 }));
 
@@ -22,6 +23,7 @@ vi.mock("@/lib/ingresso-db", () => ({
 
 vi.mock("@/lib/ticket-api", () => ({
   generateVoucherQrcodes,
+  downloadVoucherQrCode,
   TicketApiError: class TicketApiError extends Error {
     code: string;
     status: number;
@@ -40,7 +42,7 @@ vi.mock("@/lib/ops-audit-log", () => ({
 
 describe("painel-bilheteria", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     connect.mockResolvedValue({
       query: clientQuery,
       release,
@@ -159,7 +161,7 @@ describe("painel-bilheteria", () => {
     ]);
   });
 
-  it("returns a single voucher print model and extends validity", async () => {
+  it("embeds the QR for printing without changing voucher validity", async () => {
     clientQuery.mockImplementation(async (sql: string, values?: unknown[]) => {
       if (sql === "BEGIN" || sql === "COMMIT") {
         return { rows: [] };
@@ -197,18 +199,13 @@ describe("painel-bilheteria", () => {
         };
       }
 
-      if (sql.includes("UPDATE voucher")) {
-        expect(values?.[0]).toBe(12);
-        expect(String(values?.[1])).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-        return { rows: [] };
-      }
-
       return { rows: [] };
     });
     registerOpsAuditLog.mockResolvedValue(77);
     generateVoucherQrcodes.mockResolvedValue({
       12: "https://qr.example/12.png",
     });
+    downloadVoucherQrCode.mockResolvedValue("data:image/png;base64,cXI=");
 
     const model = await getPainelBilheteriaVoucherPrintModel(12, {
       name: "Operador",
@@ -224,7 +221,8 @@ describe("painel-bilheteria", () => {
         purchaseLocation: "Bilheteria",
         purchaseDate: "2026-04-28",
         visitDate: "2026-05-01",
-        qrCodeUrl: "https://qr.example/12.png",
+        validUntil: "2026-04-28",
+        qrCodeUrl: "data:image/png;base64,cXI=",
       }),
     );
     expect(generateVoucherQrcodes).toHaveBeenCalledWith([
@@ -235,6 +233,12 @@ describe("painel-bilheteria", () => {
         purchaseLocation: "Bilheteria",
       }),
     ]);
+    expect(downloadVoucherQrCode).toHaveBeenCalledWith("https://qr.example/12.png", 321, 12);
+    expect(clientQuery.mock.calls.some(([sql]) => /UPDATE\s+voucher/i.test(sql))).toBe(false);
+    expect(registerOpsAuditLog).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      acao: "imprimir",
+      detalhes: expect.objectContaining({ validUntil: "2026-04-28" }),
+    }));
     expect(release).toHaveBeenCalled();
   });
 
@@ -276,5 +280,66 @@ describe("painel-bilheteria", () => {
     });
     expect(generateVoucherQrcodes).not.toHaveBeenCalled();
     expect(release).toHaveBeenCalled();
+  });
+
+  describe("reconciled print safeguards", () => {
+    let voucher: Record<string, unknown>;
+
+    beforeEach(() => {
+      voucher = {
+        idvoucher: 12, idcompra: 321, idagenda: null, numvoucher: "A1234",
+        tpvoucher: "norma", stusado: "n", dtuso: null, vlunicompra: "49.90",
+        desconto_id: null, descricao: "Passaporte", dtvalidade: null,
+        cpf: "52998224725", tpcompra: "ponli", dtcompra: "2026-04-28",
+      };
+      clientQuery.mockImplementation(async (sql: string) => ({
+        rows: sql.includes("FROM voucher") ? [voucher] : [],
+      }));
+      generateVoucherQrcodes.mockResolvedValue({ 12: "https://qr.example/12.png" });
+      downloadVoucherQrCode.mockResolvedValue("data:image/png;base64,cXI=");
+    });
+
+    it("preserves missing validity and identifies online purchases as Site", async () => {
+      const model = await getPainelBilheteriaVoucherPrintModel(12);
+
+      expect(model).toMatchObject({ validUntil: null, purchaseLocation: "Site" });
+      expect(generateVoucherQrcodes).toHaveBeenCalledWith([
+        expect.objectContaining({ purchaseLocation: "Site", tpcompra: "ponli" }),
+      ]);
+      expect(clientQuery.mock.calls.some(([sql]) => /UPDATE\s+voucher/i.test(sql))).toBe(false);
+    });
+
+    it.each([
+      ["s", "voucher_already_used"],
+      ["inv", "voucher_invalidated"],
+    ])("rejects status %s even without a use date", async (status, code) => {
+      voucher.stusado = status;
+
+      await expect(getPainelBilheteriaVoucherPrintModel(12)).rejects.toMatchObject({ code, status: 409 });
+      expect(generateVoucherQrcodes).not.toHaveBeenCalled();
+      expect(registerOpsAuditLog).not.toHaveBeenCalled();
+      expect(clientQuery).toHaveBeenCalledWith("ROLLBACK");
+      expect(release).toHaveBeenCalled();
+    });
+
+    it("rejects a missing QR before auditing a successful print", async () => {
+      generateVoucherQrcodes.mockResolvedValue({});
+
+      await expect(getPainelBilheteriaVoucherPrintModel(12)).rejects.toMatchObject({ code: "voucher_print_unavailable", status: 502 });
+      expect(downloadVoucherQrCode).not.toHaveBeenCalled();
+      expect(registerOpsAuditLog).not.toHaveBeenCalled();
+      expect(clientQuery).toHaveBeenCalledWith("ROLLBACK");
+      expect(release).toHaveBeenCalled();
+    });
+
+    it("rolls back without a print audit when the QR download fails", async () => {
+      const { TicketApiError } = await import("@/lib/ticket-api");
+      downloadVoucherQrCode.mockRejectedValue(new TicketApiError("ticket_api_asset_unavailable", "QR unavailable"));
+
+      await expect(getPainelBilheteriaVoucherPrintModel(12)).rejects.toMatchObject({ code: "voucher_print_unavailable", status: 502 });
+      expect(registerOpsAuditLog).not.toHaveBeenCalled();
+      expect(clientQuery).toHaveBeenCalledWith("ROLLBACK");
+      expect(release).toHaveBeenCalled();
+    });
   });
 });

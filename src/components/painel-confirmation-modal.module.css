@@ -1,0 +1,43 @@
+.content {
+  display: grid;
+  gap: 24px;
+}
+
+.description {
+  line-height: 1.65;
+}
+
+.description p {
+  margin: 0;
+}
+
+.description p + p {
+  margin-top: 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--panel-line, #dce5d8);
+}
+
+:global(.estancia-panel) .actions > button {
+  width: auto;
+  min-height: 44px;
+  padding: 12px 20px;
+}
+
+@media (max-width: 480px) {
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  :global(.estancia-panel) .actions > button {
+    width: 100%;
+  }
+}

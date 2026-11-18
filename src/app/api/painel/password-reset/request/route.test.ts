@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const requestPainelPasswordReset = vi.fn();
 
@@ -9,9 +9,12 @@ vi.mock("@/lib/painel-password-reset", () => ({
 describe("painel/password-reset/request route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://estanciadayuse.com.br");
   });
 
-  it("requests a painel password reset by e-mail", async () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("uses the configured public origin for panel password resets behind IIS", async () => {
     requestPainelPasswordReset.mockResolvedValue({
       blocked: false,
       userFound: true,
@@ -22,7 +25,7 @@ describe("painel/password-reset/request route", () => {
       "@/app/api/painel/password-reset/request/route"
     );
     const response = await POST(
-      new Request("https://example.com/api/painel/password-reset/request", {
+      new Request("http://127.0.0.1:3001/api/painel/password-reset/request", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -37,7 +40,7 @@ describe("painel/password-reset/request route", () => {
     expect(response.status).toBe(200);
     expect(requestPainelPasswordReset).toHaveBeenCalledWith({
       email: "operador@example.com",
-      origin: "https://example.com",
+      origin: "https://estanciadayuse.com.br",
     });
     expect(body).toEqual({
       ok: true,

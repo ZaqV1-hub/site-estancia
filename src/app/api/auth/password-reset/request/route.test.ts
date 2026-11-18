@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const requestCustomerPasswordReset = vi.fn();
 const sanitizeCpf = vi.fn();
@@ -16,11 +16,14 @@ vi.mock("@/lib/user-repository", () => ({
 describe("auth/password-reset/request route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://estanciadayuse.com.br");
     sanitizeCpf.mockImplementation((value: string) => value.replace(/\D/g, ""));
     isValidCpf.mockReturnValue(true);
   });
 
-  it("requests a public password reset by cpf", async () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("uses the configured public origin for password resets behind IIS", async () => {
     requestCustomerPasswordReset.mockResolvedValue({
       blocked: false,
       userFound: true,
@@ -29,7 +32,7 @@ describe("auth/password-reset/request route", () => {
 
     const { POST } = await import("@/app/api/auth/password-reset/request/route");
     const response = await POST(
-      new Request("https://example.com/api/auth/password-reset/request", {
+      new Request("http://127.0.0.1:3001/api/auth/password-reset/request", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -44,7 +47,7 @@ describe("auth/password-reset/request route", () => {
     expect(response.status).toBe(200);
     expect(requestCustomerPasswordReset).toHaveBeenCalledWith({
       cpf: "52998224725",
-      origin: "https://example.com",
+      origin: "https://estanciadayuse.com.br",
     });
     expect(body).toEqual({
       ok: true,

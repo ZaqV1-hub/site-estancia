@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSiteUrl } from "@/lib/site-metadata";
 import { requestPainelPasswordReset } from "@/lib/painel-password-reset";
 
 export const runtime = "nodejs";
@@ -38,7 +39,8 @@ export async function POST(request: Request) {
   try {
     const result = await requestPainelPasswordReset({
       email,
-      origin: new URL(request.url).origin,
+      // IIS forwards the request to the local Next.js server.
+      origin: getSiteUrl(),
     });
 
     if (result.blocked) {

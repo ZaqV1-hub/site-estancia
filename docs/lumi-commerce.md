@@ -7,7 +7,7 @@ são cliente, gestor e atendente. Pedidos e cotações são isolados pela empres
 conversa. O corpo da requisição tem limite de 32 KiB.
 
 A ativação exige `LUMI_COMMERCE_ENABLED=true`, `LUMI_COMMERCE_SECRET`,
-`LUMI_TENANT_ID`, `LUMI_COMMERCE_DATABASE_NAME` e `LUMI_CHECKOUT_BASE_URL`.
+`LUMI_TENANT_ID`, `LUMI_COMMERCE_DATABASE_NAME` e `LUMI_CHECKOUT_PUBLIC_BASE_URL`.
 O banco configurado deve corresponder exatamente ao nome aprovado. A compra
 usa os mesmos produtos, disponibilidade, regras, preços e integração Cielo do site.
 O iniciador `run_next.cmd` usa `node --env-file=.env.local` para carregar o arquivo
@@ -20,11 +20,14 @@ O vínculo do pedido Lumi é gravado na transação da compra e seus vouchers.
 Após falha de resultado incerto, consulte o estado antes de repetir. Um pedido
 no estado `creating` sem vínculo exige análise operacional.
 
-O comprador fornece CPF, nome e telefone. Contas existentes são preservadas.
+O comprador fornece CPF e nome. O servidor usa o telefone do canal no WhatsApp; nos outros canais solicita somente se faltar. Contas existentes são preservadas.
 Um comprador novo recebe cadastro incompleto com senha aleatória desconhecida.
-O endereço `/lumi/checkout/TOKEN` permite pagar somente o pedido vinculado,
-sem criar sessão de usuário. As APIs de pagamento validam o token, a validade
-e o identificador do pedido. A confirmação utiliza a reconciliação Cielo existente.
+O link retornado aponta ao checkout próprio da Lumi com a marca da Estância.
+O endereço antigo `/lumi/checkout/TOKEN` redireciona a esse checkout. A página
+não cria sessão de usuário e só acessa o pedido vinculado. As APIs validam token,
+validade, origem, CSRF e uma intenção persistida de pagamento. A confirmação
+utiliza a reconciliação Cielo existente. Veja [checkout e formulário escolar](lumi-checkout.md)
+para rotas, migração aditiva, idempotência e o formulário de compra do responsável.
 
 Para retornar, desative as ferramentas do tenant e `LUMI_COMMERCE_ENABLED`.
 Preserve a versão com o checkout para pedidos ainda pendentes. Remover a

@@ -41,7 +41,7 @@ describe("checkout cielo3ds-token route", () => {
 
   it("returns a native 3ds token when bff credentials are configured", async () => {
     const { GET } = await import("@/app/api/checkout/cielo3ds-token/route");
-    const response = await GET();
+    const response = await GET(new Request("https://example.com/api/checkout/cielo3ds-token"));
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -62,7 +62,7 @@ describe("checkout cielo3ds-token route", () => {
     vi.stubGlobal("fetch", vi.fn());
 
     const { GET } = await import("@/app/api/checkout/cielo3ds-token/route");
-    const response = await GET();
+    const response = await GET(new Request("https://example.com/api/checkout/cielo3ds-token"));
     const body = await response.json();
 
     expect(response.status).toBe(503);
@@ -79,7 +79,7 @@ describe("checkout cielo3ds-token route", () => {
     );
 
     const { GET } = await import("@/app/api/checkout/cielo3ds-token/route");
-    const response = await GET();
+    const response = await GET(new Request("https://example.com/api/checkout/cielo3ds-token"));
     const body = await response.json();
 
     expect(response.status).toBe(400);
@@ -93,7 +93,7 @@ describe("checkout cielo3ds-token route", () => {
     getActivePublicUserByCpf.mockResolvedValue(null);
 
     const { GET } = await import("@/app/api/checkout/cielo3ds-token/route");
-    const response = await GET();
+    const response = await GET(new Request("https://example.com/api/checkout/cielo3ds-token"));
     const body = await response.json();
 
     expect(response.status).toBe(401);

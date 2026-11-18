@@ -30,7 +30,7 @@ function legacyCheckoutError(message: string, status = 400) {
   );
 }
 
-export async function GET(request?: Request) {
+export async function GET(request: Request) {
   const session = await checkoutSession(request);
 
   if (!session) {

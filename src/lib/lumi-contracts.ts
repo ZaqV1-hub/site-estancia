@@ -41,7 +41,7 @@ export const LUMI_CONTRACTS = [
       "gestor",
       "atendente"
     ],
-    "description": "Consultar passaportes e adicionais ativos no catálogo atual do sistema da Estância, com preços, descrições e product_id. Quando souber a data, informe visit_date para filtrar os produtos disponíveis nesse dia. Consulte antes de propor ou cotar produtos; não reutilize os preços e nomes do material antigo. Respeite as condições e faixas etárias descritas em cada produto. Não cria compra.",
+    "description": "Consultar passaportes e adicionais ativos no catálogo atual do sistema da Estância, com preços, descrições e product_id. Quando souber a data, informe visit_date para filtrar os produtos disponíveis nesse dia. Consulte antes de propor ou cotar produtos; não reutilize os preços e nomes do material antigo. Respeite as condições e faixas etárias descritas em cada produto. Não cria compra. Depois que o cliente escolher a data e os passaportes, consulte os adicionais desse dia e ofereça os disponíveis antes da cotação final. Respeite recusas e não acrescente produtos sem consentimento.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -67,7 +67,7 @@ export const LUMI_CONTRACTS = [
       "gestor",
       "atendente"
     ],
-    "description": "Calcular internamente a compra de passaportes e adicionais escolhidos para uma data. Use os product_id reais do catálogo e as quantidades informadas. Precisa de pelo menos um passaporte. Não precisa de CPF nem autorização adicional para fazer o cálculo da compra solicitada. Depois, apresente total e colete apenas dados faltantes, sem oferecer cotação como uma etapa extra.",
+    "description": "Calcular internamente a compra de passaportes e adicionais escolhidos para uma data. Use os product_id reais do catálogo e as quantidades informadas. Precisa de pelo menos um passaporte. Não precisa de CPF nem autorização adicional para fazer o cálculo da compra solicitada. Depois, apresente total e colete apenas dados faltantes, sem oferecer cotação como uma etapa extra. Inclua os adicionais expressamente aceitos na mesma cotação e recalcule o total.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -116,7 +116,7 @@ export const LUMI_CONTRACTS = [
       "gestor",
       "atendente"
     ],
-    "description": "Preparar o pedido escolhido após cotação, com nome completo, CPF válido informado pelo comprador e telefone. Somente no WhatsApp o número vem automaticamente; no Instagram e simulador peça o telefone com DDD quando faltar. Se houver dados_invalidos, peça novamente apenas o campo rejeitado. Registra pedido pendente no sistema da Estância e retorna o link de checkout. Envie esse link como retornado, no domínio oficial da Estância. Pagamento acontece na página Cielo, nunca no chat. Não afirme que está pago sem consulta.",
+    "description": "Preparar o pedido escolhido após cotação, com nome completo e CPF válido do comprador. Quando faltar telefone no histórico, tente com phone=null: o servidor usa o número do WhatsApp. Peça telefone com DDD somente se retornar dados_invalidos em phone. Retorna o checkout seguro da Lumi com a identidade da Estância. Envie o link exatamente como retornado. Não peça cartão no chat nem confirme pagamento sem consultar o pedido.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -140,7 +140,8 @@ export const LUMI_CONTRACTS = [
             "string",
             "null"
           ],
-          "maxLength": 20
+          "maxLength": 20,
+          "description": "Envie null quando ausente no histórico. O servidor usa o canal WhatsApp. Só solicite se a ferramenta rejeitar phone como required."
         },
         "email": {
           "type": [
@@ -180,6 +181,30 @@ export const LUMI_CONTRACTS = [
       },
       "required": [
         "quote_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "preparar_formulario_escolar",
+    "path": "/api/lumi/school-form",
+    "roles": [
+      "cliente",
+      "gestor",
+      "atendente"
+    ],
+    "description": "Retornar o formulário seguro do e-commerce escolar da Estância a partir do link de passeio enviado pela escola e apresentado pelo responsável. Não cria pedido nem inventa link. No formulário, o responsável informa comprador, alunos e turmas; o sistema escolar calcula os valores por turma e valida data e disponibilidade. Não usar catálogo Day Use para escolares. Para organizar um novo passeio, siga a orientação de atendimento de grupos.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "form_url": {
+          "type": "string",
+          "maxLength": 1500,
+          "description": "Link de compra escolar enviado pela escola, informado pelo cliente."
+        }
+      },
+      "required": [
+        "form_url"
       ],
       "additionalProperties": false
     }

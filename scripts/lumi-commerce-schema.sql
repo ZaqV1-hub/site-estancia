@@ -14,4 +14,5 @@ CREATE TABLE IF NOT EXISTS lumi_orders (
   expires_at timestamptz NOT NULL
 );
 CREATE INDEX IF NOT EXISTS lumi_orders_conversation ON lumi_orders(tenant_id, conversation_id);
+ALTER TABLE lumi_orders ADD COLUMN IF NOT EXISTS payment_attempt jsonb;
 COMMIT;

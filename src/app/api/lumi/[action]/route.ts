@@ -1,3 +1,4 @@
+import { schoolForm } from "@/lib/lumi-school-form";
 import { authorizeLumi } from "@/lib/lumi-access";
 import { catalog, saveQuote, availableDates, LumiInputError } from "@/lib/lumi-catalog";
 import { preparePurchase, purchaseStatus } from "@/lib/lumi-commerce";
@@ -24,7 +25,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   const { action } = await params;
   try {
     const input = body.arguments;
-    const result = action === "agenda" ? await availableDates(input) :
+    const result = action === "school-form" ? schoolForm(input) : action === "agenda" ? await availableDates(input) :
       action === "catalog" ? await catalog(input.visit_date || undefined) :
       action === "quote" ? await saveQuote(body.tenant_id, body.conversation_id, input) :
       action === "purchase" ? await preparePurchase(body.tenant_id, body.conversation_id, input, body.context ?? {}) :

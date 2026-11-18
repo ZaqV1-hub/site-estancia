@@ -158,6 +158,10 @@ async function createNativeCheckoutResponse(
 }
 
 export async function POST(request: Request) {
+  // Lumi orders use the durable, idempotent payment flow; the account checkout is unchanged.
+  if (new URL(request.url).searchParams.has("lumi_token")) {
+    return errorResponse("checkout_moved", "Reabra o link de pagamento recebido na conversa.", 409);
+  }
   const session = await checkoutSession(request);
 
   if (!session) {

@@ -69,5 +69,5 @@ export async function saveQuote(tenant: string, conversation: string, input: Rec
   const token = randomBytes(32).toString("base64url");
   await getIngressoDbPool().query("INSERT INTO lumi_orders(token,tenant_id,conversation_id,selection,expires_at) VALUES($1,$2,$3,$4::jsonb,now()+interval '15 minutes')", [token, tenant, conversation, JSON.stringify(choice)]);
   return { ok: true, quote_id: token, visit_date: choice.date, total: choice.summary.totalValue, currency: "BRL", items: choice.summary.lines,
-    instruction: "Cotação interna concluída. Prossiga com a compra já solicitada, coletando apenas nome completo, CPF e telefone que faltarem. Somente WhatsApp fornece telefone automaticamente; Instagram e simulador exigem informar. Não peça cartão ou senha no chat." };
+    instruction: "Cotação interna concluída. Prossiga com a compra já solicitada, coletando apenas nome completo e CPF que faltarem. Tente criar_compra_ingressos com phone=null quando não houver telefone no histórico; no WhatsApp o servidor fornece o número do canal. Peça telefone com DDD apenas se a ferramenta retornar dados_invalidos para phone. Não peça cartão ou senha no chat." };
 }

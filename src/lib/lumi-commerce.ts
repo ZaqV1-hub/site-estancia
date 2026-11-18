@@ -1,3 +1,4 @@
+import { checkoutBase } from "@/lib/lumi-checkout-security";
 import { randomBytes } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
@@ -37,8 +38,8 @@ export async function preparePurchase(tenant: string, conversation: string, inpu
       const purchase = await createOnlinePurchase(cpf, fresh.agendaId, { lineItems: fresh.items }, undefined, token);
       order.purchase_id = purchase.purchaseId;
     }
-    return { ok: true, order_id: String(order.purchase_id), status: "waiting_payment", payment_url: `${process.env.LUMI_CHECKOUT_BASE_URL}/lumi/checkout/${token}`,
-      instruction: "Pedido pendente no sistema da Estância. Envie o link recebido. Pagamento só na página segura do site. Confirme o pagamento somente após consultar o pedido." };
+    return { ok: true, order_id: String(order.purchase_id), status: "waiting_payment", payment_url: checkoutBase(token),
+      instruction: "Pedido pendente no sistema da Estância. Envie o link recebido. Pagamento só no checkout seguro recebido. Confirme o pagamento somente após consultar o pedido." };
   } finally {
     await lock.query("SELECT pg_advisory_unlock(hashtextextended($1,0))", [token]);
     lock.release();
@@ -51,5 +52,5 @@ export async function purchaseStatus(tenant: string, conversation: string, token
   if (!row) return { ok: false, error: "pedido_nao_encontrado" };
   const expired = new Date(row.expires_at).getTime() <= Date.now();
   return { ok: true, order_id: row.purchase_id, status: row.stcompra === "conc" ? "paid" : row.stcompra === "canc" ? "cancelled" : expired ? "expired" : row.state,
-    payment_url: row.purchase_id && !expired ? `${process.env.LUMI_CHECKOUT_BASE_URL}/lumi/checkout/${token}` : null };
+    payment_url: row.purchase_id && !expired ? checkoutBase(token) : null };
 }

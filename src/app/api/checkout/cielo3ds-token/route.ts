@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { AuthErrorResponse } from "@/lib/auth-contracts";
-import { clearAuthCookie, getAuthSession } from "@/lib/auth-session";
+import { clearAuthCookie } from "@/lib/auth-session";
+import { checkoutSession } from "@/lib/lumi-access";
 import { getCielo3dsTokenData, isCielo3dsConfigured } from "@/lib/cielo-3ds";
 import { getActivePublicUserByCpf } from "@/lib/user-repository";
 
@@ -29,8 +30,8 @@ function legacyCheckoutError(message: string, status = 400) {
   );
 }
 
-export async function GET() {
-  const session = await getAuthSession();
+export async function GET(request?: Request) {
+  const session = await checkoutSession(request);
 
   if (!session) {
     return errorResponse(

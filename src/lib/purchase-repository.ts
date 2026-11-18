@@ -15,6 +15,7 @@ import {
   normalizeCodindica,
 } from "@/lib/codindica";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
+import type { PoolClient } from "pg";
 import { getAgendaProductAvailability } from "@/lib/painel-agenda-product-availability";
 import type {
   CreatePurchaseQuantities,
@@ -308,11 +309,22 @@ async function resolveVoucherValidityDate(agenda: PurchaseAgendaDetail, now = ne
   return addMonths(now, 6).toISOString().slice(0, 10);
 }
 
+async function linkLumiOrder(client: PoolClient, token: string | undefined, purchaseId: number) {
+  if (!token) return;
+  const linked = await client.query(
+    "UPDATE lumi_orders SET purchase_id=$2,state='waiting_payment',expires_at=now()+interval '24 hours' WHERE token=$1 AND state='creating' AND purchase_id IS NULL",
+    [token, purchaseId],
+  );
+  if (linked.rowCount !== 1) throw new Error("lumi_order_changed");
+  await client.query("UPDATE compra SET origem_checkout='lumi' WHERE idcompra=$1", [purchaseId]);
+}
+
 export async function createOnlinePurchase(
   cpf: string,
   agendaId: number,
   selection: CreatePurchaseSelection,
   codindicaInput?: string,
+  lumiToken?: string,
 ) {
   const agenda = await getPurchaseAgendaContext(cpf, agendaId);
 
@@ -498,6 +510,7 @@ export async function createOnlinePurchase(
         }
       }
 
+      await linkLumiOrder(client, lumiToken, purchaseId);
       await client.query("COMMIT");
 
       return {
@@ -814,6 +827,7 @@ export async function createOnlinePurchase(
       );
     }
 
+    await linkLumiOrder(client, lumiToken, purchaseId);
     await client.query("COMMIT");
 
     return {

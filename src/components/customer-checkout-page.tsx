@@ -21,6 +21,7 @@ type CustomerCheckoutPageProps = {
   };
   returnUrl: string;
   threeDsEnabled: boolean;
+  lumiToken?: string;
 };
 
 type MockPaymentType = "CreditCard" | "DebitCard" | "Pix";
@@ -208,6 +209,7 @@ export function CustomerCheckoutPage({
   customer,
   returnUrl,
   threeDsEnabled,
+  lumiToken,
 }: CustomerCheckoutPageProps) {
   const [jqueryReady, setJqueryReady] = useState(false);
   const [checkoutScriptReady, setCheckoutScriptReady] = useState(false);
@@ -256,8 +258,8 @@ export function CustomerCheckoutPage({
     );
     const widgetThreeDsEnabled = threeDsEnabled && !isLocalhost;
     const checkoutConfig: Record<string, unknown> = {
-      checkoutUrl: "/api/checkout/checkout-link",
-      statusUrl: "/api/checkout/status",
+      checkoutUrl: "/api/checkout/checkout-link" + (lumiToken ? `?lumi_token=${encodeURIComponent(lumiToken)}` : ""),
+      statusUrl: "/api/checkout/status" + (lumiToken ? `?lumi_token=${encodeURIComponent(lumiToken)}` : ""),
       retornoUrl: returnUrl,
       container: "#cieloCheckoutInline",
       continueShoppingUrl: "/meus-ingressos",
@@ -270,7 +272,7 @@ export function CustomerCheckoutPage({
     if (widgetThreeDsEnabled) {
       checkoutConfig.threeDs = {
         enabled: true,
-        tokenUrl: "/api/checkout/cielo3ds-token",
+        tokenUrl: "/api/checkout/cielo3ds-token" + (lumiToken ? `?lumi_token=${encodeURIComponent(lumiToken)}` : ""),
       };
     }
 
@@ -297,6 +299,7 @@ export function CustomerCheckoutPage({
     purchase.totalValue,
     returnUrl,
     threeDsEnabled,
+    lumiToken,
   ]);
 
   async function handleMockPayment() {

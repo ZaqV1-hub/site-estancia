@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { AuthErrorResponse } from "@/lib/auth-contracts";
-import { clearAuthCookie, getAuthSession } from "@/lib/auth-session";
+import { clearAuthCookie } from "@/lib/auth-session";
+import { checkoutSession } from "@/lib/lumi-access";
 import { syncCheckoutStatus } from "@/lib/checkout-status";
 import { getActivePublicUserByCpf } from "@/lib/user-repository";
 import { getUserVoucherPurchaseById } from "@/lib/voucher-repository";
@@ -21,7 +22,7 @@ function errorResponse(code: string, message: string, status: number) {
 }
 
 export async function GET(request: Request) {
-  const session = await getAuthSession();
+  const session = await checkoutSession(request);
 
   if (!session) {
     return errorResponse(

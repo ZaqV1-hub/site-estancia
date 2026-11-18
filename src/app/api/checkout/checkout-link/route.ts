@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { AuthErrorResponse } from "@/lib/auth-contracts";
-import { clearAuthCookie, getAuthSession } from "@/lib/auth-session";
+import { clearAuthCookie } from "@/lib/auth-session";
+import { checkoutSession } from "@/lib/lumi-access";
 import {
   cancelCieloPayment,
   createNativeCieloCheckout,
@@ -157,7 +158,7 @@ async function createNativeCheckoutResponse(
 }
 
 export async function POST(request: Request) {
-  const session = await getAuthSession();
+  const session = await checkoutSession(request);
 
   if (!session) {
     return errorResponse(

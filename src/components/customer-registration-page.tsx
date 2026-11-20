@@ -70,16 +70,18 @@ function formatCep(value: string) {
 
 async function readResponseBody<T>(response: Response) {
   try {
-    return (await response.json()) as T;
+    return (await response.json()) as T | AuthErrorResponse;
   } catch {
     return null;
   }
 }
 
-async function readApiError(response: Response, fallback: string) {
-  const payload = await readResponseBody<AuthErrorResponse>(response);
+function readApiError(
+  payload: { ok: boolean; error?: { message: string } } | null,
+  fallback: string,
+) {
 
-  if (payload && !payload.ok) {
+  if (payload && !payload.ok && payload.error?.message) {
     return payload.error.message;
   }
 
@@ -114,8 +116,8 @@ export function CustomerRegistrationPage({
 
         if (!response.ok || !payload?.ok) {
           setError(
-            await readApiError(
-              response,
+            readApiError(
+              payload,
               "Nao foi possivel carregar os dados de cadastro agora.",
             ),
           );
@@ -164,8 +166,8 @@ export function CustomerRegistrationPage({
 
       if (!response.ok || !payload?.ok) {
         setError(
-          await readApiError(
-            response,
+          readApiError(
+            payload,
             "Nao foi possivel carregar as cidades agora.",
           ),
         );
@@ -202,8 +204,8 @@ export function CustomerRegistrationPage({
 
       if (!response.ok || !payload?.ok) {
         setError(
-          await readApiError(
-            response,
+          readApiError(
+            payload,
             "Nao foi possivel consultar o CEP agora.",
           ),
         );
@@ -279,8 +281,8 @@ export function CustomerRegistrationPage({
 
       if (!response.ok || !payload?.ok) {
         setError(
-          await readApiError(
-            response,
+          readApiError(
+            payload,
             "Nao foi possivel concluir o cadastro agora.",
           ),
         );

@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { syncOperationalPaymentStatuses } from "@/lib/ops-payment-sync";
 
+const { reconcilePurchaseRefund } = vi.hoisted(() => ({ reconcilePurchaseRefund: vi.fn() }));
+vi.mock("@/lib/purchase-refund", () => ({ reconcilePurchaseRefund }));
+
 const {
   query,
   connect,
@@ -60,6 +63,22 @@ describe("ops-payment-sync", () => {
     });
 
     expect(connect).not.toHaveBeenCalled();
+  });
+
+  it("recovers refund side effects without issuing another financial request", async () => {
+    isCieloEcommerceConfigured.mockReturnValue(true);
+    query.mockImplementation(async (sql: string) => {
+      if (sql.includes("to_regclass")) return { rows: [{ installed: true }] };
+      if (sql.includes("FROM public.purchase_refunds")) return { rows: [{
+        purchase_id: 88, payment_id: "p88", purchase_status: "canc", refund: true,
+      }] };
+      return { rows: [] };
+    });
+    reconcilePurchaseRefund.mockResolvedValue({ state: "refunded", reconciliationPending: false, message: "Concluído." });
+    const result = await syncOperationalPaymentStatuses();
+    expect(reconcilePurchaseRefund).toHaveBeenCalledWith(88);
+    expect(result).toMatchObject({ processed: 1, reconciled: 1, items: [{ purchaseId: 88, purchaseStatus: "canc" }] });
+    expect(getNativeCieloCheckoutStatus).not.toHaveBeenCalled();
   });
 
   it("reconciles pending payments and cancels stale purchases without payment id", async () => {

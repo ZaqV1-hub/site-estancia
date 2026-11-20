@@ -11,6 +11,7 @@ type PaymentSyncCandidateRow = {
   purchase_status: string | null;
   payment_id: string | null;
   gateway_status: string | null;
+  refund?: boolean;
 };
 
 export type OperationalPaymentSyncItem = {
@@ -144,7 +145,20 @@ async function listPaymentSyncCandidates(
       [recentDays, limit],
     );
 
-    return result.rows;
+    const schema = await client.query("SELECT to_regclass('public.purchase_refunds') IS NOT NULL AS installed");
+    if (!schema.rows[0]?.installed) return result.rows;
+    const refunds = await client.query<PaymentSyncCandidateRow>(
+      `SELECT r.purchase_id, r.payment_id, c.dtcompra::text AS purchase_date,
+              c.stcompra AS purchase_status, r.gateway_status::text, true AS refund
+         FROM public.purchase_refunds r JOIN compra c ON c.idcompra = r.purchase_id
+        WHERE r.state IN ('pending', 'uncertain') OR r.ticket_sync_pending OR r.cashback_pending
+        ORDER BY r.updated_at ASC, r.purchase_id LIMIT $1`,
+      [limit],
+    );
+    const refundIds = new Set(refunds.rows.map(row => row.purchase_id));
+    const payments = result.rows.filter(row => !refundIds.has(row.purchase_id));
+    const refundCount = Math.min(refunds.rows.length, Math.max(Math.ceil(limit / 2), limit - payments.length));
+    return [...refunds.rows.slice(0, refundCount), ...payments.slice(0, limit - refundCount)];
   } finally {
     client.release();
   }
@@ -203,6 +217,18 @@ export async function syncOperationalPaymentStatuses(
 
   for (const candidate of candidates) {
     try {
+      if (candidate.refund) {
+        const { reconcilePurchaseRefund } = await import("@/lib/purchase-refund");
+        const refund = await reconcilePurchaseRefund(candidate.purchase_id);
+        const settled = !refund.reconciliationPending;
+        if (settled) reconciled += 1;
+        items.push({
+          purchaseId: candidate.purchase_id, paymentId: candidate.payment_id,
+          result: settled ? "reconciled" : "skipped", purchaseStatus: refund.state === "refunded" ? "canc" : candidate.purchase_status,
+          gatewayStatus: null, note: refund.message,
+        });
+        continue;
+      }
       const statusPayload = await getNativeCieloCheckoutStatus({
         paymentId: candidate.payment_id,
         reference: String(candidate.purchase_id),

@@ -1,3 +1,5 @@
+import type { PoolClient } from "pg";
+import { withConfirmedPurchase } from "@/lib/refund-lock";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 
 type PurchaseCashbackRow = {
@@ -488,8 +490,7 @@ async function loadVoucherSummary(purchaseId: number) {
   );
 }
 
-async function updatePurchaseCashback(purchaseId: number, amount: number) {
-  const pool = getIngressoDbPool();
+async function updatePurchaseCashback(purchaseId: number, amount: number, pool: Pick<PoolClient, "query"> = getIngressoDbPool()) {
 
   await pool.query(
     `
@@ -506,12 +507,8 @@ async function syncHistoryCashback(
   code: CodindicaCashbackRow,
   voucherSummary: VoucherSummaryRow,
   amount: number,
+  pool: PoolClient,
 ) {
-  if (!(await historyTableExists())) {
-    return;
-  }
-
-  const pool = getIngressoDbPool();
   const existing = await pool.query<{ idcompra: number }>(
     "SELECT idcompra FROM codindica_cashback WHERE idcompra = $1 LIMIT 1",
     [purchase.idcompra],
@@ -622,8 +619,13 @@ export async function processCodindicaCashback(
   const voucherSummary = await loadVoucherSummary(purchaseId);
   const amount = calculateCashbackAmount(purchase, code, voucherSummary);
 
-  await updatePurchaseCashback(purchaseId, amount);
-  await syncHistoryCashback(purchase, code, voucherSummary, amount);
+  const hasHistory = await historyTableExists();
+  const updated = await withConfirmedPurchase(purchaseId, async client => {
+    await updatePurchaseCashback(purchaseId, amount, client);
+    if (hasHistory) await syncHistoryCashback(purchase, code, voucherSummary, amount, client);
+    return true;
+  });
+  if (!updated) return { status: "skipped", purchaseId, amount: "0.00", reason: "purchase_not_eligible" };
 
   try {
     await enqueueRepresentativeEmail(purchase, code, amount);

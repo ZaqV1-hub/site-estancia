@@ -1,3 +1,5 @@
+import type { PoolClient } from "pg";
+import { withConfirmedPurchase } from "@/lib/refund-lock";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 import {
   buildTicketsApiHeaders,
@@ -447,8 +449,7 @@ function buildValidationTicketPayload(voucher: TicketValidationVoucherRow) {
   };
 }
 
-async function loadConfirmedPurchase(purchaseId: number) {
-  const pool = getIngressoDbPool();
+async function loadConfirmedPurchase(purchaseId: number, pool: Pick<PoolClient, "query"> = getIngressoDbPool()) {
   const purchase = await pool.query<ConfirmedPurchaseRow>(
     `
       SELECT
@@ -471,8 +472,7 @@ async function loadConfirmedPurchase(purchaseId: number) {
   return purchase.rows[0] ?? null;
 }
 
-async function loadPendingTicketVouchers(purchaseId: number) {
-  const pool = getIngressoDbPool();
+async function loadPendingTicketVouchers(purchaseId: number, pool: PoolClient) {
   const vouchers = await pool.query<VoucherTicketRow>(
     `
       SELECT
@@ -570,12 +570,10 @@ async function loadSelectedTicketVouchers(
   return vouchers.rows;
 }
 
-async function markVouchersSent(voucherIds: number[]) {
+async function markVouchersSent(voucherIds: number[], pool: PoolClient) {
   if (voucherIds.length === 0) {
     return;
   }
-
-  const pool = getIngressoDbPool();
 
   await pool.query(
     `
@@ -628,7 +626,12 @@ export async function processConfirmedPurchaseTickets(
     };
   }
 
-  const purchase = await loadConfirmedPurchase(purchaseId);
+  const result = await withConfirmedPurchase(purchaseId, client => issueTickets(purchaseId, config, client));
+  return result ?? { status: "skipped", purchaseId, sentVoucherIds: [], skippedReason: "purchase_not_confirmed" };
+}
+
+async function issueTickets(purchaseId: number, config: TicketServiceConfig, client: PoolClient): Promise<TicketSendResult> {
+  const purchase = await loadConfirmedPurchase(purchaseId, client);
 
   if (!purchase) {
     return {
@@ -651,7 +654,7 @@ export async function processConfirmedPurchaseTickets(
     };
   }
 
-  const vouchers = await loadPendingTicketVouchers(purchaseId);
+  const vouchers = await loadPendingTicketVouchers(purchaseId, client);
 
   if (vouchers.length === 0) {
     return {
@@ -745,7 +748,7 @@ export async function processConfirmedPurchaseTickets(
     sentVoucherIds.push(voucher.idvoucher);
   }
 
-  await markVouchersSent(sentVoucherIds);
+  await markVouchersSent(sentVoucherIds, client);
 
   return {
     status: "sent",

@@ -1,5 +1,6 @@
 import { CalendarPurchaseActions } from "@/components/calendar-purchase-actions";
 import Link from "next/link";
+import { PainelCompraRefund, type RefundState } from "@/components/painel-compra-refund";
 import { PainelCompraDetailActions } from "@/components/painel-compra-detail-actions";
 import {
   formatPainelBilheteriaCpf as formatCpf,
@@ -12,6 +13,9 @@ type PainelCompraDetailPageProps = {
   actorCpf: string | null;
   canManageHistory: boolean;
   canValidate?: boolean;
+  canRefund?: boolean;
+  refundState?: RefundState;
+  reconciliationPending?: boolean;
 };
 
 type PurchaseItemSummary = {
@@ -82,9 +86,12 @@ function summarizePurchaseItems(vouchers: PainelPurchaseDetail["vouchers"]) {
   return Array.from(grouped.values());
 }
 
-export function PainelCompraDetailPage({ detail, canValidate }: PainelCompraDetailPageProps) {
+export function PainelCompraDetailPage({ detail, canValidate, canRefund = false, refundState = null, reconciliationPending = false }: PainelCompraDetailPageProps) {
   const passports = detail.vouchers.filter(isPassport);
-  const validatableTicketIds = detail.status === "conc" && (detail.type === "ponli" || detail.type === "reser" || detail.type === "bilhe")
+  const refundBlocksEntry = refundState === "pending" || refundState === "uncertain" || refundState === "refunded";
+  const canStartRefund = detail.status === "conc" && Boolean(detail.gatewayPaymentId)
+    && !detail.vouchers.some(voucher => voucher.used === "s" || voucher.usedDate);
+  const validatableTicketIds = !refundBlocksEntry && detail.status === "conc" && (detail.type === "ponli" || detail.type === "reser" || detail.type === "bilhe")
     ? passports.filter((voucher) => voucher.used === "n").map((voucher) => voucher.voucherId)
     : [];
   const addons = detail.vouchers.filter((voucher) => !isPassport(voucher));
@@ -186,6 +193,9 @@ export function PainelCompraDetailPage({ detail, canValidate }: PainelCompraDeta
           {detail.referralCode ? <div><dt>Código de indicação</dt><dd>{detail.referralCode}</dd></div> : null}
           {detail.gatewayPaymentId ? <><div><dt>ID Pagamento</dt><dd>{detail.gatewayPaymentId}</dd></div><div><dt>Status do gateway</dt><dd>{detail.gatewayStatusCode ? `Cielo ${detail.gatewayStatusCode} - ${detail.gatewayStatusLabel}` : "-"}</dd></div></> : null}
         </dl>
+        {canRefund && detail.type === "ponli" && (canStartRefund || refundState) ? (
+          <PainelCompraRefund key={`${detail.purchaseId}:${refundState}:${reconciliationPending}`} purchaseId={detail.purchaseId} totalValue={detail.totalValue} refundState={refundState} reconciliationPending={reconciliationPending} />
+        ) : null}
       </div>
 
   </section>;

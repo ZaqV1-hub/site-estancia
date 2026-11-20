@@ -54,6 +54,21 @@ describe("ops-voucher-validation", () => {
     vi.useRealTimers();
   });
 
+  it("blocks entry while a paid purchase awaits refund confirmation", async () => {
+    query.mockImplementation(async (sql: string) => {
+      if (sql.includes("WHERE voucher.numvoucher = $1")) return { rows: [{
+        idvoucher: 9, idcompra: 4, numvoucher: "A", stusado: "n", tpcompra: "ponli",
+        stcompra: "conc", payment_status: 3, dtagenda: "2026-04-23", tpagenda: "padra",
+      }] };
+      if (sql.includes("to_regclass")) return { rows: [{ installed: true }] };
+      if (sql.includes("FROM public.purchase_refunds")) return { rows: [{ state: "uncertain", payment_id: "p" }] };
+      return { rows: [] };
+    });
+    await expect(validateVoucherByNumber("A")).rejects.toMatchObject({ code: "purchase_refund" });
+    expect(syncTicketValidation).not.toHaveBeenCalled();
+    expect(query).toHaveBeenCalledWith("ROLLBACK");
+  });
+
   it("rejects expired vouchers even with date confirmation", async () => {
     query.mockImplementation(async (sql: string) => ({ rows: sql.includes("WHERE voucher.numvoucher = $1") ? [{ idvoucher: 9, idcompra: 4, numvoucher: "EXP", stusado: "n", tpcompra: "ponli", stcompra: "conc", payment_status: 3, dtagenda: "2026-04-20", dtvalidade: "2026-04-22", tpagenda: "padra" }] : [] }));
     await expect(validateVoucherByNumber("EXP", true)).rejects.toMatchObject({ code: "voucher_expired" });

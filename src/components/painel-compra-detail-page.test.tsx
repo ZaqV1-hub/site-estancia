@@ -20,11 +20,27 @@ const detail: PainelPurchaseDetail = {
   userName: "OPERADOR", referralCode: null, gatewayPaymentId: "pay-551", gatewayStatusCode: "3",
   gatewayStatusLabel: "Paga", vouchers: [passport, addon, { ...addon, voucherId: 9003, voucherNumber: "ABC-125" }],
 };
-function render(value = detail, canValidate = true) {
-  return renderToStaticMarkup(<PainelCompraDetailPage detail={value} actorName="WAGNER" actorCpf="00000000191" canManageHistory canValidate={canValidate} />);
+function render(value = detail, canValidate = true, canRefund = false, refundState: "pending" | "uncertain" | "refunded" | "denied" | null = null) {
+  return renderToStaticMarkup(<PainelCompraDetailPage detail={value} actorName="WAGNER" actorCpf="00000000191" canManageHistory canValidate={canValidate} canRefund={canRefund} refundState={refundState} />);
 }
 
 describe("PainelCompraDetailPage", () => {
+  it("offers a full refund only to authorized admins for completed online purchases", () => {
+    expect(render(detail, true, true)).toContain("Estornar valor total");
+    expect(render()).not.toContain("Estornar valor total");
+    expect(render({ ...detail, vouchers: [{ ...passport, used: "s" }] }, true, true)).not.toContain("Estornar valor total");
+    expect(render({ ...detail, type: "bilhe" }, true, true)).not.toContain("Estornar valor total");
+    expect(render({ ...detail, status: "pend" }, true, true)).not.toContain("Estornar valor total");
+  });
+
+  it("keeps durable refund results visible after cancellation without offering another refund", () => {
+    const html = render({ ...detail, status: "canc" }, true, true, "refunded");
+    expect(html).toContain("Estorno confirmado");
+    expect(html).not.toContain("Estornar valor total");
+    expect(render(detail, true, true, "uncertain")).toContain("Consultar estorno");
+    expect(render(detail, true, false, "uncertain")).not.toContain("Consultar estorno");
+  });
+
   it("offers validation for the purchase's unused tickets only to authorized operators", () => {
     expect(render()).toContain("Validar todos os ingressos");
     expect(render(detail, false)).not.toContain("Validar todos os ingressos");

@@ -65,6 +65,12 @@ export function isCieloEcommerceConfigured() {
   return getConfig() !== null;
 }
 
+export class CieloApiError extends Error {
+  constructor(public readonly status: number, public readonly code: string | null) {
+    super(`cielo_ecommerce_error_${status}${code ? ": " + code : ""}`);
+  }
+}
+
 async function cieloRequest(
   method: "GET" | "POST" | "PUT",
   path: string,
@@ -94,12 +100,9 @@ async function cieloRequest(
   const responsePayload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message =
-      typeof responsePayload === "object" && responsePayload !== null
-        ? JSON.stringify(responsePayload)
-        : "Cielo API error";
-
-    throw new Error(`cielo_ecommerce_error_${response.status}: ${message}`);
+    const detail = Array.isArray(responsePayload) ? responsePayload[0] : responsePayload;
+    const code = detail?.Code;
+    throw new CieloApiError(response.status, code == null ? null : String(code));
   }
 
   return responsePayload;
@@ -135,16 +138,21 @@ export async function createCieloSale(payload: unknown) {
   return cieloRequest("POST", "1/sales/", payload, "api");
 }
 
-export async function cancelCieloPayment(paymentId: string) {
+export async function cancelCieloPayment(paymentId: string, amountCents?: number) {
   const normalizedPaymentId = paymentId.trim();
 
   if (!normalizedPaymentId) {
     throw new Error("cielo_payment_id_invalid");
   }
 
+  if (amountCents !== undefined && (!Number.isSafeInteger(amountCents) || amountCents <= 0)) {
+    throw new Error("cielo_refund_amount_invalid");
+  }
+
+  const query = amountCents === undefined ? "" : `?amount=${amountCents}`;
   return cieloRequest(
     "PUT",
-    `1/sales/${encodeURIComponent(normalizedPaymentId)}/void`,
+    `1/sales/${encodeURIComponent(normalizedPaymentId)}/void${query}`,
     null,
     "api",
   );

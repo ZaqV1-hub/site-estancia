@@ -16,6 +16,7 @@ const originalEnv = process.env;
 vi.mock("@/lib/ingresso-db", () => ({
   getIngressoDbPool: () => ({
     query: dbQuery,
+    connect: async () => ({ query: dbQuery, release: vi.fn() }),
   }),
 }));
 

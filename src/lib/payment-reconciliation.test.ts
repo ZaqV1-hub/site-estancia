@@ -241,4 +241,15 @@ describe("payment-reconciliation", () => {
       true,
     );
   });
+  it("keeps a stale paid event from reopening a refunded purchase", async () => {
+    const query = vi.fn(async (sql: string) => {
+      if (sql.includes("FROM compra")) return { rowCount: 1, rows: [{ idcompra: 123 }] };
+      if (sql.includes("to_regclass")) return { rows: [{ installed: true }] };
+      if (sql.includes("FROM public.purchase_refunds")) return { rows: [{ state: "refunded", payment_id: "paid-id" }] };
+      throw new Error("unexpected write after refund");
+    });
+    expect(await applyPaymentReconciliationRecord({ query } as unknown as Parameters<typeof applyPaymentReconciliationRecord>[0], baseRecord()))
+      .toMatchObject({ ledgerAction: "refund", purchaseStatus: "canc" });
+  });
+
 });

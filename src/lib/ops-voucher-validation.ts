@@ -1,3 +1,4 @@
+import { findBlockingRefund } from "@/lib/refund-lock";
 import { type PoolClient } from "pg";
 import { getIngressoDbPool } from "@/lib/ingresso-db";
 import { registerOpsAuditLog } from "@/lib/ops-audit-log";
@@ -462,10 +463,13 @@ async function getVouchersByIds(client: PoolClient, voucherIds: number[]) {
 
 async function markVoucherUsed(
   client: PoolClient,
-  voucherId: number,
+  voucher: VoucherValidationRow,
   date: string,
   time: string,
 ) {
+  if (voucher.tpcompra === "ponli" && voucher.idcompra && await findBlockingRefund(client, voucher.idcompra)) {
+    throw new VoucherOperationError("purchase_refund", "Ingresso bloqueado para estorno.", 409);
+  }
   await client.query(
     `
       UPDATE voucher
@@ -474,7 +478,7 @@ async function markVoucherUsed(
           hruso = $3
       WHERE idvoucher = $1
     `,
-    [voucherId, date, time],
+    [voucher.idvoucher, date, time],
   );
 }
 
@@ -643,7 +647,7 @@ export async function validateVoucherByNumber(
         const validity = evaluateAgendaUsage(voucher, false, date);
         if (validity.status !== "ok") throw new VoucherOperationError(validity.code, validity.message, 409);
       }
-      await markVoucherUsed(client, voucher.idvoucher, date, time);
+      await markVoucherUsed(client, voucher, date, time);
     const auditLogId = await registerVoucherOperationAuditLog(client, {
       action: "validate",
       mode: "voucher_number",
@@ -778,7 +782,7 @@ export async function validatePurchaseVouchers(
         const validity = evaluateAgendaUsage(voucher, false, date);
         if (validity.status !== "ok") throw new VoucherOperationError(validity.code, validity.message, 409);
       }
-      await markVoucherUsed(client, voucher.idvoucher, date, time);
+      await markVoucherUsed(client, voucher, date, time);
       affectedVoucherIds.push(voucher.idvoucher);
     }
 
@@ -936,7 +940,7 @@ export async function validateSelectedVouchers(
         const validity = evaluateAgendaUsage(voucher, false, date);
         if (validity.status !== "ok") throw new VoucherOperationError(validity.code, validity.message, 409);
       }
-      await markVoucherUsed(client, voucher.idvoucher, date, time);
+      await markVoucherUsed(client, voucher, date, time);
       affectedVoucherIds.push(voucher.idvoucher);
     }
 
@@ -1084,7 +1088,7 @@ export async function validateSchoolTripVouchers(
         const validity = evaluateAgendaUsage(voucher, false, date);
         if (validity.status !== "ok") throw new VoucherOperationError(validity.code, validity.message, 409);
       }
-      await markVoucherUsed(client, voucher.idvoucher, date, time);
+      await markVoucherUsed(client, voucher, date, time);
       affectedVoucherIds.push(voucher.idvoucher);
     }
 

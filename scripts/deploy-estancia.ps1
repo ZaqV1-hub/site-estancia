@@ -89,7 +89,8 @@ try {
   Copy-BuildFiles $output $candidate
 
   Assert-Release
-  git merge --ff-only $Release
+  # Windows PowerShell treats native stderr as an error when the worker redirects all streams.
+  git merge --ff-only --no-progress $Release
   if ($LASTEXITCODE -ne 0) { throw 'Unable to fast-forward the production checkout.' }
   $uploads = Join-Path $root 'public\uploads\site'
   if (Test-Path $uploads) { Copy-BuildFiles $uploads "$candidate\standalone\public\uploads\site" }
